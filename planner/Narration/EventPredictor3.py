@@ -885,7 +885,7 @@ class EventPredictor3:
             s2 = self.markovChain.nextState(s)
             
             q_previous = q
-            if s2.hasEvent(predictedEvent):
+            if s2.has_event(predictedEvent):
                 q = self.dfa.transitions[q][predictedEvent]
                 if q != q_previous:
                     story += predictedEvent

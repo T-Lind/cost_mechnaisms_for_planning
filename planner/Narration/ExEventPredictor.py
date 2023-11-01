@@ -81,30 +81,30 @@ class ExEventPredictor:
                 
                 for e in self.eventList:
                     if dfa.transitions[q][e] == q2 and q2 == q:
-                        if s2.hasEvent(e) and o2 == True:
+                        if s2.has_event(e) and o2 == True:
                             trans = MDPTransition(v1, v2, e, s2.events, w*eventProbability*eventCaptureProbability+w*eventProbability*(1-eventCaptureProbability))
                             mdp.addTransition(trans)
-                        if s2.hasEvent(e) and o2 == False:
+                        if s2.has_event(e) and o2 == False:
                             trans = MDPTransition(v1, v2, e, s2.events, w*(1-eventProbability))
                             mdp.addTransition(trans)                            
-                        if not s2.hasEvent(e) and q == q2 and o2 == False:
+                        if not s2.has_event(e) and q == q2 and o2 == False:
                             trans = MDPTransition(v1, v2, e, s2.events, w)
                             mdp.addTransition(trans)
                     else:                       
-                        if s2.hasEvent(e) and dfa.transitions[q][e] == q2 and o2 == True:
-                            eventProbability = s2.getEventProbability(e)
-                            eventCaptureProbability = s2.getEventCaptureProbabilities(e)
+                        if s2.has_event(e) and dfa.transitions[q][e] == q2 and o2 == True:
+                            eventProbability = s2.get_event_probability(e)
+                            eventCaptureProbability = s2.get_event_capture_probabilities(e)
                         #print("w:"+str(w))
                         #print("eventProbability:"+str(eventProbability))
                         #print("eventCaptureProbability:"+str(eventCaptureProbability))
                             trans = MDPTransition(v1, v2, e, s2.events, w*eventProbability*eventCaptureProbability)
                             mdp.addTransition(trans)
-                        elif s2.hasEvent(e) and q == q2 and o2 == False:
-                            eventProbability = s2.getEventProbability(e)
-                            eventCaptureProbability = s2.getEventCaptureProbabilities(e)
+                        elif s2.has_event(e) and q == q2 and o2 == False:
+                            eventProbability = s2.get_event_probability(e)
+                            eventCaptureProbability = s2.get_event_capture_probabilities(e)
                             trans = MDPTransition(v1, v2, e, s2.events, w*eventProbability*(1-eventCaptureProbability)+w*(1-eventProbability))
                             mdp.addTransition(trans)
-                        if not s2.hasEvent(e) and q == q2 and o2 == False:
+                        if not s2.has_event(e) and q == q2 and o2 == False:
                             trans = MDPTransition(v1, v2, e, s2.events, w)
                             mdp.addTransition(trans)
         
@@ -205,27 +205,27 @@ class ExEventPredictor:
                 
                 for e in self.eventList:
                     if dfa.transitions[q][e] == q2 and q2 == q:
-                        if s2.hasEvent(e):
+                        if s2.has_event(e):
                             trans = MDPTransition(v1, v2, e, s2.events, w*eventProbability*eventCaptureProbability+w*eventProbability*(1-eventCaptureProbability)+w*(1-eventProbability))
                             mdp.addTransition(trans)
-                        if not s2.hasEvent(e) and q == q2:
+                        if not s2.has_event(e) and q == q2:
                             trans = MDPTransition(v1, v2, e, s2.events, w)
                             mdp.addTransition(trans)
                     else:                       
-                        if s2.hasEvent(e) and dfa.transitions[q][e] == q2:
-                            eventProbability = s2.getEventProbability(e)
-                            eventCaptureProbability = s2.getEventCaptureProbabilities(e)
+                        if s2.has_event(e) and dfa.transitions[q][e] == q2:
+                            eventProbability = s2.get_event_probability(e)
+                            eventCaptureProbability = s2.get_event_capture_probabilities(e)
                         #print("w:"+str(w))
                         #print("eventProbability:"+str(eventProbability))
                         #print("eventCaptureProbability:"+str(eventCaptureProbability))
                             trans = MDPTransition(v1, v2, e, s2.events, w*eventProbability*eventCaptureProbability)
                             mdp.addTransition(trans)
-                        elif s2.hasEvent(e) and q == q2:
-                            eventProbability = s2.getEventProbability(e)
-                            eventCaptureProbability = s2.getEventCaptureProbabilities(e)
+                        elif s2.has_event(e) and q == q2:
+                            eventProbability = s2.get_event_probability(e)
+                            eventCaptureProbability = s2.get_event_capture_probabilities(e)
                             trans = MDPTransition(v1, v2, e, s2.events, w*eventProbability*(1-eventCaptureProbability)+w*(1-eventProbability))
                             mdp.addTransition(trans)
-                        if not s2.hasEvent(e) and q == q2:
+                        if not s2.has_event(e) and q == q2:
                             trans = MDPTransition(v1, v2, e, s2.events, w)
                             mdp.addTransition(trans)
         
@@ -265,9 +265,9 @@ class ExEventPredictor:
                     s2 = o[1]
                     r = o[0] 
                     if r == True and s2 == s:
-                        mdp.observationFunction[o][x][e] = s.getEventProbability(e)
+                        mdp.observationFunction[o][x][e] = s.get_event_probability(e)
                     if r == False and s2 == s:
-                        mdp.observationFunction[o][x][e] = 1-s.getEventProbability(e)
+                        mdp.observationFunction[o][x][e] = 1-s.get_event_probability(e)
                     if s2 != s:
                         mdp.observationFunction[o][x][e] = 0
                     
@@ -286,11 +286,11 @@ class ExEventPredictor:
         
         self.beliefTree = self.mdp.beliefTree
         
-        self.beliefTree.computeOptimalPolicyToMaxProbToGoal(H, self.eventList)
+        self.beliefTree.compute_optimal_policy_to_max_prob_to_goal(H, self.eventList)
         
         if self.verbose == True:
             print("Optimal policy to maximize the probability of reaching goal states has been computed. The maximum probability is: "+str(self.beliefTree.root.expcetedProbToGoal))
-            print("Number of belief nodes of the tree with a nonzero goal value is: "+str(self.beliefTree.numberOfNodesWithNonzeroGoalValue()))
+            print("Number of belief nodes of the tree with a nonzero goal value is: " + str(self.beliefTree.number_of_nodes_with_nonzero_goal_value()))
             #print(str(self.beliefTree))
                      
         #return G[0][self.mdp.initialState.index]
@@ -315,7 +315,7 @@ class ExEventPredictor:
             
             s2 = self.exMarkovChain.nextState(s)
             
-            occuredEvents = s2.simulateEventsOccring()
+            occuredEvents = s2.simulate_events_occurring()
             
             eventOccured = False
             if predictedEvent in occuredEvents:
@@ -323,7 +323,7 @@ class ExEventPredictor:
             
             eventCaptured = False
             if predictedEvent in occuredEvents:
-                if s2.simulateEventCapturing(predictedEvent):
+                if s2.simulate_event_capturing(predictedEvent):
                     eventCaptured = True 
             
             q_previous = q
@@ -339,7 +339,7 @@ class ExEventPredictor:
             
             #print("node="+str(node))
             
-            node = node.getChild(observation, predictedEvent)
+            node = node.get_child(observation, predictedEvent)
             
             #print("node="+str(node))
             

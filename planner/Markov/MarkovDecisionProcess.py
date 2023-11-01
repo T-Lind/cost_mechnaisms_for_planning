@@ -5,7 +5,7 @@ import time
 from copy import deepcopy
 from sys import float_info
 
-from planner.Markov.BeliefTree import BeliefTreeNode, BeleifTreeEdge, BeliefTree
+from planner.Markov.BeliefTree import BeliefTreeNode, BeliefTreeEdge, BeliefTree
 
 
 # from gettext import lngettext
@@ -1006,8 +1006,8 @@ class MDP:
                     node2.goalAvgValue = self.getGoalAvgValue(b2)
                     node2.height = node.height + 1
                     prob = self.probabilityObservationGivenActionAndbeleif(o, a, b)
-                    edge = BeleifTreeEdge(node, node2, a, o, prob)
-                    node.addEdge(edge)
+                    edge = BeliefTreeEdge(node, node2, a, o, prob)
+                    node.add_edge(edge)
                     node2.probabilityTo = node.probabilityTo * prob
                     queue.append(node2)
             if self.verbose and i % 1000 == 0:

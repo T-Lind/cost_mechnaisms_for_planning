@@ -93,23 +93,23 @@ class EventPredictor2:
                 w = mc.getTransitionProbability(s, s2)
                 
                 for e in self.eventList:
-                    if s2.hasEvent(e) and dfa.transitions[q][e] == q2 and (q != q2) and (q not in dfa.final_states):
+                    if s2.has_event(e) and dfa.transitions[q][e] == q2 and (q != q2) and (q not in dfa.final_states):
                         ep = s2.getEventPair(e)
                         p = ep[1]
                         trans = MDPTransition(v1, v2, e, s2.events, w*p)
                         mdp.addTransition(trans)
-                    elif s2.hasEvent(e) and dfa.transitions[q][e] == q2 and (q == q2) and (q not in dfa.final_states):
+                    elif s2.has_event(e) and dfa.transitions[q][e] == q2 and (q == q2) and (q not in dfa.final_states):
                         ep = s2.getEventPair(e)
                         p = ep[1]
                         trans = MDPTransition(v1, v2, e, s2.events, w)
                         mdp.addTransition(trans)                        
-                    elif s2.hasEvent(e) and q == q2 and (q not in dfa.final_states):
+                    elif s2.has_event(e) and q == q2 and (q not in dfa.final_states):
                         ep = s2.getEventPair(e)
                         p = ep[1]
                         if w*(1-p)>0:
                             trans = MDPTransition(v1, v2, e, s2.events, w*(1-p))
                             mdp.addTransition(trans)
-                    elif (not s2.hasEvent(e)) and q == q2 and (q not in dfa.final_states):
+                    elif (not s2.has_event(e)) and q == q2 and (q not in dfa.final_states):
                         trans = MDPTransition(v1, v2, e, s2.events, w)
                         mdp.addTransition(trans)
                     
@@ -730,7 +730,7 @@ class EventPredictor2:
             s2 = self.markovChain.nextState(s)
             
             q_previous = q
-            if s2.hasEvent(predictedEvent):
+            if s2.has_event(predictedEvent):
                 q = self.dfa.transitions[q][predictedEvent]
                 if q != q_previous:
                     story += predictedEvent
@@ -791,7 +791,7 @@ class EventPredictor2:
             s2 = self.markovChain.nextState(s)
             
             q_previous = q
-            if s2.hasEvent(predictedEvent):
+            if s2.has_event(predictedEvent):
                 q = self.dfa.transitions[q][predictedEvent]
                 if q != q_previous:
                     story += predictedEvent

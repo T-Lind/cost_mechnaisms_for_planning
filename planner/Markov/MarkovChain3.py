@@ -166,14 +166,14 @@ class MarkovChain3:
     def getSuccessorsHavingEvent(self, state, event):
         succ = set()
         for j in range(len(self.states)):
-            if self.transitionMatrix[state.index][j] > 0 and self.states[j].hasEvent(event):
+            if self.transitionMatrix[state.index][j] > 0 and self.states[j].has_event(event):
                 succ.add(self.states[j])
         return succ
     
     def getSuccessorsNotHavingEvent(self, state, event):
         succ = set()
         for j in range(len(self.states)):
-            if self.transitionMatrix[state.index][j] > 0 and not self.states[j].hasEvent(event):
+            if self.transitionMatrix[state.index][j] > 0 and not self.states[j].has_event(event):
                 succ.add(self.states[j])
         return succ
     

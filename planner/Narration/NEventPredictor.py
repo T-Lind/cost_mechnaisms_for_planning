@@ -196,23 +196,23 @@ class EventPredictor:
                 w = mc.getTransitionProbability(s, s2)
                 
                 for e in self.eventList:
-                    if s2.hasEvent(e) and dfa.transitions[q][e] == q2 and (q != q2) and (q not in dfa.final_states):
+                    if s2.has_event(e) and dfa.transitions[q][e] == q2 and (q != q2) and (q not in dfa.final_states):
                         ep = s2.getEventPair(e)
                         p = ep[1]
                         trans = MDPTransition(v1, v2, e, s2.events, w*p)
                         mdp.addTransition(trans)
-                    elif s2.hasEvent(e) and dfa.transitions[q][e] == q2 and (q == q2) and (q not in dfa.final_states):
+                    elif s2.has_event(e) and dfa.transitions[q][e] == q2 and (q == q2) and (q not in dfa.final_states):
                         ep = s2.getEventPair(e)
                         p = ep[1]
                         trans = MDPTransition(v1, v2, e, s2.events, w)
                         mdp.addTransition(trans)                        
-                    elif s2.hasEvent(e) and q == q2 and (q not in dfa.final_states):
+                    elif s2.has_event(e) and q == q2 and (q not in dfa.final_states):
                         ep = s2.getEventPair(e)
                         p = ep[1]
                         if w*(1-p)>0:
                             trans = MDPTransition(v1, v2, e, s2.events, w*(1-p))
                             mdp.addTransition(trans)
-                    elif not s2.hasEvent(e) and q == q2 and (q not in dfa.final_states):
+                    elif not s2.has_event(e) and q == q2 and (q not in dfa.final_states):
                         trans = MDPTransition(v1, v2, e, s2.events, w)
                         mdp.addTransition(trans)
                 
@@ -360,7 +360,7 @@ class EventPredictor:
                     if act_e in valid_evnts:
                         # print(q, act_e)
 
-                        if s2.hasEvent(act_e) and dfa.transitions[q][act_e] == q2 and (q != q2) and (q not in dfa.final_states):
+                        if s2.has_event(act_e) and dfa.transitions[q][act_e] == q2 and (q != q2) and (q not in dfa.final_states):
                             if cur_sty == st2:
                                 ep = s2.getEventPair(act_e)
                                 p = ep[1]
@@ -369,7 +369,7 @@ class EventPredictor:
                                     trans = MDPTransition(v1, v2, e_s, s2.events, w * p)
                                     mdp.addTransition(trans)
 
-                        elif s2.hasEvent(act_e) and dfa.transitions[q][act_e] == q2 and (q == q2) and (q not in dfa.final_states):
+                        elif s2.has_event(act_e) and dfa.transitions[q][act_e] == q2 and (q == q2) and (q not in dfa.final_states):
                             if cur_sty == st2:
                                 ep = s2.getEventPair(act_e)
                                 p = ep[1]
@@ -380,14 +380,14 @@ class EventPredictor:
                     #         p = ep[1]
                     #         trans = MDPTransition(v1, v2, e, s2.events, w * p)
                     #         mdp.addTransition(trans)
-                        elif s2.hasEvent(act_e) and q == q2 and (q not in dfa.final_states):
+                        elif s2.has_event(act_e) and q == q2 and (q not in dfa.final_states):
                             ep = s2.getEventPair(act_e)
                             p = ep[1]
                             # print(w * (1-p))
                             if w * (1 - p) > 0:
                                 trans = MDPTransition(v1, v2, e_s, s2.events, w * (1 - p))
                                 mdp.addTransition(trans)
-                        elif not s2.hasEvent(act_e) and q == q2 and (q not in dfa.final_states):
+                        elif not s2.has_event(act_e) and q == q2 and (q not in dfa.final_states):
                             # print(w)
                             trans = MDPTransition(v1, v2, e_s, s2.events, w)
                             mdp.addTransition(trans)
