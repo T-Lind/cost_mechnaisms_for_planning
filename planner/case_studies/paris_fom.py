@@ -3,10 +3,11 @@ Created on Aug 14, 2019
 
 @author: hazhar
 '''
-from Markov.MarkovChain import MarkovChain
-from Narration.EventPredictor import EventPredictor
+
 from automata.fa.dfa import DFA
 
+from planner.Markov.MarkovChain import MarkovChain
+from planner.Narration.EventPredictor import EventPredictor
 from planner.case_studies.case_study import CaseStudy
 
 """
