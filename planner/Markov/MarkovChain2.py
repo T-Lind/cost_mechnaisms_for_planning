@@ -48,7 +48,7 @@ class MarkovState2:
 
 class MarkovChain2:
     """
-    Parameter stateEvents is a collection of lists, where for each state 's' there is a list of pairs (e, p), in which 'e' is the event name and
+    Parameter state_events is a collection of lists, where for each state 's' there is a list of pairs (e, p), in which 'e' is the event name and
     'p' is the probability that event 'e' happens at state 's'  
     """
     def __init__(self, stateNames, stateEvents, transitionMatrix, initialDistribution, initialStateIndex=0, hasEvidence=False, evidenceList=[]):
@@ -79,7 +79,7 @@ class MarkovChain2:
             
     def setDefault_EvidenceDistribution(self, evidenceDistribution):
         for state in self.states:
-            state.evidenceDistribution = evidenceDistribution
+            state.evidence_distribution = evidenceDistribution
 
     def stateIndex(self, state):
         return self.states.index(state)
@@ -124,8 +124,8 @@ class MarkovChain2:
         if currentState == self.nullState:
             return numpy.random.choice(self.states, p=self.initialDistribution)
         #print("len(states)="+str(len(self.states)))
-        #print("len(self.transitionMatrix[currentState.index])="+str(len(self.transitionMatrix[currentState.index])))
-        #print("self.transitionMatrix[currentState.index]="+str(currentState.index))
+        #print("len(self.transition_matrix[current_state.index])="+str(len(self.transition_matrix[current_state.index])))
+        #print("self.transition_matrix[current_state.index]="+str(current_state.index))
         return numpy.random.choice(self.states, p=self.transitionMatrix[currentState.index]) 
         
     def getSuccessorsHavingEvent(self, state, event):

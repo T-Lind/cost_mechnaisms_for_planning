@@ -10,10 +10,10 @@ class MarkovState:
     # name = ""
     # events = set()
     # index = -1
-    def __init__(self, name="", events=set(), evidenceDistribution=[]):
+    def __init__(self, name="", events=set(), evidence_distribution=[]):
         self.name = name
         self.events = events
-        self.evidenceDistribution = evidenceDistribution
+        self.evidence_distribution = evidence_distribution
         self.index = -1
 
     def __str__(self):
@@ -28,106 +28,108 @@ class MarkovState:
 
 class MarkovChain:
 
-    def __init__(self, stateNames, stateEvents, transitionMatrix, initialDistribution, initialStateIndex=0,
-                 hasEvidence=False, evidenceList=[]):
+    def __init__(self, state_names, state_events, transition_matrix, initial_distribution, initial_state_index=0,
+                 has_evidence=False, evidence_list=None):
+        if evidence_list is None:
+            evidence_list = []
         self.states = []
-        self.stateNames = stateNames
-        self.stateEvents = stateEvents
-        self.initialStateIndex = initialStateIndex
-        self.__createStates(stateNames, stateEvents)
-        self.initialDistribution = initialDistribution
-        self.transitionMatrix = transitionMatrix
+        self.state_names = state_names
+        self.state_events = state_events
+        self.initial_state_index = initial_state_index
+        self.__create_states(state_names, state_events)
+        self.initial_distribution = initial_distribution
+        self.transition_matrix = transition_matrix
         self.events = set()
         for s in self.states:
             for e in s.events:
                 if not (e in self.events):
                     self.events.add(e)
-        self.initialState = self.states[initialStateIndex]
+        self.initialState = self.states[initial_state_index]
         self.nullState = MarkovState("none", "none")
-        self.hasEvidence = hasEvidence
-        self.evidenceList = evidenceList
+        self.has_evidence = has_evidence
+        self.evidence_list = evidence_list
 
-    def __createStates(self, stateNames, stateEvents):
+    def __create_states(self, state_names, state_events):
         self.states = []
 
         i = 0
 
-        for name in stateNames:
-            state = MarkovState(name, stateEvents[i])
+        for name in state_names:
+            state = MarkovState(name, state_events[i])
             state.index = len(self.states)
             self.states.append(state)
             i += 1
 
-    def setDefault_EvidenceDistribution(self, evidenceDistribution):
+    def setDefault_EvidenceDistribution(self, evidence_distribution):
         for state in self.states:
-            state.evidenceDistribution = evidenceDistribution
+            state.evidence_distribution = evidence_distribution
 
     def stateIndex(self, state):
         return self.states.index(state)
 
     def getInitialProbability(self, state):
-        return self.initialDistribution[state.index]
+        return self.initial_distribution[state.index]
 
-    def getTransitionProbability(self, srcState, dstState):
-        return self.transitionMatrix[srcState.index][dstState.index]
+    def getTransitionProbability(self, src_state, dstState):
+        return self.transition_matrix[src_state.index][dstState.index]
 
     def printAll(self):
         print("---------------------------------Markov Chain-------------------------------------")
         print(self.states)
-        print(self.transitionMatrix)
-        print(self.initialDistribution)
+        print(self.transition_matrix)
+        print(self.initial_distribution)
         print("----------------------------------------------------------------------------------")
 
     """
     Randomly raise an evidence based on the evidence distribution of the current state
     """
 
-    def pomdp_raiseEvidence(self, currentState):
-        # print("currentState.evidenceDistribution: "+str(currentState.evidenceDistribution))
-        return numpy.random.choice(self.evidenceList, p=currentState.evidenceDistribution)
+    def pomdp_raiseEvidence(self, current_state):
+        # print("current_state.evidence_distribution: "+str(current_state.evidence_distribution))
+        return numpy.random.choice(self.evidence_list, p=current_state.evidence_distribution)
 
-    def nextState(self, currentState):
-        if currentState == self.nullState:
-            return numpy.random.choice(self.states, p=self.initialDistribution)
+    def next_state(self, current_state):
+        if current_state == self.nullState:
+            return numpy.random.choice(self.states, p=self.initial_distribution)
         # print("len(states)="+str(len(self.states)))
-        # print("len(self.transitionMatrix[currentState.index])="+str(len(self.transitionMatrix[currentState.index])))
-        # print("self.transitionMatrix[currentState.index]="+str(currentState.index))
-        return numpy.random.choice(self.states, p=self.transitionMatrix[currentState.index])
+        # print("len(self.transition_matrix[current_state.index])="+str(len(self.transition_matrix[current_state.index])))
+        # print("self.transition_matrix[current_state.index]="+str(current_state.index))
+        return numpy.random.choice(self.states, p=self.transition_matrix[current_state.index])
 
-    def getSuccessorsHavingEvent(self, state, event):
+    def get_successors_having_event(self, state, event):
         succ = set()
         for j in range(len(self.states)):
-            if self.transitionMatrix[state.index][j] > 0 and (event in self.states[j].events):
+            if self.transition_matrix[state.index][j] > 0 and (event in self.states[j].events):
                 succ.add(self.states[j])
         return succ
 
-    def getSuccessorsNotHavingEvent(self, state, event):
+    def get_successors_not_having_event(self, state, event):
         succ = set()
         for j in range(len(self.states)):
-            if self.transitionMatrix[state.index][j] > 0 and not (event in self.states[j].events):
+            if self.transition_matrix[state.index][j] > 0 and not (event in self.states[j].events):
                 succ.add(self.states[j])
         return succ
 
-    def getSetSuccessorsHavingEvent(self, stateSet, event):
+    def get_set_successors_having_event(self, stateSet, event):
         succ = set()
         for state in stateSet:
-            scc = self.getSuccessorsHavingEvent(state, event)
+            scc = self.get_successors_having_event(state, event)
             for s in scc:
                 if not (s in succ):
                     succ.add(s)
         return succ
 
-    def getSetSuccessorsNotHavingEvent(self, stateSet, event):
+    def get_set_successors_not_having_event(self, stateSet, event):
         succ = set()
         for state in stateSet:
-            scc = self.getSuccessorsNotHavingEvent(state, event)
+            scc = self.get_successors_not_having_event(state, event)
             for s in scc:
                 if not (s in succ):
                     succ.add(s)
         return succ
 
     """
-    The probablity that the given event happens in the next time step given that the event model is currently in state currentState
+    The probablity that the given event happens in the next time step given that the event model is currently in state current_state
     """
 
     def possbilityOfHappeningInNextStep(self, currentState, event):
@@ -180,26 +182,26 @@ class MarkovChain:
 
     def getMarkovChain2(self):
         newStateEvents = []
-        for i in range(len(self.stateEvents)):
+        for i in range(len(self.state_events)):
             tples = []
-            for ev in self.stateEvents[i]:
+            for ev in self.state_events[i]:
                 tple = (ev, 1.0)
                 tples.append(tple)
             newStateEvents.append(tples)
-        markovChain2 = MarkovChain2(self.stateNames, newStateEvents, self.transitionMatrix, self.initialDistribution,
-                                    self.initialStateIndex, self.hasEvidence, self.evidenceList)
+        markovChain2 = MarkovChain2(self.state_names, newStateEvents, self.transition_matrix, self.initial_distribution,
+                                    self.initial_state_index, self.has_evidence, self.evidence_list)
         return markovChain2
 
     def convertMarkovChain3(self):
         newStateEvents = []
-        for i in range(len(self.stateEvents)):
+        for i in range(len(self.state_events)):
             tples = []
-            # for ev in self.stateEvents[i]:
+            # for ev in self.state_events[i]:
             #    tple = (ev, 1.0)
             #    tples.append(tple)
             newStateEvents.append(tples)
-        markovChain3 = MarkovChain3(self.stateNames, newStateEvents, self.transitionMatrix, self.initialDistribution,
-                                    self.initialStateIndex, self.hasEvidence, self.evidenceList)
+        markovChain3 = MarkovChain3(self.state_names, newStateEvents, self.transition_matrix, self.initial_distribution,
+                                    self.initial_state_index, self.has_evidence, self.evidence_list)
         return markovChain3
 
     def product_singleInitialState(self, markovChain, pairEventsList=[]):
@@ -229,7 +231,7 @@ class MarkovChain:
                     initialStateIndex = k
                 s1 = self.states[i]
                 s2 = markovChain.states[j]
-                initialDistribution.append(self.initialDistribution[i] * markovChain.initialDistribution[j])
+                initialDistribution.append(self.initial_distribution[i] * markovChain.initial_distribution[j])
                 stateName = s1.name + "_" + s2.name
                 stateNames.append(stateName)
                 eventSet = s1.events.union(s2.events)
@@ -261,7 +263,7 @@ class MarkovChain:
                 statePrime = prodStates[t]
                 s1prime = statePrime.anchor[0]
                 s2prime = statePrime.anchor[1]
-                p = self.transitionMatrix[s1.index][s1prime.index] * markovChain.transitionMatrix[s2.index][
+                p = self.transition_matrix[s1.index][s1prime.index] * markovChain.transition_matrix[s2.index][
                     s2prime.index]
                 transitionMatrix[k][t] = p
 
@@ -273,7 +275,7 @@ class MarkovChain:
         s1prime = statePrime.anchor[0]
         s2prime = statePrime.anchor[1]
 
-        p = self.transitionMatrix[s1.index][s1prime.index] * markovChain.transitionMatrix[s2.index][s2prime.index]
+        p = self.transition_matrix[s1.index][s1prime.index] * markovChain.transition_matrix[s2.index][s2prime.index]
 
         prodMC = MarkovChain(stateNames, stateEvents, transitionMatrix, initialDistribution, initialStateIndex)
 
@@ -294,7 +296,7 @@ class MarkovChain:
             for j in range(len(markovChain.states)):
                 s1 = self.states[i]
                 s2 = markovChain.states[j]
-                # initialDistribution.append(self.initialDistribution[i]*markovChain.initialDistribution[j])
+                # initial_distribution.append(self.initial_distribution[i]*markovChain.initial_distribution[j])
                 stateName = s1.name + "_" + s2.name
                 stateNames.append(stateName)
                 eventSet = s1.events.union(s2.events)
@@ -324,7 +326,7 @@ class MarkovChain:
                 statePrime = prodStates[t]
                 s1prime = statePrime.anchor[0]
                 s2prime = statePrime.anchor[1]
-                p = self.transitionMatrix[s1.index][s1prime.index] * markovChain.transitionMatrix[s2.index][
+                p = self.transition_matrix[s1.index][s1prime.index] * markovChain.transition_matrix[s2.index][
                     s2prime.index]
                 transitionMatrix[k][t] = p
 
@@ -336,7 +338,7 @@ class MarkovChain:
         s1prime = statePrime.anchor[0]
         s2prime = statePrime.anchor[1]
 
-        p = self.transitionMatrix[s1.index][s1prime.index] * markovChain.transitionMatrix[s2.index][s2prime.index]
+        p = self.transition_matrix[s1.index][s1prime.index] * markovChain.transition_matrix[s2.index][s2prime.index]
 
         prodMC = MarkovChain(stateNames, stateEvents, transitionMatrix, initialDistribution)
 

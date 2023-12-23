@@ -218,7 +218,7 @@ class EventPredictor3:
         t0 = (dfa.initial_state, mc.initialState, ts.initial_state, ft.initial_state)
         x0 = MDPState(dfa.initial_state+"_"+mc.initialState.name +"_"+ ts.initial_state +"_"+ ft.initial_state, t0)
         x0.weightBVector = ft.output_function[ft.initial_state]
-        #v0.evidenceDistribution = mc.initialState.evidenceDistribution
+        #v0.evidence_distribution = mc.initialState.evidence_distribution
         #q0 = dfa.initial_state
         x0.isInitial = True
         mdp.addState(x0)
@@ -800,7 +800,7 @@ class EventPredictor3:
             #    print("q="+q+", s="+s.name) 
             #location, predictedEvent = policy[q][s.name][w.name]
             location, predictedEvent = policy[mdp_state] 
-            s2 = self.markovChain.nextState(s)
+            s2 = self.markovChain.next_state(s)
             occuredEvents = s2.occurEvents(location)
             
             occured = False
@@ -850,7 +850,7 @@ class EventPredictor3:
             eventLisToPredict = AU.getNonSelfLoopLetters(self.dfa, q)
             
             predictedEvent = self.markovChain.getNexTimeMostPlausibleEvent(eventLisToPredict, s) 
-            s2 = self.markovChain.nextState(s)
+            s2 = self.markovChain.next_state(s)
             
             q_previous = q
             if predictedEvent in s2.events:
@@ -870,19 +870,19 @@ class EventPredictor3:
         story = ""
         sts = set()
         for i in range(len(self.markovChain.states)):
-            if self.markovChain.initialDistribution[i]>0:
+            if self.markovChain.initial_distribution[i]>0:
                 sts.add(self.markovChain.states[i])
         q = self.dfa.initial_state
         q_previous = q
         i = 1
-        s = self.markovChain.nextState(self.markovChain.nullState)
+        s = self.markovChain.next_state(self.markovChain.nullState)
         m = self.mdp.initialState
         while True:
             if q in self.dfa.final_states:
                 return (i-1, story)
 
             predictedEvent = policy[q][str(sts)] 
-            s2 = self.markovChain.nextState(s)
+            s2 = self.markovChain.next_state(s)
             
             q_previous = q
             if s2.has_event(predictedEvent):

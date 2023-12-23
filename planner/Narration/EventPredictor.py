@@ -62,7 +62,7 @@ class EventPredictor:
         Create transitions from the initial state of the MDP, which is (q0, _)
         """
         for i in range(0, len(mc.states)):
-            if mc.initialDistribution[i] == 0:
+            if mc.initial_distribution[i] == 0:
                 continue
             s = mc.states[i]
             evs = s.events
@@ -124,8 +124,8 @@ class EventPredictor:
         dfa = self.dfa
         mc = self.markovChain
         mdp = MDP()
-        mdp.hasEvidence = mc.hasEvidence
-        mdp.evidenceList = mc.evidenceList
+        mdp.hasEvidence = mc.has_evidence
+        mdp.evidenceList = mc.evidence_list
         self.mdp = mdp
 
         mdp.actions = self.eventList
@@ -135,7 +135,7 @@ class EventPredictor:
         """
         t0 = (dfa.initial_state, mc.initialState)
         v0 = MDPState(dfa.initial_state + "_" + mc.initialState.name, t0)
-        v0.evidenceDistribution = mc.initialState.evidenceDistribution
+        v0.evidenceDistribution = mc.initialState.evidence_distribution
         q0 = dfa.initial_state
         v0.isInitial = True
         mdp.addState(v0)
@@ -151,7 +151,7 @@ class EventPredictor:
                     continue
                 t = (q, s)
                 v = MDPState(q + "_" + s.name, t)
-                v.evidenceDistribution = s.evidenceDistribution
+                v.evidenceDistribution = s.evidence_distribution
                 mdp.addState(v)
                 if q in dfa.final_states:
                     v.isGoal = True
@@ -211,7 +211,7 @@ class EventPredictor:
         self.mdp.removeUnReachableStates()
         self.mdp.computeStatesAvailableActions()
 
-        # if mdp.hasEvidence:
+        # if mdp.has_evidence:
         mdp.makeObservationFunction()
 
         if self.verbose == True:
@@ -224,8 +224,8 @@ class EventPredictor:
         dfa = self.dfa
         mc = self.markovChain
         mdp = MDP()
-        mdp.hasEvidence = mc.hasEvidence
-        mdp.evidenceList = mc.evidenceList
+        mdp.hasEvidence = mc.has_evidence
+        mdp.evidenceList = mc.evidence_list
         self.mdp = mdp
 
         mdp.actions = self.eventList
@@ -235,7 +235,7 @@ class EventPredictor:
         """
         t0 = (dfa.initial_state, mc.initialState)
         v0 = MDPState(dfa.initial_state + "_" + mc.initialState.name, t0)
-        v0.evidenceDistribution = mc.initialState.evidenceDistribution
+        v0.evidenceDistribution = mc.initialState.evidence_distribution
         q0 = dfa.initial_state
         v0.isInitial = True
         mdp.addState(v0)
@@ -274,7 +274,7 @@ class EventPredictor:
                     else:
                         t2 = (q2, s2)
                         v2 = MDPState(v2Name, t2)
-                        v2.evidenceDistribution = s2.evidenceDistribution
+                        v2.evidenceDistribution = s2.evidence_distribution
                         mdp.addState(v2)
                         cnt += 1
                         if q2 in dfa.final_states:
@@ -296,7 +296,7 @@ class EventPredictor:
                     else:
                         t2 = (q, s2)
                         v2 = MDPState(v2Name, t2)
-                        v2.evidenceDistribution = s2.evidenceDistribution
+                        v2.evidenceDistribution = s2.evidence_distribution
                         mdp.addState(v2)
                         cnt += 1
                         if q in dfa.final_states:
@@ -381,7 +381,7 @@ class EventPredictor:
         """
         s0s = set()
         for i in range(len(mc.states)):
-            if mc.initialDistribution[i] > 0:
+            if mc.initial_distribution[i] > 0:
                 s0s.add(mc.states[i])
         t0 = (dfa.initial_state, s0s)
         v0 = MDPState(dfa.initial_state + "," + str(s0s), t0)
@@ -404,7 +404,7 @@ class EventPredictor:
                 ________________________________begin_________________________________________
                 Add from transition (v1, e, v2) where v2 is C_{e+}(v1)
                 """
-                sts2 = mc.getSetSuccessorsHavingEvent(sts1, e)
+                sts2 = mc.get_set_successors_having_event(sts1, e)
                 p1 = 0
                 p2 = 0
                 if len(sts2) != 0:
@@ -423,7 +423,7 @@ class EventPredictor:
                     p = 0
                     for s in sts1:
                         for s2 in sts2:
-                            p = p + mc.transitionMatrix[s.index][s2.index]
+                            p = p + mc.transition_matrix[s.index][s2.index]
                             # print("p1="+str(p)+", len(sts1)="+str(len(sts1)))
                     p = p / len(sts1)
                     p1 = p
@@ -444,7 +444,7 @@ class EventPredictor:
                 ________________________________begin_________________________________________
                 Add from transition (v1, e, v3) where v3 is C_{e-}(v1)
                 """
-                sts3 = mc.getSetSuccessorsNotHavingEvent(sts1, e)
+                sts3 = mc.get_set_successors_not_having_event(sts1, e)
                 if len(sts3) != 0:
                     t3 = (q1, sts3)
                     v3 = mdp.getStateByAnchor(t3)
@@ -460,7 +460,7 @@ class EventPredictor:
                     p = 0
                     for s in sts1:
                         for s3 in sts3:
-                            p = p + mc.transitionMatrix[s.index][s3.index]
+                            p = p + mc.transition_matrix[s.index][s3.index]
                             # print("p2="+str(p)+", len(sts1)="+str(len(sts1)))
                     p = p / len(sts1)
                     p2 = p
@@ -925,7 +925,7 @@ class EventPredictor:
             if (s.name in policy[q].keys()) == False:
                 print("q=" + q + ", s=" + s.name)
             predictedEvent = policy[q][s.name]
-            s2 = self.markovChain.nextState(s)
+            s2 = self.markovChain.next_state(s)
 
             q_previous = q
             if predictedEvent in s2.events:
@@ -960,7 +960,7 @@ class EventPredictor:
             if (s.name in policy[q].keys()) == False:
                 print("q=" + q + ", s=" + s.name)
 
-            s2 = self.markovChain.nextState(s)
+            s2 = self.markovChain.next_state(s)
 
             if q not in self.dfa.final_states:
                 steps += 1
@@ -1010,7 +1010,7 @@ class EventPredictor:
             eventLisToPredict = AU.getNonSelfLoopLetters(self.dfa, q)
 
             predictedEvent = self.markovChain.getNexTimeMostPlausibleEvent(eventLisToPredict, s)
-            s2 = self.markovChain.nextState(s)
+            s2 = self.markovChain.next_state(s)
 
             q_previous = q
             if predictedEvent in s2.events:
@@ -1060,7 +1060,7 @@ class EventPredictor:
 
             # print("beleif = "+str(b)+", predictedEvent="+predictedEvent)
 
-            s2 = self.markovChain.nextState(s)
+            s2 = self.markovChain.next_state(s)
 
             q_previous = q
 
@@ -1101,19 +1101,19 @@ class EventPredictor:
         story = ""
         sts = set()
         for i in range(len(self.markovChain.states)):
-            if self.markovChain.initialDistribution[i] > 0:
+            if self.markovChain.initial_distribution[i] > 0:
                 sts.add(self.markovChain.states[i])
         q = self.dfa.initial_state
         q_previous = q
         i = 1
-        s = self.markovChain.nextState(self.markovChain.nullState)
+        s = self.markovChain.next_state(self.markovChain.nullState)
         m = self.mdp.initialState
         while True:
             if q in self.dfa.final_states:
                 return (i - 1, story)
 
             predictedEvent = policy[q][str(sts)]
-            s2 = self.markovChain.nextState(s)
+            s2 = self.markovChain.next_state(s)
 
             q_previous = q
             if predictedEvent in s2.events:

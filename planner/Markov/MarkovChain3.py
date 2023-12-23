@@ -10,7 +10,7 @@ class MarkovState3:
     def __init__(self, name="", events=set()):
         self.name = name
         self.events = events
-        #self.evidenceDistribution = evidenceDistribution
+        #self.evidence_distribution = evidence_distribution
         self.index = -1
         
     def __str__(self):
@@ -66,7 +66,7 @@ class MarkovState3:
 
 class MarkovChain3:
     """
-    Parameter stateEvents is a collection of lists, where for each state 's' there is a list of pairs (e, w, p), in which 'e' is the event name, 'w' is the location name (state of transition system), and
+    Parameter state_events is a collection of lists, where for each state 's' there is a list of pairs (e, w, p), in which 'e' is the event name, 'w' is the location name (state of transition system), and
     'p' is the probability that event 'e' happens at state 's' and location 'w' 
     """
     def __init__(self, stateNames, stateEvents, transitionMatrix, initialDistribution, initialStateIndex=0, hasEvidence=False, evidenceList=[]):
@@ -97,7 +97,7 @@ class MarkovChain3:
             
     def setDefault_EvidenceDistribution(self, evidenceDistribution):
         for state in self.states:
-            state.evidenceDistribution = evidenceDistribution
+            state.evidence_distribution = evidenceDistribution
 
     def stateIndex(self, state):
         return self.states.index(state)
@@ -159,8 +159,8 @@ class MarkovChain3:
         if currentState == self.nullState:
             return numpy.random.choice(self.states, p=self.initialDistribution)
         #print("len(states)="+str(len(self.states)))
-        #print("len(self.transitionMatrix[currentState.index])="+str(len(self.transitionMatrix[currentState.index])))
-        #print("self.transitionMatrix[currentState.index]="+str(currentState.index))
+        #print("len(self.transition_matrix[current_state.index])="+str(len(self.transition_matrix[current_state.index])))
+        #print("self.transition_matrix[current_state.index]="+str(current_state.index))
         return numpy.random.choice(self.states, p=self.transitionMatrix[currentState.index]) 
         
     def getSuccessorsHavingEvent(self, state, event):

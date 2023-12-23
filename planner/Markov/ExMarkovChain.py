@@ -72,7 +72,7 @@ class ExMarkovState:
 
 class ExMarkovChain:
     """
-    Parameter stateEvents is a collection of lists, where for each state 's' there is a list of pairs (e, p), in which 'e' is the event name and
+    Parameter state_events is a collection of lists, where for each state 's' there is a list of pairs (e, p), in which 'e' is the event name and
     'p' is the probability that event 'e' happens at state 's'  
     """
 

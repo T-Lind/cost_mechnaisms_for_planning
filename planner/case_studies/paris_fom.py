@@ -38,17 +38,17 @@ class ParisFOM(CaseStudy):
 
         initial_distribution = [1, 0, 0, 0, 0, 0, 0, 0, 0]
         self.markov_chain = MarkovChain(state_names, state_events, transition_matrix, initial_distribution, 0)
-        self.markov_chain.hasEvidence = True
-        self.markov_chain.evidenceList = ["s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]
-        self.markov_chain.states[0].evidenceDistribution = [1, 0, 0, 0, 0, 0, 0, 0, 0]
-        self.markov_chain.states[1].evidenceDistribution = [0, 1, 0, 0, 0, 0, 0, 0, 0]
-        self.markov_chain.states[2].evidenceDistribution = [0, 0, 1, 0, 0, 0, 0, 0, 0]
-        self.markov_chain.states[3].evidenceDistribution = [0, 0, 0, 1, 0, 0, 0, 0, 0]
-        self.markov_chain.states[4].evidenceDistribution = [0, 0, 0, 0, 1, 0, 0, 0, 0]
-        self.markov_chain.states[5].evidenceDistribution = [0, 0, 0, 0, 0, 1, 0, 0, 0]
-        self.markov_chain.states[6].evidenceDistribution = [0, 0, 0, 0, 0, 0, 1, 0, 0]
-        self.markov_chain.states[7].evidenceDistribution = [0, 0, 0, 0, 0, 0, 0, 1, 0]
-        self.markov_chain.states[8].evidenceDistribution = [0, 0, 0, 0, 0, 0, 0, 0, 1]
+        self.markov_chain.has_evidence = True
+        self.markov_chain.evidence_list = ["s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]
+        self.markov_chain.states[0].evidence_distribution = [1, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.markov_chain.states[1].evidence_distribution = [0, 1, 0, 0, 0, 0, 0, 0, 0]
+        self.markov_chain.states[2].evidence_distribution = [0, 0, 1, 0, 0, 0, 0, 0, 0]
+        self.markov_chain.states[3].evidence_distribution = [0, 0, 0, 1, 0, 0, 0, 0, 0]
+        self.markov_chain.states[4].evidence_distribution = [0, 0, 0, 0, 1, 0, 0, 0, 0]
+        self.markov_chain.states[5].evidence_distribution = [0, 0, 0, 0, 0, 1, 0, 0, 0]
+        self.markov_chain.states[6].evidence_distribution = [0, 0, 0, 0, 0, 0, 1, 0, 0]
+        self.markov_chain.states[7].evidence_distribution = [0, 0, 0, 0, 0, 0, 0, 1, 0]
+        self.markov_chain.states[8].evidence_distribution = [0, 0, 0, 0, 0, 0, 0, 0, 1]
 
         self.alphabet_set = {"h", "k", "t", "c"}
         self.alphabet_list = ["h", "k", "t", "c"]

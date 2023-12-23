@@ -78,7 +78,7 @@ class MDPState:
         self.sumProbabilityTransitions += trans.probability
 
         # if self.sumProbabilityTransitions > 1:
-        # print("sum probability greater than 1: state="+trans.srcState.name+", prob="+str(self.sumProbabilityTransitions))
+        # print("sum probability greater than 1: state="+trans.src_state.name+", prob="+str(self.sumProbabilityTransitions))
 
         self.transitions.append(trans)
 
@@ -220,7 +220,7 @@ class MDP:
         self.statesDictByName = {}
 
         """
-        The property evidenceList contains only the original evidence and not the results of whether the prediction was right or not.
+        The property evidence_list contains only the original evidence and not the results of whether the prediction was right or not.
         We make new list of evidences here.  
         """
         self.evidenceTupleList = []
@@ -356,10 +356,10 @@ class MDP:
                         else:
                             self.observationFunction[o3][x][a] = 0
                             if a in s.events:
-                                self.observationFunction[o1][x][a] = s.evidenceDistribution[i]
+                                self.observationFunction[o1][x][a] = s.evidence_distribution[i]
                                 self.observationFunction[o2][x][a] = 0
                             else:
-                                self.observationFunction[o2][x][a] = s.evidenceDistribution[i]
+                                self.observationFunction[o2][x][a] = s.evidence_distribution[i]
                                 self.observationFunction[o1][x][a] = 0
         else:
             for x in self.states:
@@ -401,7 +401,7 @@ class MDP:
         #                 continue
         #             if t.action != action:
         #                 continue
-        #             total += beleifState[t.srcState.index]*t.probability
+        #             total += beleifState[t.src_state.index]*t.probability
         #         return total
         for srcState in self.states:
             total += beleifState[srcState.index] * self.conditionalProbability(dstState.index, srcState.index, action)
@@ -468,7 +468,7 @@ class MDP:
         #    print("Error. Transition has been added before")
         #    return
 
-        # if self.hasTransition(mdpTransition.srcState, mdpTransition.dstState, mdpTransition.action):
+        # if self.hasTransition(mdpTransition.src_state, mdpTransition.dstState, mdpTransition.action):
         #    return
 
         self.transitions.append(mdpTransition)
@@ -1204,7 +1204,7 @@ class MDP:
                 for j in range(len(self.evidenceList)):
                     st += "<Entry>" + "\n"
                     st += "<Instance>" + s.name + " " + self.evidenceList[j] + "</Instance>" + "\n"
-                    st += "<ProbTable>" + str(s.evidenceDistribution[j]) + "</ProbTable>" + "\n"
+                    st += "<ProbTable>" + str(s.evidence_distribution[j]) + "</ProbTable>" + "\n"
                     st += "</Entry>" + "\n"
 
             st += "</Parameter>" + "\n"
@@ -1396,10 +1396,10 @@ class MDP:
         st += "</ObsVar>" + "\n"
 
         """
-        if self.hasEvidence:
+        if self.has_evidence:
             st += "<ObsVar vname='evidence'>"+"\n"
             st += "<ValueEnum>"
-            for ev in self.evidenceList:
+            for ev in self.evidence_list:
                 st = st + ev + " " 
             st += "</ValueEnum>"+"\n"
             st += "</ObsVar>"+"\n"

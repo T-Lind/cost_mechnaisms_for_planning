@@ -29,8 +29,8 @@ class EventPredictor2:
         dfa = self.dfa
         mc = self.markovChain
         mdp = MDP()
-        mdp.hasEvidence = mc.hasEvidence
-        mdp.evidenceList = mc.evidenceList
+        mdp.has_evidence = mc.has_evidence
+        mdp.evidence_list = mc.evidence_list
         self.mdp = mdp
         
         mdp.actions = self.eventList
@@ -40,7 +40,7 @@ class EventPredictor2:
         """
         t0 = (dfa.initial_state, mc.initialState)
         v0 = MDPState(dfa.initial_state+"_"+mc.initialState.name, t0)
-        v0.evidenceDistribution = mc.initialState.evidenceDistribution
+        v0.evidence_distribution = mc.initialState.evidence_distribution
         q0 = dfa.initial_state
         v0.isInitial = True
         mdp.addState(v0)
@@ -56,7 +56,7 @@ class EventPredictor2:
                     continue
                 t = (q, s)
                 v = MDPState(q+"_"+s.name, t)
-                v.evidenceDistribution = s.evidenceDistribution
+                v.evidence_distribution = s.evidence_distribution
                 mdp.addState(v)
                 if q in dfa.final_states:
                     v.isGoal = True
@@ -146,8 +146,8 @@ class EventPredictor2:
         dfa = self.dfa
         mc = self.markovChain
         mdp = MDP()
-        mdp.hasEvidence = mc.hasEvidence
-        mdp.evidenceList = mc.evidenceList
+        mdp.has_evidence = mc.has_evidence
+        mdp.evidence_list = mc.evidence_list
         self.mdp = mdp
         
         mdp.actions = self.eventList
@@ -157,7 +157,7 @@ class EventPredictor2:
         """
         t0 = (dfa.initial_state, mc.initialState)
         v0 = MDPState(dfa.initial_state+"_"+mc.initialState.name, t0)
-        v0.evidenceDistribution = mc.initialState.evidenceDistribution
+        v0.evidence_distribution = mc.initialState.evidence_distribution
         q0 = dfa.initial_state
         v0.isInitial = True
         mdp.addState(v0)
@@ -209,7 +209,7 @@ class EventPredictor2:
                         else:
                             t2 = (q2, s2)
                             v2 = MDPState(v2Name, t2)
-                            v2.evidenceDistribution = s2.evidenceDistribution
+                            v2.evidence_distribution = s2.evidence_distribution
                             mdp.addState(v2)
                             cnt += 1
                             if q2 in dfa.final_states:
@@ -229,7 +229,7 @@ class EventPredictor2:
                         else:
                             t2 = (q2, s2)
                             v2 = MDPState(v2Name, t2)
-                            v2.evidenceDistribution = s2.evidenceDistribution
+                            v2.evidence_distribution = s2.evidence_distribution
                             mdp.addState(v2)
                             cnt += 1
                             if q2 in dfa.final_states:
@@ -262,7 +262,7 @@ class EventPredictor2:
                     else:
                         t2 = (q, s2)
                         v2 = MDPState(v2Name, t2)
-                        v2.evidenceDistribution = s2.evidenceDistribution
+                        v2.evidence_distribution = s2.evidence_distribution
                         mdp.addState(v2)
                         cnt += 1
                         if q in dfa.final_states:
@@ -727,7 +727,7 @@ class EventPredictor2:
             if (s.name in policy[q].keys()) == False:
                 print("q="+q+", s="+s.name) 
             predictedEvent = policy[q][s.name] 
-            s2 = self.markovChain.nextState(s)
+            s2 = self.markovChain.next_state(s)
             
             q_previous = q
             if s2.has_event(predictedEvent):
@@ -756,7 +756,7 @@ class EventPredictor2:
             eventLisToPredict = AU.getNonSelfLoopLetters(self.dfa, q)
             
             predictedEvent = self.markovChain.getNexTimeMostPlausibleEvent(eventLisToPredict, s) 
-            s2 = self.markovChain.nextState(s)
+            s2 = self.markovChain.next_state(s)
             
             q_previous = q
             if predictedEvent in s2.events:
@@ -776,19 +776,19 @@ class EventPredictor2:
         story = ""
         sts = set()
         for i in range(len(self.markovChain.states)):
-            if self.markovChain.initialDistribution[i]>0:
+            if self.markovChain.initial_distribution[i]>0:
                 sts.add(self.markovChain.states[i])
         q = self.dfa.initial_state
         q_previous = q
         i = 1
-        s = self.markovChain.nextState(self.markovChain.nullState)
+        s = self.markovChain.next_state(self.markovChain.nullState)
         m = self.mdp.initialState
         while True:
             if q in self.dfa.final_states:
                 return (i-1, story)
 
             predictedEvent = policy[q][str(sts)] 
-            s2 = self.markovChain.nextState(s)
+            s2 = self.markovChain.next_state(s)
             
             q_previous = q
             if s2.has_event(predictedEvent):

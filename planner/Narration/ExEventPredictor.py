@@ -235,7 +235,7 @@ class ExEventPredictor:
                 for v2 in mdp.states:
                     trans = []
                     for t in mdp.transitions:
-                        if t.srcState == v1 and t.dstState == v2 and t.action == a:
+                        if t.src_state == v1 and t.dstState == v2 and t.action == a:
                             trans.append(t)
                     if len(trans)>0:
                         s = 0 
@@ -243,7 +243,7 @@ class ExEventPredictor:
                         while i < len(trans):
                             s += trans[i].probability
                             mdp.transitions.remove(trans[i])
-                            t.srcState.transitions.remove(trans[i])
+                            t.src_state.transitions.remove(trans[i])
                         trans[0].probability += s
         """
         
@@ -313,7 +313,7 @@ class ExEventPredictor:
             
             #print("bestAction="+node.bestActionToMaxExpectedToGoal)
             
-            s2 = self.exMarkovChain.nextState(s)
+            s2 = self.exMarkovChain.next_state(s)
             
             occuredEvents = s2.simulate_events_occurring()
             
