@@ -33,7 +33,7 @@ class ExEventPredictor:
         t0 = (dfa.initial_state, mc.initialState, False)
         v0 = MDPState(dfa.initial_state+"_"+mc.initialState.name+"_False", t0)
         q0 = dfa.initial_state
-        v0.isInitial = True
+        v0.is_initial = True
         mdp.addState(v0)
         mdp.initialState = v0
         
@@ -51,7 +51,7 @@ class ExEventPredictor:
                     v = MDPState(q+"_"+s.name+"_"+str(ob), t)
                     mdp.addState(v)
                     if q in dfa.final_states:
-                        v.isGoal = True
+                        v.is_goal = True
                         mdp.setAsGoal(v)
                 
         
@@ -160,7 +160,7 @@ class ExEventPredictor:
         t0 = (dfa.initial_state, mc.initialState)
         v0 = MDPState(dfa.initial_state+"_"+mc.initialState.name, t0)
         q0 = dfa.initial_state
-        v0.isInitial = True
+        v0.is_initial = True
         mdp.addState(v0)
         mdp.initialState = v0
         
@@ -176,7 +176,7 @@ class ExEventPredictor:
                 v = MDPState(q+"_"+s.name, t)
                 mdp.addState(v)
                 if q in dfa.final_states:
-                    v.isGoal = True
+                    v.is_goal = True
                     mdp.setAsGoal(v)
                 
         
@@ -282,7 +282,7 @@ class ExEventPredictor:
     
     
     def optimalPolicyToMaximizeProbOfGoals(self, H, printPolicy):
-        self.mdp.makeBeliefTree(H)
+        self.mdp.make_belief_tree(H)
         
         self.beliefTree = self.mdp.beliefTree
         
@@ -366,7 +366,7 @@ class ExEventPredictor:
         A = ["" for j in range(n)]
         
         for j in range(n):
-            if (self.mdp.states[j].isGoal):
+            if (self.mdp.states[j].is_goal):
                 G[j][0] = 1
                 G[j][1] = 1
         
@@ -396,7 +396,7 @@ class ExEventPredictor:
                     
                     for k in range(n):
                         reward = 0
-                        if state.isGoal:
+                        if state.is_goal:
                             reward = 1
                         term = self.mdp.conditionalProbability(k, j, action)*(G[k][1])
                         val += term

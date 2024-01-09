@@ -19,21 +19,33 @@ class ParisFOM(CaseStudy):
 
     def __init__(self):
         self.verbose = False
-        self.copmutedPolicy = None
+        self.computed_policy = None
         self.ep = None
+
+        self.cost_matrix = [
+            [0, 1, 2, 3, 4, 5, 6, 7, 8],
+            [1, 0, 1, 2, 3, 4, 5, 6, 7],
+            [2, 1, 0, 1, 2, 3, 4, 5, 6],
+            [3, 2, 1, 0, 1, 2, 3, 4, 5],
+            [4, 3, 2, 1, 0, 1, 2, 3, 4],
+            [5, 4, 3, 2, 1, 0, 1, 2, 3],
+            [6, 5, 4, 3, 2, 1, 0, 1, 2],
+            [7, 6, 5, 4, 3, 2, 1, 0, 1],
+            [8, 7, 6, 5, 4, 3, 2, 1, 0]
+        ]
 
     def make_event_predictor(self):
         state_names = ["s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]
 
         state_events = [set(), set(), set(["h"]), set(["k"]), set(), set(), set(["t"]), set(["c"]), set()]
-        transition_matrix = [[0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                             [0.0, 0.25, 0.25, 0.25, 0.0, 0.0, 0.0, 0.0, 0.25],
-                             [0.0, 0.25, 0.25, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0],
-                             [0.0, 0.25, 0.0, 0.25, 0.5, 0.0, 0.0, 0.0, 0.0],
-                             [0.0, 0.0, 0.0, 0.25, 0.25, 0.5, 0.0, 0.0, 0.0],
-                             [0.0, 0.0, 0.0, 0.0, 0.25, 0.25, 0.2, 0.3, 0.0],
-                             [0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.25, 0.0, 0.5],
-                             [0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.25, 0.5],
+        transition_matrix = [[0.00, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                             [0.00, 0.25, 0.25, 0.25, 0.0, 0.0, 0.0, 0.0, 0.25],
+                             [0.00, 0.25, 0.25, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0],
+                             [0.00, 0.25, 0.0, 0.25, 0.5, 0.0, 0.0, 0.0, 0.0],
+                             [0.00, 0.0, 0.0, 0.25, 0.25, 0.5, 0.0, 0.0, 0.0],
+                             [0.00, 0.0, 0.0, 0.0, 0.25, 0.25, 0.2, 0.3, 0.0],
+                             [0.00, 0.0, 0.0, 0.0, 0.0, 0.25, 0.25, 0.0, 0.5],
+                             [0.00, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.25, 0.5],
                              [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.3, 0.25]]
 
         initial_distribution = [1, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -115,8 +127,8 @@ class ParisFOM(CaseStudy):
 
     def compute_optimal_policy(self):
         self.make_event_predictor()
-        self.copmutedPolicy = self.ep.optimalPolicyInfiniteHorizon(0.001, True)
-        return self.copmutedPolicy
+        self.computed_policy = self.ep.optimal_policy_infinite_horizon(0.001, True)
+        return self.computed_policy
 
     def make_pomdpx_file(self, filePath):
         if self.ep is None:
@@ -125,17 +137,18 @@ class ParisFOM(CaseStudy):
         print("POMDPX file created in path '" + filePath + "'")
 
     def simulate(self, show_results=True):
-        if self.copmutedPolicy is None:
+
+        if self.computed_policy is None:
             self.compute_optimal_policy()
-        tple = self.copmutedPolicy
+        tple = self.computed_policy
         policy = tple[0]
         expc = tple[2]
-        tple2 = self.ep.simulate(policy, True)
+        tple2 = self.ep.simulate(policy, True, cost_matrix=self.cost_matrix)
         avg = tple2[0]
         if show_results:
-            print("expc=" + str(expc) + ", avg=" + str(avg) + ", recorded=" + tple2[1])
+            print("expc=" + str(expc) + ", avg=" + str(avg) + ", recorded=" + tple2[1], "cost=" + str(tple2[2]))
         # return expc, avg, tple2[1], tple[3]  # changed to this
-        return {"expected": expc, "average": avg, "story": tple2[1], "computation_time": tple[3]}
+        return {"expected": expc, "average": avg, "story": tple2[1], "computation_time": tple[3], "cost": tple2[2]}
 
     def simulate_greedy_algorithm(self, show_results=True):
         if self.ep is None:
@@ -148,9 +161,9 @@ class ParisFOM(CaseStudy):
         return avg, tple2[1]
 
     def simulate_general_and_greedy_algorithms(self, show_results=True):
-        if self.copmutedPolicy == None:
+        if self.computed_policy == None:
             self.compute_optimal_policy()
-        tple = self.copmutedPolicy
+        tple = self.computed_policy
         policy = tple[0]
         expc = tple[2]
         tple2 = self.ep.simulate_general_and_greedy_algorithms(policy, False)
@@ -222,7 +235,7 @@ class ParisFOM(CaseStudy):
                   initial_state=initial_state, final_states=final_states)
 
         ep = EventPredictor(dfa, self.markov_chain, self.alphabet_set, self.verbose, False)
-        tple = ep.optimalPolicyInfiniteHorizon(0.01, True)
+        tple = ep.optimal_policy_infinite_horizon(0.01, True)
         policy = tple[0]
         expc = tple[2]
         tple2 = ep.simulate(policy, True)

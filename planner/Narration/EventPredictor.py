@@ -15,7 +15,7 @@ class EventPredictor:
         self.eventList = eventList
         self.verbose = verbose
         self.mdp = None
-        self.currentMarkovStateVisibile = currentMarkovStateVisibile
+        self.current_markov_state_visible = currentMarkovStateVisibile
         if currentMarkovStateVisibile == True:
             # self.__createProductAutomaton_singleInitialState()
             self.__createProductAutomaton_singleInitialState_onlyreachables()
@@ -41,7 +41,7 @@ class EventPredictor:
         t0 = (dfa.initial_state, mc.nullState)
         v0 = MDPState(dfa.initial_state + "," + "_" + mc.initialState.name, t0)
         q0 = dfa.initial_state
-        v0.isInitial = True
+        v0.is_initial = True
         mdp.addState(v0)
         mdp.initialState = v0
 
@@ -55,7 +55,7 @@ class EventPredictor:
                 v = MDPState(q + "_" + s.name, t)
                 mdp.addState(v)
                 if q in dfa.final_states:
-                    v.isGoal = True
+                    v.is_goal = True
                     mdp.setAsGoal(v)
 
         """
@@ -135,9 +135,9 @@ class EventPredictor:
         """
         t0 = (dfa.initial_state, mc.initialState)
         v0 = MDPState(dfa.initial_state + "_" + mc.initialState.name, t0)
-        v0.evidenceDistribution = mc.initialState.evidence_distribution
+        v0.evidence_distr = mc.initialState.evidence_distribution
         q0 = dfa.initial_state
-        v0.isInitial = True
+        v0.is_initial = True
         mdp.addState(v0)
         mdp.initialState = v0
 
@@ -151,10 +151,10 @@ class EventPredictor:
                     continue
                 t = (q, s)
                 v = MDPState(q + "_" + s.name, t)
-                v.evidenceDistribution = s.evidence_distribution
+                v.evidence_distr = s.evidence_distribution
                 mdp.addState(v)
                 if q in dfa.final_states:
-                    v.isGoal = True
+                    v.is_goal = True
                     mdp.setAsGoal(v)
 
         selfLoopAdded = {}
@@ -235,9 +235,9 @@ class EventPredictor:
         """
         t0 = (dfa.initial_state, mc.initialState)
         v0 = MDPState(dfa.initial_state + "_" + mc.initialState.name, t0)
-        v0.evidenceDistribution = mc.initialState.evidence_distribution
+        v0.evidence_distr = mc.initialState.evidence_distribution
         q0 = dfa.initial_state
-        v0.isInitial = True
+        v0.is_initial = True
         mdp.addState(v0)
         mdp.initialState = v0
 
@@ -274,11 +274,11 @@ class EventPredictor:
                     else:
                         t2 = (q2, s2)
                         v2 = MDPState(v2Name, t2)
-                        v2.evidenceDistribution = s2.evidence_distribution
+                        v2.evidence_distr = s2.evidence_distribution
                         mdp.addState(v2)
                         cnt += 1
                         if q2 in dfa.final_states:
-                            v2.isGoal = True
+                            v2.is_goal = True
                             mdp.setAsGoal(v2)
                     if v2Name not in queueNames and v2wasInMDP == False:
                         queue.append(v2)
@@ -296,11 +296,11 @@ class EventPredictor:
                     else:
                         t2 = (q, s2)
                         v2 = MDPState(v2Name, t2)
-                        v2.evidenceDistribution = s2.evidence_distribution
+                        v2.evidence_distr = s2.evidence_distribution
                         mdp.addState(v2)
                         cnt += 1
                         if q in dfa.final_states:
-                            v2.isGoal = True
+                            v2.is_goal = True
                             mdp.setAsGoal(v2)
                     if v2Name not in queueNames and v2wasInMDP == False:
                         queue.append(v2)
@@ -385,7 +385,7 @@ class EventPredictor:
                 s0s.add(mc.states[i])
         t0 = (dfa.initial_state, s0s)
         v0 = MDPState(dfa.initial_state + "," + str(s0s), t0)
-        v0.isInitial = True
+        v0.is_initial = True
         mdp.addState(v0)
         mdp.initialState = v0
 
@@ -488,7 +488,7 @@ class EventPredictor:
         A = [["" for j in range(n)] for i in range(F + 1)]
 
         for j in range(n):
-            if (self.mdp.states[j].isGoal):
+            if (self.mdp.states[j].is_goal):
                 G[F][j] = 0.0
                 A[F][j] = "STOP"
             else:
@@ -497,7 +497,7 @@ class EventPredictor:
         for i in range(F - 1, -1, -1):
             # print(i)
             for j in range(n):
-                if self.mdp.states[j].isGoal == True:
+                if self.mdp.states[j].is_goal == True:
                     A[i][j] = "STOP"
                     G[i][j] = 0.0
                     continue
@@ -508,7 +508,7 @@ class EventPredictor:
 
                 for action in self.eventList:
                     val = 0.0
-                    if state.isGoal == False:
+                    if state.is_goal == False:
                         val += 1
                     for k in range(n):
                         term = G[i + 1][k] * self.mdp.conditionalProbability(k, j, action)
@@ -519,14 +519,14 @@ class EventPredictor:
                 G[i][j] = minVal
                 A[i][j] = optAction
 
-        optPolicy = {}
+        opt_policy = {}
         for q in self.dfa.states:
-            optPolicy[q] = {}
+            opt_policy[q] = {}
 
         print("mdp.initialState=[" + self.mdp.initialState.anchor[0] + "," + self.mdp.initialState.anchor[1].name + "]")
 
         for j in range(n):
-            optPolicy[self.mdp.states[j].anchor[0]][self.mdp.states[j].anchor[1]] = A[0][j]
+            opt_policy[self.mdp.states[j].anchor[0]][self.mdp.states[j].anchor[1]] = A[0][j]
             if printPolicy == True:
                 print("\pi(" + self.mdp.states[j].anchor[0] + "," + self.mdp.states[j].anchor[1].name + ")=" + A[0][j])
                 print(
@@ -536,9 +536,10 @@ class EventPredictor:
             print("optimal policy for finite horizon has been computed")
 
         # return G[0][self.mdp.initialState.index]
-        return (optPolicy, G, G[0][self.mdp.initialState.index])
+        return opt_policy, G, G[0][self.mdp.initialState.index]
 
-    def optimalPolicyInfiniteHorizon(self, epsilonOfConvergance=0.01, printPolicy=True, computeAvoidableActions=False):
+    def optimal_policy_infinite_horizon(self, epsilonOfConvergance=0.01, printPolicy=True,
+                                        computeAvoidableActions=False):
         if self.verbose == True:
             print("------computing optimal policy for finite horizon--------------")
         n = len(self.mdp.states)
@@ -553,7 +554,7 @@ class EventPredictor:
         A = ["" for j in range(n)]
 
         for j in range(n):
-            if (self.mdp.states[j].isGoal):
+            if (self.mdp.states[j].is_goal):
                 G[j][0] = 0.0
                 G[j][1] = 0.0
                 A[j] = "STOP"
@@ -573,15 +574,10 @@ class EventPredictor:
 
             print("dif=" + str(dif))
 
-            # print("r="+str(r))
-
-            # if numIterations > 1000:
-            # break
-
             maxDif = 0
 
             for j in range(n):
-                if self.mdp.states[j].isGoal == True:
+                if self.mdp.states[j].is_goal == True:
                     continue
 
                 if self.mdp.states[j].reachable == False:
@@ -594,16 +590,12 @@ class EventPredictor:
                 optAction = ""
                 state = self.mdp.states[j]
 
-                # print("r="+str(r))
-
-                # for action in self.eventList:
-                # print("#Available actions for "+str(state)+": "+str(len(state.availableActions)))
                 for action in state.availableActions:
                     if computeAvoidableActions:
                         if action in state.avoidActions:
                             continue
                     val = 0.0
-                    if state.isGoal == False:
+                    if state.is_goal == False:
                         val += 1
                     # for k in range(n):
                     #    term = G[k][1]*self.mdp.conditionalProbability(k, j, action)
@@ -649,298 +641,52 @@ class EventPredictor:
 
         time_elapsed = (time.time() - time_start)
 
-        # return G[0][self.mdp.initialState.index]
         return (optPolicy, G, G[0][self.mdp.initialState.index], time_elapsed)
 
-    def optimalPolicyInfiniteHorizonForLayeredDAG(self, epsilonOfConvergance, printPolicy,
-                                                  computeAvoidableActions=False):
-        if self.verbose == True:
-            print("------computing optimal policy for finite horizon--------------")
-        n = len(self.mdp.states)
-
-        # for state in self.mdp.states:
-        # state.computeAvailableActions()
-
-        if computeAvoidableActions == True:
-            if self.mdp.availableActionsComputed == False:
-                self.mdp.computeAvoidableActions()
-
-        G = [[0.0 for j in [0, 1]] for i in range(n)]
-        A = ["" for j in range(n)]
-
-        for j in range(n):
-            if (self.mdp.states[j].isGoal):
-                G[j][0] = 0.0
-                G[j][1] = 0.0
-                A[j] = "STOP"
-
-        if computeAvoidableActions == True:
-            for j in range(n):
-                if self.mdp.states[j].aGoalIsReachable == False:
-                    G[j][0] = G[j][1] = float("inf")
-                    A[j] = "DeadEnd"
-                    print("Set optimal action for dead end state " + self.mdp.states[j].name)
-
-        dif = float_info.max
-
-        numIterations = 0
-
-        r = 0
-
-        time_start = time.time()
-
-        if self.mdp.initialSCC == None:
-            self.mdp.decomposeToStrngConnComponents()
-            self.mdp.computeSCCTopologicalOrder()
-
-        for scc in self.mdp.sccTopologicalOrder:
-            dif = float("inf")
-            if len(scc.states) == 0:
-                continue
-            if scc.states[0].isGoal:
-                continue
-            firstTimeComputeDif = True
-            # print("Start Computing Optimal Policy for states within SCC "+scc.name)
-            while dif > epsilonOfConvergance:
-                numIterations += 1
-                maxDif = 0
-                for state in scc.states:
-                    if state.isGoal == True:
-                        continue
-
-                    if state.reachable == False:
-                        continue
-
-                    if computeAvoidableActions == True and state.aGoalIsReachable == False:
-                        A[j] = "DeadEnd"
-                        G[j][0] = G[j][1] = float("inf")
-                        continue
-
-                    minVal = float_info.max
-                    optAction = ""
-
-                    if len(state.availableActions) == 0:
-                        print("Number of available actions of state " + str(state) + " is " + str(
-                            len(state.availableActions)))
-
-                    for action in state.availableActions:
-                        if computeAvoidableActions == True:
-                            if action in state.avoidActions:
-                                continue
-
-                        val = 0.0
-
-                        if state.isGoal == False:
-                            val += 1
-                        for tran in state.actionsTransitions[action]:
-                            # term = G[tran.dstState.index][1]*self.mdp.conditionalProbability(tran.dstState.index, state.index, action)
-                            term = G[tran.dstState.index][1] * tran.probability
-                            val += term
-                        # r += 1
-                        # print("r="+str(r))
-                        if val < minVal:
-                            minVal = val
-                            optAction = action
-
-                            # if minVal-G[j][0] > maxDif:
-                    # maxDif = minVal-G[j][0]
-
-                    maxDif = max(maxDif, minVal - G[state.index][0])
-
-                    if state == scc.Leader:
-                        dif = minVal - G[state.index][0]
-
-                    G[state.index][0] = minVal
-                    A[state.index] = optAction
-
-                for s in scc.states:
-                    G[s.index][1] = G[s.index][0]
-                dif = maxDif
-                print("numIterations=" + str(numIterations) + ", dif = " + str(dif))
-            print("Optimal Policy for states within SCC " + scc.name + " was computed")
-
-        optPolicy = {}
-        for q in self.dfa.states:
-            optPolicy[q] = {}
-
-        for j in range(n):
-            optPolicy[self.mdp.states[j].anchor[0]][str(self.mdp.states[j].anchor[1])] = A[j]
-            if printPolicy == True:
-                print("\pi(" + self.mdp.states[j].anchor[0] + "," + str(self.mdp.states[j].anchor[1]) + ")=" + A[j])
-                print(
-                    "M(" + self.mdp.states[j].anchor[0] + "," + str(self.mdp.states[j].anchor[1]) + ")=" + str(G[j][0]))
-
-        if self.verbose == True:
-            print("optimal policy for infinite horizon has been computed in " + str(numIterations) + " iterations")
-            print("Initial state is: " + str(self.mdp.initialState.name))
-
-        time_elapsed = (time.time() - time_start)
-
-        # return G[0][self.mdp.initialState.index]
-        return (optPolicy, G, G[0][self.mdp.initialState.index], time_elapsed)
-
-    def optimalPolicyInfiniteHorizon_Only4ReachableStates(self, epsilonOfConvergance, printPolicy):
-        if self.verbose == True:
-            print("------computing optimal policy for finite horizon--------------")
-        n = len(self.mdp.states)
-
-        self.mdp.computeStatesAvailableActions()
-        # for state in self.mdp.states:
-        # state.computeAvailableActions()
-
-        G = [[0.0 for j in [0, 1]] for i in range(n)]
-        A = ["" for j in range(n)]
-
-        for j in range(n):
-            if (self.mdp.states[j].isGoal):
-                G[j][0] = 0.0
-                G[j][1] = 0.0
-                A[j] = "STOP"
-
-        # dif = float_info.max
-
-        dif = float("inf")
-
-        numIterations = 0
-
-        time_start = time.time()
-
-        r = 0
-
-        while dif > epsilonOfConvergance:
-            numIterations += 1
-
-            print("dif=" + str(dif))
-
-            # print("r="+str(r))
-
-            # if numIterations > 1000:
-            # break
-
-            maxDif = 0
-
-            for j in range(n):
-                if self.mdp.states[j].isGoal == True:
-                    continue
-
-                if self.mdp.states[j].reachable == False:
-                    continue
-
-                if self.mdp.states[j].aGoalIsReachable == False:
-                    continue
-
-                minVal = float_info.max
-                optAction = ""
-                state = self.mdp.states[j]
-
-                # print("r="+str(r))
-
-                # for action in self.eventList:
-                # print("#Available actions for "+str(state)+": "+str(len(state.availableActions)))
-                for action in state.availableActions:
-                    if action in state.avoidActions:
-                        continue
-                    val = 0.0
-                    if state.isGoal == False:
-                        val += 1
-                    # for k in range(n):
-                    #    term = G[k][1]*self.mdp.conditionalProbability(k, j, action)
-                    #    val += term
-                    for tran in state.actionsTransitions[action]:
-                        term = G[tran.dstState.index][1] * tran.probability
-                        val += term
-                        # r += 1
-                        # print("r="+str(r))
-                    if val < minVal:
-                        minVal = val
-                        optAction = action
-
-                        # if minVal-G[j][0] > maxDif:
-                    # maxDif = minVal-G[j][0]
-
-                if j == 0:
-                    dif = minVal - G[j][0]
-
-                maxDif = max(maxDif, minVal - G[j][0])
-
-                G[j][0] = minVal
-                A[j] = optAction
-
-            for j in range(n):
-                G[j][1] = G[j][0]
-
-            dif = maxDif
-
-        optPolicy = {}
-        for q in self.dfa.states:
-            optPolicy[q] = {}
-
-        for j in range(n):
-            optPolicy[self.mdp.states[j].anchor[0]][str(self.mdp.states[j].anchor[1])] = A[j]
-            if printPolicy == True:
-                print("\pi(" + self.mdp.states[j].anchor[0] + "," + str(self.mdp.states[j].anchor[1]) + ")=" + A[j])
-                print(
-                    "M(" + self.mdp.states[j].anchor[0] + "," + str(self.mdp.states[j].anchor[1]) + ")=" + str(G[j][0]))
-
-        if self.verbose == True:
-            print("optimal policy for infinite horizon has been computed in " + str(numIterations) + " iterations")
-
-        time_elapsed = (time.time() - time_start)
-
-        # return G[0][self.mdp.initialState.index]
-        return (optPolicy, G, G[0][self.mdp.initialState.index], time_elapsed)
-
-    def simulate(self, policy, printOutput=True):
-        if self.currentMarkovStateVisibile == True:
-            return self.__simulate_markovStateVisible(policy, printOutput)
+    def simulate(self, policy, printOutput=True, cost_matrix=None):
+        if self.current_markov_state_visible:
+            return self.__simulate_markov_state_visible(policy, printOutput, cost_matrix=cost_matrix)
         else:
             return self.__simulate_markovStateInvisible(policy, printOutput)
 
-    def simulate_greedyAlgorithm(self, printOutput=True):
-        if self.currentMarkovStateVisibile == True:
-            return self.__simulate_markovStateVisible_greedyalgorithm(printOutput)
-        # else:
-        #    return self.__simulate_markovStateInvisible( policy, printOutput)     
+    def __simulate_markov_state_visible(self, policy, printOutput=True, cost_matrix=None):
+        if not cost_matrix:
+            raise Exception("Cost matrix is not provided")
 
-    def simulate_greedyAlgorithm_pomdp(self, printOutput=True):
-        # if self.currentMarkovStateVisibile == True:
-        return self.__simulate_markovStateVisible_pomdp_greedyalgorithm(printOutput)
-
-    def simulate_generalAndGreedyAlgorithms(self, policy, printOutput=True):
-        if self.currentMarkovStateVisibile == True:
-            return self.__simulate_markovStateVisible_generalAndGreedy(policy, printOutput)
-        # else:
-        #    return self.__simulate_markovStateInvisible( policy, printOutput)         
-
-    def __simulate_markovStateVisible(self, policy, printOutput=True, ):
         story = ""
         # s = self.markovChain.nullState
         s = self.markovChain.initialState
         q = self.dfa.initial_state
-        q_previous = q
         i = 0
+        cost = 0
         while True:
             if q in self.dfa.final_states:
-                return (i, story)
-            if (s.name in policy[q].keys()) == False:
+                return i, story, cost
+            if not (s.name in policy[q].keys()):
                 print("q=" + q + ", s=" + s.name)
-            predictedEvent = policy[q][s.name]
+            predicted_event = policy[q][s.name]
             s2 = self.markovChain.next_state(s)
 
             q_previous = q
-            if predictedEvent in s2.events:
-                q = self.dfa.transitions[q][predictedEvent]
+            if predicted_event in s2.events:
+                q = self.dfa.transitions[q][predicted_event]
                 if q != q_previous:
-                    story += predictedEvent
+                    story += predicted_event
             i += 1
 
-            if printOutput == True:
+            past_s = int(s.name[1])
+            current_s = int(s2.name[1])
+
+            cost += cost_matrix[past_s][current_s]
+
+            if printOutput:
                 print(
-                    str(i) + ". " + "q=" + q_previous + ", s=" + s.name + ", predicted=" + predictedEvent + ", actual=" + str(
-                        s2.events) + ", sNext=" + s2.name + ", recorded story=" + story)
+                    str(i) + ". " + "q=" + q_previous + ", s=" + s.name + ", predicted=" + predicted_event + ", actual=" + str(
+                        s2.events) + ", sNext=" + s2.name + ", recorded story=" + story, "cost=" + str(cost))
 
             s = s2
-        return (i, story)
+        print("HERE YO")
+        return i, story, cost
 
     def __simulate_markovStateVisible_generalAndGreedy(self, policy, printOutput=True):
         story = ""  # for the general algorithm

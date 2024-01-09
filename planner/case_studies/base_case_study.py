@@ -18,7 +18,7 @@ class BaseCaseStudy:
 
         self.ep = EventPredictor(dfa, self.mc, self.alphabetS, self.verbose)
 
-        self.ep.mdp.checkTransitionFunction()
+        self.ep.mdp.check_transition_function()
 
     def get_dfa(self):
 
@@ -26,7 +26,7 @@ class BaseCaseStudy:
 
     def compute_optimal_policy(self):
         self.make_event_predictor()
-        self.computed_policy = self.ep.optimalPolicyInfiniteHorizon(0.01, True)
+        self.computed_policy = self.ep.optimal_policy_infinite_horizon(0.01, True)
         return self.computed_policy
 
     def make_pomdpx_file(self, filePath):

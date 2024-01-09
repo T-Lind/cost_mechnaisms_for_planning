@@ -49,7 +49,7 @@ class EventPredictor:
         t0 = (dfa.initial_state, mc.nullState)
         v0 = MDPState(dfa.initial_state+","+"_"+mc.initialState.name, t0)
         q0 = dfa.initial_state
-        v0.isInitial = True
+        v0.is_initial = True
         mdp.addState(v0)
         mdp.initialState = v0
         
@@ -63,7 +63,7 @@ class EventPredictor:
                 v = MDPState(q+"_"+s.name, t)
                 mdp.addState(v)
                 if q in dfa.final_states:
-                    v.isGoal = True
+                    v.is_goal = True
                     mdp.setAsGoal(v)
                 
               
@@ -147,7 +147,7 @@ class EventPredictor:
         v0 = MDPState(dfa.initial_state+"_"+mc.initialState.name, t0)
         v0.evidence_distribution = mc.initialState.evidence_distribution
         q0 = dfa.initial_state
-        v0.isInitial = True
+        v0.is_initial = True
         mdp.addState(v0)
         mdp.initialState = v0
         
@@ -164,7 +164,7 @@ class EventPredictor:
                 v.evidence_distribution = s.evidence_distribution
                 mdp.addState(v)
                 if q in dfa.final_states:
-                    v.isGoal = True
+                    v.is_goal = True
                     mdp.setAsGoal(v)
                 
         
@@ -284,7 +284,7 @@ class EventPredictor:
         v0 = MDPState(dfa.initial_state + "_" + mc.initialState.name + "_" + style_initial, t0)
         v0.evidence_distribution = mc.initialState.evidence_distribution
         q0 = dfa.initial_state
-        v0.isInitial = True
+        v0.is_initial = True
         mdp.addState(v0)
         mdp.initialState = v0
 
@@ -313,7 +313,7 @@ class EventPredictor:
                     v.evidence_distribution = s.evidence_distribution
                     mdp.addState(v)
                     if q in dfa.final_states:
-                        v.isGoal = True
+                        v.is_goal = True
                         mdp.setAsGoal(v)
 
         selfLoopAdded = {}
@@ -408,7 +408,7 @@ class EventPredictor:
         A = [["" for j in range(n)] for i in range(F+1)]
         
         for j in range(n):
-            if (self.mdp.states[j].isGoal):
+            if (self.mdp.states[j].is_goal):
                 G[F][j] = 0.0
                 A[F][j] = "STOP"
             else:
@@ -417,7 +417,7 @@ class EventPredictor:
         for i in range(F-1, -1, -1):
             #print(i)
             for j in range(n):
-                if self.mdp.states[j].isGoal == True:
+                if self.mdp.states[j].is_goal == True:
                     A[i][j] = "STOP"
                     G[i][j] = 0.0
                     continue
@@ -428,7 +428,7 @@ class EventPredictor:
                 
                 for action in self.eventList:
                     val = 0.0
-                    if  state.isGoal == False:
+                    if  state.is_goal == False:
                         val += 1
                     for k in range(n):
                         term = G[i+1][k]*self.mdp.conditionalProbability(k, j, action)
@@ -471,7 +471,7 @@ class EventPredictor:
         A = ["" for j in range(n)]
         
         for j in range(n):
-            if (self.mdp.states[j].isGoal):
+            if (self.mdp.states[j].is_goal):
                 G[j][0] = 0.0
                 G[j][1] = 0.0
                 A[j] = "STOP"
@@ -495,7 +495,7 @@ class EventPredictor:
                         
             
             for j in range(n):
-                if self.mdp.states[j].isGoal == True:
+                if self.mdp.states[j].is_goal == True:
                     continue
                 
                 if self.mdp.states[j].reachable == False:
@@ -509,7 +509,7 @@ class EventPredictor:
                 
                 for action in self.eventList:
                     val = 0.0
-                    if  state.isGoal == False:
+                    if  state.is_goal == False:
                         val += 1
                     for k in range(n):
                         term = G[k][1]*self.mdp.conditionalProbability(k, j, action)
@@ -560,7 +560,7 @@ class EventPredictor:
         A = ["" for j in range(n)]
 
         for j in range(n):
-            if (self.mdp.states[j].isGoal):
+            if (self.mdp.states[j].is_goal):
                 G[j][0] = 0.0
                 G[j][1] = 0.0
                 A[j] = "STOP"
@@ -582,7 +582,7 @@ class EventPredictor:
             # break
 
             for j in range(n):
-                if self.mdp.states[j].isGoal == True:
+                if self.mdp.states[j].is_goal == True:
                     continue
 
                 if self.mdp.states[j].reachable == False:
@@ -596,7 +596,7 @@ class EventPredictor:
 
                 for action in self.mdp_actions:
                     val = 0.0
-                    # if state.isGoal == False:
+                    # if state.is_goal == False:
                     #     val += 1
                     for k in range(n):
                         # print(state.anchor[2], action.split('_')[1])
@@ -790,7 +790,7 @@ class EventPredictor:
                 if self.mdp.states[j].anchor[0] == "*":
                     continue
 
-                if self.mdp.states[j].isGoal == True:
+                if self.mdp.states[j].is_goal == True:
                     continue
 
                 if self.mdp.states[j].reachable == False:
@@ -801,7 +801,7 @@ class EventPredictor:
                 for a in self.eventList:
                     if a in self.story.get_outgoing_events(self.mdp.states[j].anchor[0]):
                         val = 0.0
-                        if self.mdp.states[j].isGoal == False:
+                        if self.mdp.states[j].is_goal == False:
                             val = val + 1.0
                         for k in range(n):
                             val = val + self.mdp.conditionalProbability(k, j, a) * u[self.mdp.states[k]]

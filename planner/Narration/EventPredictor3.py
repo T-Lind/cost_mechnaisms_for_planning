@@ -60,7 +60,7 @@ class EventPredictor3:
         """
         t0 = (dfa.initial_state, mc.initialState, ts.initial_state, ft.initial_state)
         x0 = MDPState(dfa.initial_state+"_"+mc.initialState.name +"_"+ ts.initial_state +"_"+ ft.initial_state, t0)
-        x0.isInitial = True
+        x0.is_initial = True
         mdp.addState(x0)
         mdp.initialState = x0
         
@@ -81,7 +81,7 @@ class EventPredictor3:
                         x = MDPState(q+"_"+s.name+"_"+w+"_"+v, t)
                         mdp.addState(x)
                         if q in dfa.final_states:
-                            x.isGoal = True
+                            x.is_goal = True
                             mdp.setAsGoal(x)
                             x.weightBVector = ft.output_function[v]
         
@@ -99,7 +99,7 @@ class EventPredictor3:
             #if v1 == v0:
             #    continue
             
-            if x1.isGoal:
+            if x1.is_goal:
                 continue
             
             q = x1.anchor[0]
@@ -172,7 +172,7 @@ class EventPredictor3:
         Make goal states absorbing
         """
         for x in mdp.goalStates:
-            if not x.isGoal:
+            if not x.is_goal:
                 continue
             for a in mdp.actions:
                 trans = MDPTransition(x, x, a, set(), 1)
@@ -189,7 +189,7 @@ class EventPredictor3:
         
         self.mdp.makeObservationFunction()
         
-        self.mdp.checkTransitionFunction()
+        self.mdp.check_transition_function()
         
         if self.verbose == True:
             print("the product automata has been computed. It has "+str(len(mdp.states))+" states")
@@ -220,7 +220,7 @@ class EventPredictor3:
         x0.weightBVector = ft.output_function[ft.initial_state]
         #v0.evidence_distribution = mc.initialState.evidence_distribution
         #q0 = dfa.initial_state
-        x0.isInitial = True
+        x0.is_initial = True
         mdp.addState(x0)
         mdp.initialState = x0
         
@@ -241,7 +241,7 @@ class EventPredictor3:
             s = t[1]
             w = t[2]
             v = t[3]
-            if x.isGoal == True:
+            if x.is_goal == True:
                 for a in self.actions:
                     trans = MDPTransition(x, x, a, set(), 1)
                     mdp.addTransition(trans)
@@ -293,7 +293,7 @@ class EventPredictor3:
                             mdp.addState(x2)
                             cnt += 1
                             if q2 in dfa.final_states:
-                                x2.isGoal = True
+                                x2.is_goal = True
                                 mdp.setAsGoal(x2)
                         if x2Name not in queueNames and x2wasInMDP == False:
                             queue.append(x2)       
@@ -318,7 +318,7 @@ class EventPredictor3:
                             mdp.addState(x2)
                             cnt += 1
                             if q2 in dfa.final_states:
-                                x2.isGoal = True
+                                x2.is_goal = True
                                 mdp.setAsGoal(x2)
                         if x2Name not in queueNames and x2wasInMDP == False:
                             queue.append(x2)       
@@ -348,7 +348,7 @@ class EventPredictor3:
                             mdp.addState(x2)
                             cnt += 1
                             if q2 in dfa.final_states:
-                                x2.isGoal = True
+                                x2.is_goal = True
                                 mdp.setAsGoal(x2)
                         if x2Name not in queueNames and x2wasInMDP == False:
                             queue.append(x2)       
@@ -376,7 +376,7 @@ class EventPredictor3:
         
         self.mdp.makeObservationFunction()
         
-        self.mdp.checkTransitionFunction()
+        self.mdp.check_transition_function()
         
         
         
@@ -395,7 +395,7 @@ class EventPredictor3:
         A = [["" for j in range(n)] for i in range(F+1)]
         
         for j in range(n):
-            if (self.mdp.states[j].isGoal):
+            if (self.mdp.states[j].is_goal):
                 G[F][j] = 0.0
                 A[F][j] = "STOP"
             else:
@@ -404,7 +404,7 @@ class EventPredictor3:
         for i in range(F-1, -1, -1):
             #print(i)
             for j in range(n):
-                if self.mdp.states[j].isGoal == True:
+                if self.mdp.states[j].is_goal == True:
                     A[i][j] = "STOP"
                     G[i][j] = 0.0
                     continue
@@ -415,7 +415,7 @@ class EventPredictor3:
                 
                 for action in self.eventList:
                     val = 0.0
-                    if  state.isGoal == False:
+                    if  state.is_goal == False:
                         val += 1
                     for k in range(n):
                         term = G[i+1][k]*self.mdp.conditionalProbability(k, j, action)
@@ -463,7 +463,7 @@ class EventPredictor3:
             self.mdp.computeTopologicalOrder()
         
         for state in self.mdp.topologicalOrder:
-            if state.isGoal:
+            if state.is_goal:
                 G[state.index] = 0.0
                 A[state.index] = "STOP"
                 continue
@@ -539,7 +539,7 @@ class EventPredictor3:
         A = ["" for j in range(n)]
         
         for j in range(n):
-            if (self.mdp.states[j].isGoal):
+            if (self.mdp.states[j].is_goal):
                 G[j][0] = 0.0
                 G[j][1] = 0.0
                 A[j] = "STOP"
@@ -568,7 +568,7 @@ class EventPredictor3:
             dif = float("inf")
             if len(scc.states) == 0:
                 continue
-            if scc.states[0].isGoal:
+            if scc.states[0].is_goal:
                 continue
             firstTimeComputeDif = True
             #print("Start Computing Optimal Policy for states within SCC "+scc.name)
@@ -576,7 +576,7 @@ class EventPredictor3:
                 numIterations += 1
                 maxDif = 0
                 for state in scc.states:
-                    if self.mdp.states[state.index].isGoal == True:
+                    if self.mdp.states[state.index].is_goal == True:
                         continue
                 
                     if self.mdp.states[state.index].reachable == False:
@@ -600,7 +600,7 @@ class EventPredictor3:
                         
                         val = 0.0
                         
-                        if  state.isGoal == False:
+                        if  state.is_goal == False:
                             val += 1
                         for tran in state.actionsTransitions[action]:
                             #term = G[tran.dstState.index][1]*self.mdp.conditionalProbability(tran.dstState.index, state.index, action)
@@ -663,7 +663,7 @@ class EventPredictor3:
         A = ["" for j in range(n)]
         
         for j in range(n):
-            if (self.mdp.states[j].isGoal):
+            if (self.mdp.states[j].is_goal):
                 G[j][0] = 0.0
                 G[j][1] = 0.0
                 A[j] = "STOP"
@@ -688,7 +688,7 @@ class EventPredictor3:
             maxDif = 0            
             
             for j in range(n):
-                if self.mdp.states[j].isGoal == True:
+                if self.mdp.states[j].is_goal == True:
                     continue
                 
                 if self.mdp.states[j].reachable == False:
@@ -709,7 +709,7 @@ class EventPredictor3:
                         if action in state.avoidActions:
                             continue
                     val = 0.0
-                    if  state.isGoal == False:
+                    if  state.is_goal == False:
                         val += 1
                     #for k in range(n):
                     #    term = G[k][1]*self.mdp.conditionalProbability(k, j, action)
@@ -769,7 +769,7 @@ class EventPredictor3:
         
     
     def simulate(self, policy, printOutput =False):
-        #if self.currentMarkovStateVisibile == True:
+        #if self.current_markov_state_visible == True:
         return self.__simulate_markovStateVisible( policy, printOutput)
         #else:
         #    return self.__simulate_markovStateInvisible( policy, printOutput)
