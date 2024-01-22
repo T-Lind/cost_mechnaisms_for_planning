@@ -19,7 +19,9 @@ discount_factor = 0.9
 
 mdp = MarkovDecisionProcess(state_labels, action_labels, transitions, rewards, discount_factor)
 print(mdp)
-optimal_policy = mdp.policy_evaluation(
-    {'A': 'X', 'B': 'Y', 'C': 'X'},
-)
-print(optimal_policy)
+policy = {'A': 'X', 'B': 'Y', 'C': 'X'}
+print("Initial policy", policy)
+print("Initial policy evaluation", mdp.policy_evaluation(policy))
+policy_improv = mdp.policy_improvement(policy)
+print("Iterated policy", policy_improv)
+print("Iterated policy evaluation", mdp.policy_evaluation(policy_improv))

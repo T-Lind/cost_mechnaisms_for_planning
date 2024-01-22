@@ -156,6 +156,37 @@ class MarkovDecisionProcess:
 
         return V
 
+    def policy_improvement(self, policy: Dict[Union[int, str], Union[int, str]]) -> Dict[Union[int, str], Union[int, str]]:
+        """
+        Perform policy improvement based on the estimated state values.
+
+        Parameters:
+        - policy: Current policy
+
+        Returns:
+        - Improved policy
+        """
+
+        new_policy = policy.copy()
+
+        for s in self.states:
+            best_action = None
+            best_value = float('-inf')
+
+            for a in self.actions:
+                expected_return = 0
+                for s_prime in self.states:
+                    expected_return += self.get_transition_prob(s, a, s_prime) * (
+                            self.get_reward(s, a) + self.discount_factor * self.get_transition_prob(s, a, s_prime))
+
+                if expected_return > best_value:
+                    best_value = expected_return
+                    best_action = a
+
+            new_policy[self.state_labels[s]] = self.action_labels[best_action]
+
+        return new_policy
+
     def __str__(self) -> str:
         """
         String representation of the MDP.
