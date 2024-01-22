@@ -1,4 +1,5 @@
-from typing import Dict, Union
+from random import choice
+from typing import Dict, Union, Any
 
 import numpy as np
 
@@ -55,7 +56,7 @@ class MarkovDecisionProcess:
         for key, val in dictionary.items():
             if val == value:
                 return key
-        raise ValueError(f"Value {value} not found in dictionary")
+        raise ValueError(f"Value {value} not found in dictionary {dictionary}")
 
     def build_reward_matrix(self, rewards: Dict[str, float]) -> np.ndarray:
         """
@@ -156,7 +157,8 @@ class MarkovDecisionProcess:
 
         return V
 
-    def policy_improvement(self, policy: Dict[Union[int, str], Union[int, str]]) -> Dict[Union[int, str], Union[int, str]]:
+    def policy_improvement(self, policy: Dict[Union[int, str], Union[int, str]]) -> Dict[
+        Union[int, str], Union[int, str]]:
         """
         Perform policy improvement based on the estimated state values.
 
@@ -186,6 +188,117 @@ class MarkovDecisionProcess:
             new_policy[self.state_labels[s]] = self.action_labels[best_action]
 
         return new_policy
+
+    def policy_iteration(self, policy: Dict[Union[int, str], Union[int, str]] = None, tol: float = 1e-6,
+                         max_iter: int = 1000, return_eval_sums=True) -> tuple[dict[int | str, int | str], list[Any]] | \
+                                                                         dict[int | str, int | str]:
+        """
+        Perform policy iteration to find the optimal policy.
+
+        Parameters:
+        - tol: Tolerance for convergence
+        - max_iter: Maximum number of iterations
+
+        Returns:
+        - Optimal policy
+        """
+        if not policy:
+            policy = {}
+            for state in self.state_labels.values():
+                policy[state] = choice(list(self.action_labels.values()))
+
+        old_policy = policy.copy()
+        old_evaluation = self.policy_evaluation(old_policy)
+
+        iters = 0
+
+        eval_sums = []
+        eval_sums.append(np.sum(old_evaluation))
+
+        while iters < max_iter:
+            policy = self.policy_improvement(old_policy)
+            evaluation = self.policy_evaluation(policy)
+
+            eval_sums.append(np.sum(evaluation))
+
+            if np.allclose(evaluation, old_evaluation, atol=tol):
+                break
+
+            old_policy = policy
+            old_evaluation = evaluation
+
+            iters += 1
+
+        if return_eval_sums:
+            return policy, eval_sums
+        return policy
+
+    def simulate_policy(self, policy: Dict[Union[int, str], Union[int, str]], num_steps: int = 10,
+                        verbose=True) -> tuple[list[str], list[float]]:
+        """
+        Simulate the agent's behavior based on the given policy and print the states visited.
+
+        Parameters:
+        - policy: Dictionary mapping state to action
+        - num_steps: Number of steps to simulate
+        """
+        current_state = np.random.choice(self.states)
+
+        if verbose:
+            print(f"Initial state: {self.state_labels[current_state]}")
+
+        state_tracker = []
+        cumulative_reward = []
+
+        for _ in range(num_steps):
+            state = self.state_labels[current_state]
+            state_tracker.append(state)
+
+            action = policy[state]
+            numerical_action = self.__find_key_by_value(self.action_labels, action)
+
+            # Transition to the next state based on the chosen action
+            next_state_probs = [
+                self.get_transition_prob(current_state, numerical_action, next_state)
+                for next_state in self.states
+            ]
+            next_state = np.random.choice(self.states, p=next_state_probs)
+            # get the probability that that state was selected
+            prob = next_state_probs[self.states.index(next_state)]
+
+            reward = self.get_reward(current_state, numerical_action)
+            cumulative_reward.append(reward + cumulative_reward[-1] if len(cumulative_reward) > 0 else reward)
+
+            if verbose:
+                print(
+                    f"State: {state}, Action: {action}, Reward: {reward} | Transition prob: {prob:.2f}")
+
+            current_state = next_state
+
+        return state_tracker, cumulative_reward
+
+    def get_policy_average(self,
+                           policy: Dict[Union[int, str], Union[int, str]],
+                           num_iterations: int = 1000,
+                           steps_per_iteration: int = 25) -> float:
+        """
+        Get the average reward for a given policy.
+
+        Parameters:
+        - policy: Dictionary mapping state to action
+        - num_iterations: Number of iterations to average over
+        - steps_per_iteration: Number of steps to simulate per iteration
+
+        Returns:
+        - Average reward
+        """
+
+        rewards = []
+        for _ in range(num_iterations):
+            _, cumulative_reward = self.simulate_policy(policy, steps_per_iteration, verbose=False)
+            rewards.append(cumulative_reward[-1])
+
+        return np.mean(rewards)
 
     def __str__(self) -> str:
         """

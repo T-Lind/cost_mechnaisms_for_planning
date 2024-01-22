@@ -1,1 +1,3 @@
 pip install numpy==1.26.3
+pip install matplotlib==3.8.2
+colorama==0.4.6
