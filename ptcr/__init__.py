@@ -1,1 +1,2 @@
 from ptcr.MarkovDecisionProcess import MarkovDecisionProcess
+from ptcr.DeterministicFiniteAutomaton import DeterministicFiniteAutomaton
