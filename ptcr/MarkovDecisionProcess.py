@@ -7,14 +7,14 @@ class MarkovDecisionProcess:
     def __init__(self, states: Dict[Union[int, str], str],
                  actions: Dict[Union[int, str], str],
                  transitions: Dict[str, float],
-                 rewards: np.ndarray,
+                 rewards: Dict[str, float],
                  discount_factor: float):
         self.states = list(states.keys())
         self.state_labels = states
         self.actions = list(actions.keys())
         self.action_labels = actions
         self.transitions = transitions
-        self.rewards = rewards
+        self.rewards = self.build_reward_matrix(rewards)
         self.discount_factor = discount_factor
 
     def build_transition_matrix(self, transitions: Dict[str, float]) -> np.ndarray:
@@ -41,6 +41,45 @@ class MarkovDecisionProcess:
 
         return transition_matrix
 
+    def __find_key_by_value(self, dictionary: Dict[Union[int, str], str], value: str) -> Union[int, str]:
+        """
+        Find a key in a dictionary by its value.
+
+        Parameters:
+        - dictionary: Dictionary to search
+        - value: Value to search for
+
+        Returns:
+        - Key corresponding to the value
+        """
+        for key, val in dictionary.items():
+            if val == value:
+                return key
+        raise ValueError(f"Value {value} not found in dictionary")
+
+    def build_reward_matrix(self, rewards: Dict[str, float]) -> np.ndarray:
+        """
+        Build the reward matrix from the reward labels and values.
+
+        Parameters:
+        - rewards: Dictionary mapping state-action labels to immediate rewards
+
+        Returns:
+        - Reward matrix
+        """
+        num_states = len(self.states)
+        num_actions = len(self.actions)
+        reward_matrix = np.zeros((num_states, num_actions))
+
+        for reward_label, value in rewards.items():
+            state, action = reward_label.split("->")
+            state_idx = self.states.index(self.__find_key_by_value(self.state_labels, state))
+            action_idx = self.actions.index(self.__find_key_by_value(self.action_labels, action))
+
+            reward_matrix[state_idx, action_idx] = value
+
+        return reward_matrix
+
     def get_transition_prob(self, current_state: Union[int, str], action: Union[int, str],
                             next_state: Union[int, str]) -> float:
         """
@@ -60,7 +99,12 @@ class MarkovDecisionProcess:
 
         transition_label = f"{self.state_labels[current_state_idx]}->{self.action_labels[action_idx]}->{self.state_labels[next_state_idx]}"
 
-        return float(self.transitions[transition_label])
+        transition_result = self.transitions.get(transition_label, None)
+
+        if transition_result is None:
+            return 0.0
+        else:
+            return float(transition_result)
 
     def get_reward(self, current_state: Union[int, str], action: Union[int, str]) -> float:
         """
@@ -77,6 +121,40 @@ class MarkovDecisionProcess:
         action_idx = self.actions.index(action) if isinstance(action, str) else action
 
         return float(self.rewards[current_state_idx, action_idx])
+
+    def policy_evaluation(self,
+                          policy: Dict[Union[int, str], Union[int, str]],
+                          tol: float = 1e-6, max_iter: int = 1000) -> np.ndarray:
+        """
+        Perform policy evaluation to estimate the state values for a given policy.
+
+        Parameters:
+        - policy: Dictionary mapping state to action
+        - tol: Tolerance for convergence
+        - max_iter: Maximum number of iterations
+
+        Returns:
+        - Estimated state values
+        """
+        num_states = len(self.states)
+        V = np.zeros(num_states)
+
+        for _ in range(max_iter):
+            delta = 0
+            for s in self.states:
+                v = V[s]
+                action = self.__find_key_by_value(self.action_labels, policy[self.state_labels[s]])
+                expected_return = 0
+                for s_prime in self.states:
+                    expected_return += self.get_transition_prob(s, action, s_prime) * (
+                            self.get_reward(s, action) + self.discount_factor * V[s_prime])
+                    V[s] = expected_return
+                    delta = max(delta, abs(v - V[s]))
+
+            if delta < tol:
+                break
+
+        return V
 
     def __str__(self) -> str:
         """
