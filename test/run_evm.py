@@ -1,50 +1,8 @@
 from ptcr import EventModel
 
-states = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
-events = {"h", "c", "k", "t"}
 
-transitions = {
-    "0->1": 1,
-    "1->1": 0.25,
-    "1->3": 0.25,
-    "1->2": 0.25,
-    "1->8": 0.25,
-    "2->1": 0.25,
-    "2->3": 0.50,
-    "2->2": 0.25,
-    "3->1": 0.25,
-    "3->3": 0.25,
-    "3->4": 0.50,
-    "4->3": 0.25,
-    "4->4": 0.25,
-    "4->5": 0.50,
-    "5->4": 0.25,
-    "5->5": 0.25,
-    "5->6": 0.20,
-    "5->7": 0.30,
-    "6->5": 0.25,
-    "6->6": 0.25,
-    "6->8": 0.50,
-    "7->5": 0.25,
-    "7->7": 0.25,
-    "7->8": 0.50,
-    "8->0": 0.25,
-    "8->8": 0.25,
-    "8->6": 0.20,
-    "8->7": 0.30
-}
-
-event_function = {
-    "0": dict(),
-    "1": dict(),
-    "2": {"h": 1},
-    "3": {"k": 1},
-    "4": dict(),
-    "5": dict(),
-    "6": {"t": 1},
-    "7": {"c": 1},
-    "8": dict()
-}
-start_state = "0"
-e = EventModel(states, events, transitions, event_function, start_state)
-print(e.step())
+with open("../samples/oulu/event_model.json", "r") as f:
+    e = EventModel.load_model(f.read())
+    for _ in range(50):
+        current_state, event = e.step()
+        print(f"Current state: {current_state}, event: {event}")

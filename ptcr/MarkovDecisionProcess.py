@@ -1,15 +1,20 @@
 from random import choice
-from typing import Dict, Union, Any
+from typing import Dict, Union, Any, List
 
 import numpy as np
 
 
 class MarkovDecisionProcess:
-    def __init__(self, states: Dict[Union[int, str], str],
-                 actions: Dict[Union[int, str], str],
+    def __init__(self, states: List[str],
+                 actions: List[str],
                  transitions: Dict[str, float],
                  rewards: Dict[str, float],
                  discount_factor: float):
+        # create a dict where each state is mapped to an index starting at 0 (same for actions)
+        states = {i: state for i, state in enumerate(states)}
+        actions = {i: action for i, action in enumerate(actions)}
+
+
         self.states = list(states.keys())
         self.state_labels = states
         self.actions = list(actions.keys())
@@ -310,3 +315,19 @@ class MarkovDecisionProcess:
         result += "Immediate Rewards:\n{}\n".format(self.rewards)
         result += "Discount Factor (gamma): {}".format(self.discount_factor)
         return result
+
+    @classmethod
+    def load_model(cls, model: str):
+        """
+        Load a model from a JSON string.
+
+        Parameters:
+        - model: JSON string representing the model
+
+        Returns:
+        - MarkovDecisionProcess object
+        """
+        import json
+        model = json.loads(model)
+        return cls(model['state_labels'], model['action_labels'], model['transitions'], model['rewards'],
+                   model['discount_factor'])

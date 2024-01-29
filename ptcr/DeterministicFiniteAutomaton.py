@@ -1,3 +1,4 @@
+import json
 from typing import Set, Tuple, Dict
 
 
@@ -38,23 +39,18 @@ class DeterministicFiniteAutomaton:
         # Check if the final state is an accept state
         return current_state in self.accept_states
 
+    @classmethod
+    def load_model(cls, model_text_raw: str):
+        model_text = json.loads(model_text_raw)
 
-# Example usage:
-states = {'q0', 'q1', 'q2'}
-alphabet = {'0', '1'}
-transitions = {('q0', '0'): 'q1', ('q0', '1'): 'q2', ('q1', '0'): 'q0', ('q1', '1'): 'q2', ('q2', '0'): 'q2',
-               ('q2', '1'): 'q2'}
-start_state = 'q0'
-accept_states = {'q1'}
+        start_state = model_text['start_state']
+        accept_states = model_text['accept_states']
+        states = model_text['states']
+        alphabet = model_text['alphabet']
 
-dfa = DeterministicFiniteAutomaton(states, alphabet, transitions, start_state, accept_states)
+        transitions = {}
+        for key, value in model_text['transitions'].items():
+            for symbol, next_state in value.items():
+                transitions[(key, symbol)] = next_state
 
-# Print the DFA
-print(dfa)
-
-# Test the DFA with input strings
-input_strings = ['01', '001', '101', '1001']
-
-for input_str in input_strings:
-    result = dfa.run(input_str)
-    print(f"Input: {input_str}, Accepted: {result}")
+        return cls(states, alphabet, transitions, start_state, accept_states)

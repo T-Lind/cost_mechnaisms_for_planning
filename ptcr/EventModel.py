@@ -1,5 +1,5 @@
 from typing import Set, Dict, List
-
+import json
 import numpy as np
 
 
@@ -17,6 +17,11 @@ class EventModel:
         self.transition_matrix = self.build_transition_matrix(transitions)
         self.start_state = start_state
         self.event_function = event_function
+
+        # add an empty dictionary for each state that does not have an event function
+        for state in self.states:
+            if state not in self.event_function:
+                self.event_function[state] = dict()
 
         self.current_state = start_state
 
@@ -49,4 +54,16 @@ class EventModel:
         event = np.random.choice(list(event_probs.keys()), p=list(event_probs.values()))
 
         return self.current_state, event
+
+    @classmethod
+    def load_model(cls, event_model_raw: str):
+        # Loads the event model from a JSON string
+        event_model = json.loads(event_model_raw)
+
+        states = event_model["states"]
+        events = event_model["events"]
+        transitions = event_model["transitions"]
+        event_function = event_model["event_function"]
+
+        return cls(states, events, transitions, event_function, event_model["start_state"])
 
