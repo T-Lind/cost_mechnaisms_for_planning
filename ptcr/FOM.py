@@ -1,6 +1,8 @@
 import json
 
 from ptcr import DeterministicFiniteAutomaton
+from ptcr.EventPredictor import EventPredictor
+from ptcr.MarkovChain import MarkovChain
 
 
 class FOM:
@@ -38,25 +40,16 @@ class FOM:
         self.initial_dfa_state = self.input_dict['initial_dfa_state']
         self.final_dfa_states = set(self.input_dict['final_dfa_states'])
 
-        # Convert to Dict[Tuple[str, str], str]
-        #
-        # "dfa": {
-        #     "q0": {"h": "q1", "k": "q2", "c": "q3", "t": "q3"},
-        #     "q1": {"h": "q1", "k": "q4", "c": "q5", "t": "q5"},
-        #     "q2": {"h": "q4", "k": "q2", "c": "q6", "t": "q6"},
-        #     "q3": {"h": "q5", "k": "q6", "c": "q3", "t": "q3"},
-        #     "q4": {"h": "q4", "k": "q4", "c": "q7", "t": "q7"},
-        #     "q5": {"h": "q5", "k": "q7", "c": "q5", "t": "q5"},
-        #     "q6": {"h": "q7", "k": "q6", "c": "q6", "t": "q6"},
-        #     "q7": {"h": "q7", "k": "q7", "c": "q7", "t": "q7"}
-        # }
         self.dfa_transitions = {}
         # the tuple is ((from_state, to_state), event)
         for from_state, transitions in self.input_dict['dfa'].items():
             for event, to_state in transitions.items():
                 self.dfa_transitions[(from_state, event)] = to_state
 
+        self.markov_chain = MarkovChain(self.state_names, self.state_events, self.transition_matrix, self.initial_distribution, self.evidence_distribution)
         self.dfa = DeterministicFiniteAutomaton(self.dfa_states, self.alphabet, self.dfa_transitions, self.initial_dfa_state, self.final_dfa_states)
+
+        self.event_predictor = EventPredictor(self.dfa, self.markov_chain, self.alphabet)
 
         print("state names\n", self.state_names)
         print("state events\n", self.state_events)
@@ -71,3 +64,18 @@ class FOM:
 
     def identity_matrix(self, size: int):
         return [[1 if i == j else 0 for i in range(size)] for j in range(size)]
+
+    def simulate(self):
+        if self.computed_policy is None:
+            self.compute_optimal_policy()
+
+        n_iters, story = self.event_predictor.simulate(self.computed_policy[0])
+
+
+
+
+    def compute_optimal_policy(self):
+        self.computed_policy = self.event_predictor.optimal_policy_infinite_horizon(0.001)
+        return self.computed_policy
+
+

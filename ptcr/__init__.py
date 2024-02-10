@@ -1,3 +1,3 @@
 from ptcr.DeterministicFiniteAutomaton import DeterministicFiniteAutomaton
 from ptcr.EventModel import EventModel
-from ptcr.MarkovDecisionProcess import MarkovDecisionProcess
+from ptcr.MarkovDecisionProcess import MarkovDecisionProcessOld

@@ -1,5 +1,3 @@
-import random
-
 class MarkovState:
     def __init__(self, name: str, events: list, index: int, evidence_distribution=None):
         if events is None:
@@ -19,9 +17,10 @@ class MarkovState:
 
 
 class MarkovChain:
-    def __init__(self, state_names: list, state_events: list, transition_matrix: list, initial_distribution: list, initial_state_index: int=0):
+    def __init__(self, state_names: list, state_events: list, transition_matrix: list, initial_distribution: list,
+                 evidence_distribution: list, initial_state_index: int = 0):
         self.states = []
-        self.state_names = state_names
+        self.state_names = state_names  # AKA evidence_list?
         self.initial_state_index = initial_state_index
 
         for i in range(len(state_names)):
@@ -29,4 +28,18 @@ class MarkovChain:
 
         self.initial_distribution = initial_distribution
 
+        self.transition_matrix = transition_matrix
 
+        self.events = set()
+        for state in self.states:
+            for e in state.events:
+                if not e in self.events:
+                    self.events.add(e)
+
+        self.initial_state = self.states[self.initial_state_index]
+        self.null_state = MarkovState("none", [], -1)
+
+        self.has_evidence = False
+
+        for row in range(len(self.transition_matrix)):
+            self.states[row].evidence_distribution = evidence_distribution[row]

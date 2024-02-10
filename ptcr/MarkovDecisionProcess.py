@@ -4,7 +4,8 @@ from typing import Dict, Union, Any, List
 import numpy as np
 
 
-class MarkovDecisionProcess:
+@DeprecationWarning
+class MarkovDecisionProcessOld:
     def __init__(self, states: List[str],
                  actions: List[str],
                  transitions: Dict[str, float],
@@ -13,7 +14,6 @@ class MarkovDecisionProcess:
         # create a dict where each state is mapped to an index starting at 0 (same for actions)
         states = {i: state for i, state in enumerate(states)}
         actions = {i: action for i, action in enumerate(actions)}
-
 
         self.states = list(states.keys())
         self.state_labels = states
@@ -325,9 +325,109 @@ class MarkovDecisionProcess:
         - model: JSON string representing the model
 
         Returns:
-        - MarkovDecisionProcess object
+        - MarkovDecisionProcessOld object
         """
         import json
         model = json.loads(model)
         return cls(model['state_labels'], model['action_labels'], model['transitions'], model['rewards'],
                    model['discount_factor'])
+
+
+class MDPState:
+    def __init__(self, name: str, anchor=None):
+        self.name = name
+        self.anchor = anchor
+        self.is_initial = False
+        self.is_goal = False
+        self.index = -1
+        self.transitions = []
+        self.reachable = True
+        self.evidence_distribution = []
+        self.sub_probability_transitions = 0
+        self.available_actions = []
+        self.action_transitions = {}
+
+        self.scc_index = -1
+        self.lowlink = -1
+
+        self.scc = None
+
+        self.visited = False
+
+        self.avoid_actions = []
+
+        self.a_goal_is_reachable = False
+
+        self.transitions_to = []
+        self.weight_b_vector = []
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
+
+
+class MDP:
+    def __init__(self):
+        self.states: list[MDPState] = []
+        self.actions = []
+        self.initial_state = MDPState("")
+        self.goal_states = []
+        self.transitions = []
+        self.transitions_dict = {}
+
+        self.made_transition_dict = False
+        self.has_evidence = False
+
+        self.evidence_list = []
+        self.observations = []
+
+        self.observation_function = {}
+        self.belief_tree = None
+
+        self.strong_connected_components = []
+        self.initial_scc = None
+        self.scc_transitions = []
+
+        self.states_dict_by_name = {}
+
+    def compute_avoidable_actions(self):
+        for state in self.states:
+            state.a_goal_is_reachable = False
+
+        queue = []
+        for state in self.states:
+            if state.is_goal:
+                queue.append(state)
+                state.a_goal_is_reachable = True
+
+        while queue:
+            state = queue.pop(0)
+            for transition in state.transitions_to:
+                all_reach_to_goals = True
+                for transition_2 in transition.src_state.actions_transitions[transition.action]:
+                    if not transition_2.dst_state.a_goal_is_reachable:
+                        all_reach_to_goals = False
+                        break
+                if all_reach_to_goals and not transition.src_state.a_goal_is_reachable:
+                    transition.src_state.a_goal_is_reachable = True
+                    queue.append(transition.src_state)
+
+        for state in self.states:
+            for action in self.actions:
+                all_dst_reachable = True
+
+                if not action not in state.action_transitions.keys():
+                    for transition_3 in state.action_transitions[action]:
+                        if not transition_3.dst_state.a_goal_is_reachable:
+                            all_dst_reachable = False
+                            break
+
+                if not all_dst_reachable:
+                    state.avoid_actions.append(action)
+
+    def add_state(self, state: MDPState):
+        state.index = len(self.states)
+        self.states.append(state)
+        self.states_dict_by_name[state.name] = state

@@ -8,23 +8,29 @@ class DeterministicFiniteAutomaton:
                  alphabet: Set[str],
                  transitions: Dict[Tuple[str, str], str],
                  start_state: str,
-                 accept_states: Set[str]):
+                 accept_states: Set[str],
+                 ):
         self.states = states
         self.alphabet = alphabet
         self.transitions = transitions
-        self.start_state = start_state
+        self.initial_state = start_state
         self.accept_states = accept_states
+
+
+    def generate_transition_matrix(self, transitions: Dict[Tuple[str, str], str]) -> list:
+        raise NotImplementedError("Not implemented yet")
+
 
     def __str__(self) -> str:
         result = "States: {}\n".format(self.states)
         result += "Alphabet: {}\n".format(self.alphabet)
         result += "Transitions:\n{}\n".format(self.transitions)
-        result += "Start State: {}\n".format(self.start_state)
+        result += "Start State: {}\n".format(self.initial_state)
         result += "Accept States: {}\n".format(self.accept_states)
         return result
 
     def run(self, input_string: str, verbose=False) -> bool:
-        current_state = self.start_state
+        current_state = self.initial_state
 
         for symbol in input_string:
             if (current_state, symbol) in self.transitions:
@@ -43,7 +49,7 @@ class DeterministicFiniteAutomaton:
     def load_model(cls, model_text_raw: str):
         model_text = json.loads(model_text_raw)
 
-        start_state = model_text['start_state']
+        start_state = model_text['initial_state']
         accept_states = model_text['accept_states']
         states = model_text['states']
         alphabet = model_text['alphabet']

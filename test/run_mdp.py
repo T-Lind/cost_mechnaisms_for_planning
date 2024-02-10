@@ -1,7 +1,7 @@
 import random
 
 random.seed(0)
-from ptcr import MarkovDecisionProcess
+from ptcr import MarkovDecisionProcessOld
 import matplotlib.pyplot as plt
 from colorama import Fore as Fr, Style as St
 
@@ -28,7 +28,7 @@ transitions = {
 rewards = {"A->X": 1, "A->Y": -1, "A->Z": 0, "B->X": 0, "B->Y": 1, "B->Z": -1, "C->X": -1, "C->Y": 0, "C->Z": 5}
 discount_factor = 0.9
 
-mdp = MarkovDecisionProcess(state_labels, action_labels, transitions, rewards, discount_factor)
+mdp = MarkovDecisionProcessOld(state_labels, action_labels, transitions, rewards, discount_factor)
 print(mdp)
 policy = {}
 for state in state_labels.values():

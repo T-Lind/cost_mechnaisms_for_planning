@@ -1,5 +1,5 @@
 import random
-from ptcr import MarkovDecisionProcess
+from ptcr import MarkovDecisionProcessOld
 import matplotlib.pyplot as plt
 from colorama import Fore as Fr, Style as St
 random.seed(0)
@@ -7,7 +7,7 @@ random.seed(0)
 # Example usage with dictionaries for states, actions, transitions, and rewards:
 with open("samples/oulu/mdp.json", "r") as f:
     text_json = f.read()
-mdp = MarkovDecisionProcess.load_model(text_json)
+mdp = MarkovDecisionProcessOld.load_model(text_json)
 print(mdp)
 policy = {}
 for state in mdp.state_labels.values():

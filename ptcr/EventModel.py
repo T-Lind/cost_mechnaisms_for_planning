@@ -65,5 +65,5 @@ class EventModel:
         transitions = event_model["transitions"]
         event_function = event_model["event_function"]
 
-        return cls(states, events, transitions, event_function, event_model["start_state"])
+        return cls(states, events, transitions, event_function, event_model["initial_state"])
 
