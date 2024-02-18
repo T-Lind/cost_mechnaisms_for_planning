@@ -29,9 +29,10 @@ class EventPredictor:
         print("G starting", G)
 
         for i in range(len_mdp_states):
-            G[i][0] = 0.0
-            G[i][1] = 0.0
-            A[i] = "STOP"
+            if self.mdp.states[i].is_goal:
+                G[i][0] = 0.0
+                G[i][1] = 0.0
+                A[i] = "STOP"
 
         dif = float('inf')
 
@@ -87,6 +88,7 @@ class EventPredictor:
             optimal_policy[state] = {}
 
         for l in range(len_mdp_states):
+            print("A", A[l], "state", self.mdp.states[l].name, "anchor", self.mdp.states[l].anchor)
             optimal_policy[self.mdp.states[l].anchor[0]][str(self.mdp.states[l].anchor[1])] = A[l]
 
         time_end = time.time()
@@ -112,6 +114,7 @@ class EventPredictor:
         while i < max_steps:
             if dfa_state in self.dfa.accept_states:
                 return i, story
+
 
             predicted_event = policy[dfa_state][state.name]
             state_2 = self.markov_chain.next_state(state)

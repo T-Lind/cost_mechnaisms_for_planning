@@ -86,6 +86,7 @@ class FOM:
         :return: A dict containing the number of iterations, the story, the expected cost, and the time elapsed
         """
         if not self.computed_policy_with_metadata:
+            print("Computing optimal policy...")
             self.compute_optimal_policy()
 
         print("OPTIMAL POLICY WITH METADATA", self.computed_policy_with_metadata)
