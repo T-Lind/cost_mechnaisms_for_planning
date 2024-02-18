@@ -2,7 +2,7 @@ import time
 from sys import float_info
 from typing import Tuple
 
-from MarkovDecisionProcess import MDP, MDPState
+from MarkovDecisionProcess import MDP, MDPState, MDPTransition
 from ptcr import DeterministicFiniteAutomaton, MarkovChain
 from ptcr.MarkovChain import MarkovState
 
@@ -134,3 +134,89 @@ class EventPredictor:
         self.mdp.initial_state = v0
 
         # TODO: finish implementing this
+
+        queue = []
+        queue_names = []
+        queue.append(v0)
+        queue_names.append(v0.name)
+
+        cnt = 0
+        i = 0
+        while queue:
+            i += 1
+
+            v = queue.pop(0)
+            v_name = queue_names.pop(0)
+
+            t = v.anchor
+            q = t[0]
+            s = t[1]
+
+            for dstState in self.markov_chain.states:
+                probability = self.markov_chain.get_transition_probability(s, dstState)
+                if probability == 0.0:
+                    continue
+
+                for event in self.event_list:
+                    if event not in dstState.events:
+                        continue
+
+                    dstDFAState = self.dfa.transitions[(q, event)]
+                    v2_name = dstDFAState + "_" + dstState.name
+
+                    v2_was_in_mdp = False
+                    if v2_name in self.mdp.states_dict_by_name.keys():
+                        v2 = self.mdp.states_dict_by_name[v2_name]
+                        v2_was_in_mdp = True
+                    else:
+                        t2 = (dstDFAState, dstState)
+                        v2 = MDPState(v2_name, t2)
+                        v2.evidence_distribution = dstState.evidence_distribution
+                        self.mdp.add_state(v2)
+                        cnt += 1
+                        if dstDFAState in self.dfa.accept_states:
+                            v2.is_goal = True
+                            self.mdp.set_as_goal(v2)
+
+                    if v2_name not in queue_names and not v2_was_in_mdp:
+                        queue.append(v2)
+                        queue_names.append(v2_name)
+                    transition = MDPTransition(v, v2, event, dstState.events, probability)
+                    self.mdp.add_transition(transition)
+
+                for event in self.event_list:
+                    if event in dstState.events:
+                        continue
+
+                    v2_name = q + "_" + dstState.name
+                    v2_was_in_mdp = False
+
+                    if v2_name in self.mdp.states_dict_by_name.keys():
+                        v2 = self.mdp.states_dict_by_name[v2_name]
+                        v2_was_in_mdp = True
+                    else:
+                        t2 = (q, dstState)
+                        v2 = MDPState(v2_name, t2)
+                        v2.evidence_distribution = dstState.evidence_distribution
+                        self.mdp.add_state(v2)
+                        cnt += 1
+                        if q in self.dfa.accept_states:
+                            v2.is_goal = True
+                            self.mdp.set_as_goal(v2)
+
+                    if v2_name not in queue_names and not v2_was_in_mdp:
+                        queue.append(v2)
+                        queue_names.append(v2_name)
+
+                    transition = MDPTransition(v, v2, event, dstState.events, probability)
+                    self.mdp.add_transition(transition)
+
+        self.mdp.remove_unreachable_states()
+        self.mdp.compute_states_available_actions()
+
+        self.mdp.make_observable_function()
+
+
+
+
+

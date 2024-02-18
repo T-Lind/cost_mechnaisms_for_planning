@@ -89,7 +89,7 @@ class MarkovDecisionProcessOld:
     def get_transition_prob(self, current_state: Union[int, str], action: Union[int, str],
                             next_state: Union[int, str]) -> float:
         """
-        Get the transition probability P(s' | s, a).
+        Get the transition probability P(srcState' | srcState, a).
 
         Parameters:
         - current_state: Current state index or label
@@ -114,7 +114,7 @@ class MarkovDecisionProcessOld:
 
     def get_reward(self, current_state: Union[int, str], action: Union[int, str]) -> float:
         """
-        Get the immediate reward R(s, a).
+        Get the immediate reward R(srcState, a).
 
         Parameters:
         - current_state: Current state index or label
@@ -241,7 +241,7 @@ class MarkovDecisionProcessOld:
     def simulate_policy(self, policy: Dict[Union[int, str], Union[int, str]], num_steps: int = 10,
                         verbose=True) -> tuple[list[str], list[float]]:
         """
-        Simulate the agent's behavior based on the given policy and print the states visited.
+        Simulate the agent'srcState behavior based on the given policy and print the states visited.
 
         Parameters:
         - policy: Dictionary mapping state to action
@@ -335,6 +335,7 @@ class MarkovDecisionProcessOld:
 
 class MDPState:
     def __init__(self, name: str, anchor=None):
+        self.available_transitions = {}
         self.name = name
         self.anchor = anchor
         self.is_initial = False
@@ -367,9 +368,45 @@ class MDPState:
     def __repr__(self):
         return self.name
 
+    def add_transition(self, transition):
+        if transition not in self.transitions:
+            self.sub_probability_transitions += transition.probability
+            self.transitions.append(transition)
+
+    def add_transition_to(self, transition):
+        if transition not in self.transitions_to:
+            self.transitions_to.append(transition)
+
+    def compute_available_actions(self):
+        for transition in self.transitions:
+            if transition.action not in self.available_actions:
+                self.available_transitions[transition.action] = []
+                self.available_actions.append(transition.action)
+            self.action_transitions[transition.action].append(transition)
+
+
+class MDPTransition:
+    def __init__(self, srcState: MDPState, dstState: MDPState, action: str, natureAction: str, probability: float):
+        self.src_state = srcState
+        self.dst_state = dstState
+        self.action = action
+        self.nature_action = natureAction
+        self.probability = probability
+        self.event_positive = False
+        self.event_negative = False
+
+    def __str__(self):
+        return str(self.src_state) + "--" + str(self.action) + "--" + str(self.probability) + "-->" + str(
+            self.dst_state)
+
+    def __repr__(self):
+        return str(self.src_state) + "--" + str(self.action) + "--" + str(self.probability) + "-->" + str(
+            self.dst_state)
+
 
 class MDP:
     def __init__(self):
+        self.goal_reached_observation = "goal_reached"
         self.states: list[MDPState] = []
         self.actions = []
         self.initial_state = MDPState("")
@@ -391,6 +428,10 @@ class MDP:
         self.scc_transitions = []
 
         self.states_dict_by_name = {}
+
+        self.visited = []
+
+        self.available_actions_computed = False
 
     def compute_avoidable_actions(self):
         for state in self.states:
@@ -431,3 +472,80 @@ class MDP:
         state.index = len(self.states)
         self.states.append(state)
         self.states_dict_by_name[state.name] = state
+
+    def set_as_goal(self, markov_state: MDPState):
+        markov_state.is_goal = True
+        if markov_state not in self.goal_states:
+            self.goal_states.append(markov_state)
+
+    def add_transition(self, transition: MDPTransition):
+        transition.src_state.add_transition(transition)
+        transition.dst_state.add_transition_to(transition)
+        self.transitions.append(transition)
+
+    def dfs(self, state):
+        self.visited[state.index] = True
+        state.reachable = True
+        for transition in state.transitions:
+            if self.visited[transition.dst_state.index]:
+                self.dfs(transition.dst_state)
+
+    def recognize_reachable_states(self):
+        self.visited = [False for _ in range(len(self.states))]
+        for state in self.states:
+            state.reachable = False
+        self.dfs(self.initial_state)
+
+    def remove_unreachable_states(self):
+        self.recognize_reachable_states()
+
+        states_to_remove = []
+        for state in self.states:
+            if not state.reachable:
+                states_to_remove.append(state)
+
+        transitions_to_remove = []
+
+        for transition in self.transitions:
+            if not transition.src_state.reachable or not transition.dst_state.reachable:
+                transitions_to_remove.append(transition)
+
+        count_removed_transitions = 0
+        for transition in transitions_to_remove:
+            self.transitions.remove(transition)
+            count_removed_transitions += 1
+
+        count_removed_states = 0
+        for state in states_to_remove:
+            self.states.remove(state)
+            if state in self.goal_states:
+                self.goal_states.remove(state)
+            count_removed_states += 1
+
+        self.reindex_states()
+
+    def reindex_states(self):
+        i = 0
+        for state in self.states:
+            state.index = i
+            i += 1
+
+    def compute_states_available_actions(self):
+        for state in self.states:
+            state.compute_available_actions()
+        self.available_actions_computed = True
+
+    def make_observable_function(self):
+        self.observations = []
+        if len(self.evidence_list) > 0:
+            for evidence in self.evidence_list:
+                self.observations.append((True, evidence))
+                self.observations.append((False, evidence))
+        else:
+            self.observations.append(True)
+            self.observations.append(False)
+
+        self.observations.append(self.goal_reached_observation)
+
+        # TODO: FINISH THIS
+

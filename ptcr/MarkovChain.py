@@ -43,3 +43,6 @@ class MarkovChain:
 
         for row in range(len(self.transition_matrix)):
             self.states[row].evidence_distribution = evidence_distribution[row]
+
+    def get_transition_probability(self, srcState: MarkovState, dstState: MarkovState):
+        return self.transition_matrix[srcState.index][dstState.index]
