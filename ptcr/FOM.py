@@ -88,6 +88,8 @@ class FOM:
         if not self.computed_policy_with_metadata:
             self.compute_optimal_policy()
 
+        print("OPTIMAL POLICY WITH METADATA", self.computed_policy_with_metadata)
+
         n_iters, story = self.event_predictor.simulate(self.computed_policy_with_metadata['policy'])
 
         return {

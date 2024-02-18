@@ -23,8 +23,10 @@ class EventPredictor:
 
     def optimal_policy_infinite_horizon(self, epsilon_of_convergence: float):
         len_mdp_states = len(self.mdp.states)
-        G = [[0.0 for _ in [0, 1]] for _ in range(len_mdp_states)]
+        G = [[0.0 for _ in [0, 1]] for _ in range(len_mdp_states + 1)]
         A = ["" for _ in range(len_mdp_states)]
+
+        print("G starting", G)
 
         for i in range(len_mdp_states):
             G[i][0] = 0.0
@@ -58,6 +60,8 @@ class EventPredictor:
                     val = 0.0
 
                     for transition in state.action_transitions[action]:
+                        print("G", G)
+                        print("transition", transition, "dst state index", transition.dst_state.index)
                         term = G[transition.dst_state.index][1] * transition.probability
                         val += term
 
@@ -102,6 +106,8 @@ class EventPredictor:
 
         dfa_state_previous = dfa_state
         i = 0
+
+        print("starting out here with policy", policy)
 
         while i < max_steps:
             if dfa_state in self.dfa.accept_states:

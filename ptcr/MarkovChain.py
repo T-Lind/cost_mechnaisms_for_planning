@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class MarkovState:
     def __init__(self, name: str, events: list, index: int, evidence_distribution=None):
         if events is None:
@@ -51,3 +54,9 @@ class MarkovChain:
 
     def get_transition_probability(self, srcState: MarkovState, dstState: MarkovState):
         return self.transition_matrix[srcState.index][dstState.index]
+
+    def next_state(self, currentState):
+        if currentState == self.null_state:
+            return np.random.choice(self.states, p=self.initial_distribution)
+
+        return np.random.choice(self.states, p=self.transition_matrix[currentState.index])
