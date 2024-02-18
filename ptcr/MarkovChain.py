@@ -18,7 +18,12 @@ class MarkovState:
 
 class MarkovChain:
     def __init__(self, state_names: list, state_events: list, transition_matrix: list, initial_distribution: list,
-                 evidence_distribution: list, initial_state_index: int = 0):
+                 evidence_distribution: list, initial_state_index: int = 0, evidence_list: list = None):
+        if evidence_list is None:
+            self.evidence_list = []
+        else:
+            self.evidence_list = evidence_list
+
         self.states = []
         self.state_names = state_names  # AKA evidence_list?
         self.initial_state_index = initial_state_index

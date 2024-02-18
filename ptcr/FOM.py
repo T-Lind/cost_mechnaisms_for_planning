@@ -7,6 +7,10 @@ from ptcr.MarkovChain import MarkovChain
 
 class FOM:
     def __init__(self, input_str: str):
+        """
+        Generalized Fully Observable Markov Setup.
+        :param input_str: JSON string to provide specifications for the FOM object
+        """
         self.computed_policy_with_metadata = None
         self.ep = None
         self.ep = None
@@ -51,6 +55,10 @@ class FOM:
         self.dfa = DeterministicFiniteAutomaton(self.dfa_states, self.alphabet, self.dfa_transitions,
                                                 self.initial_dfa_state, self.final_dfa_states)
 
+        print("DFA", self.dfa)
+        print("Markov Chain", self.markov_chain)
+        print("Alphabet", self.alphabet)
+
         self.event_predictor = EventPredictor(self.dfa, self.markov_chain, self.alphabet)
 
         print("state names\n", self.state_names)
@@ -65,9 +73,18 @@ class FOM:
         print("dfa transitions\n", self.dfa_transitions)
 
     def identity_matrix(self, size: int):
+        """
+        Create an identity matrix of size `size`
+        :param size: How big the identity matrix should be
+        :return:
+        """
         return [[1 if i == j else 0 for i in range(size)] for j in range(size)]
 
     def simulate(self):
+        """
+        Simulate the FOM using the specifications from input_str
+        :return: A dict containing the number of iterations, the story, the expected cost, and the time elapsed
+        """
         if not self.computed_policy_with_metadata:
             self.compute_optimal_policy()
 

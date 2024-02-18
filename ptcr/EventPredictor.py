@@ -2,9 +2,8 @@ import time
 from sys import float_info
 from typing import Tuple
 
-from MarkovDecisionProcess import MDP, MDPState, MDPTransition
+from ptcr.MarkovDecisionProcess import MDP, MDPState, MDPTransition
 from ptcr import DeterministicFiniteAutomaton, MarkovChain
-from ptcr.MarkovChain import MarkovState
 
 
 class EventPredictor:

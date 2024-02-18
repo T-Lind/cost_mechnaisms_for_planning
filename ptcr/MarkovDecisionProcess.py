@@ -380,7 +380,7 @@ class MDPState:
     def compute_available_actions(self):
         for transition in self.transitions:
             if transition.action not in self.available_actions:
-                self.available_transitions[transition.action] = []
+                self.action_transitions[transition.action] = []
                 self.available_actions.append(transition.action)
             self.action_transitions[transition.action].append(transition)
 
