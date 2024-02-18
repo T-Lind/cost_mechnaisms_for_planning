@@ -547,5 +547,73 @@ class MDP:
 
         self.observations.append(self.goal_reached_observation)
 
-        # TODO: FINISH THIS
+        self.create_observation_function_dict()
 
+        if len(self.evidence_list) > 0:
+            for state in self.states:
+                s = state.anchor[1]
+
+                for action in self.actions:
+                    for i in range(len(self.evidence_list)):
+                        y = self.evidence_list[i]
+                        observation1 = self.get_observation_of_tuple(True, y)
+                        observation2 = self.get_observation_of_tuple(False, y)
+                        observation3 = self.goal_reached_observation
+
+                        if state.is_goal:
+                            self.observation_function[observation1][state][action] = 0.0
+                            self.observation_function[observation2][state][action] = 0.0
+                            self.observation_function[observation3][state][action] = 1.0
+
+                        else:
+                            self.observation_function[observation3][state][action] = 0.0
+
+                            if action in s.events:
+                                self.observation_function[observation1][state][action] = s.evidence_distribution[i]
+                                self.observation_function[observation2][state][action] = 0.0
+                            else:
+                                self.observation_function[observation1][state][action] = 0.0
+                                self.observation_function[observation2][state][action] = s.evidence_distribution[i]
+        else:
+            for state in self.states:
+                s = state.anchor[1]
+                for action in self.actions:
+                    observation1 = self.get_boolean_observation(True)
+                    observation2 = self.get_boolean_observation(False)
+                    observation3 = self.goal_reached_observation
+
+                    if state.is_goal:
+                        self.observation_function[observation1][state][action] = 0.0
+                        self.observation_function[observation2][state][action] = 0.0
+                        self.observation_function[observation3][state][action] = 1.0
+                    else:
+                        self.observation_function[observation3][state][action] = 0.0
+                        if action in s.events:
+                            self.observation_function[observation1][state][action] = 1.0
+                            self.observation_function[observation2][state][action] = 0.0
+                        else:
+                            self.observation_function[observation1][state][action] = 0.0
+                            self.observation_function[observation2][state][action] = 1.0
+    def get_observation_of_tuple(self, prediction_result: bool, evidence: str):
+        for observation in self.observations:
+            if observation[0] != prediction_result:
+                continue
+            if observation[1] != evidence:
+                continue
+            return observation
+        return None
+
+    def create_observation_function_dict(self):
+        self.observation_function = {}
+        for observation in self.observations:
+            self.observation_function[observation] = {}
+            for state in self.states:
+                self.observation_function[observation][state] = {}
+                for action in self.actions:
+                    self.observation_function[observation][state][action] = 0.0
+
+    def get_boolean_observation(self, booleanValue: bool):
+        for observation in self.observations:
+            if observation == booleanValue:
+                return observation
+        return None

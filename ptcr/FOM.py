@@ -7,7 +7,7 @@ from ptcr.MarkovChain import MarkovChain
 
 class FOM:
     def __init__(self, input_str: str):
-        self.computed_policy = None
+        self.computed_policy_with_metadata = None
         self.ep = None
         self.ep = None
 
@@ -46,8 +46,10 @@ class FOM:
             for event, to_state in transitions.items():
                 self.dfa_transitions[(from_state, event)] = to_state
 
-        self.markov_chain = MarkovChain(self.state_names, self.state_events, self.transition_matrix, self.initial_distribution, self.evidence_distribution)
-        self.dfa = DeterministicFiniteAutomaton(self.dfa_states, self.alphabet, self.dfa_transitions, self.initial_dfa_state, self.final_dfa_states)
+        self.markov_chain = MarkovChain(self.state_names, self.state_events, self.transition_matrix,
+                                        self.initial_distribution, self.evidence_distribution)
+        self.dfa = DeterministicFiniteAutomaton(self.dfa_states, self.alphabet, self.dfa_transitions,
+                                                self.initial_dfa_state, self.final_dfa_states)
 
         self.event_predictor = EventPredictor(self.dfa, self.markov_chain, self.alphabet)
 
@@ -66,16 +68,22 @@ class FOM:
         return [[1 if i == j else 0 for i in range(size)] for j in range(size)]
 
     def simulate(self):
-        if self.computed_policy is None:
+        if not self.computed_policy_with_metadata:
             self.compute_optimal_policy()
 
-        n_iters, story = self.event_predictor.simulate(self.computed_policy[0])
+        n_iters, story = self.event_predictor.simulate(self.computed_policy_with_metadata['policy'])
 
-
-
+        return {
+            "n_iters": n_iters,
+            "story": story,
+            "expected_cost": self.computed_policy_with_metadata['expected_cost'],
+            "time_elapsed": self.computed_policy_with_metadata['time_elapsed']
+        }
 
     def compute_optimal_policy(self):
-        self.computed_policy = self.event_predictor.optimal_policy_infinite_horizon(0.001)
-        return self.computed_policy
-
-
+        response = self.event_predictor.optimal_policy_infinite_horizon(0.001)
+        self.computed_policy_with_metadata = {
+            "policy": response[0],
+            "expected_cost": response[1],
+            "time_elapsed": response[2]
+        }

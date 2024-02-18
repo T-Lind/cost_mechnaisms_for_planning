@@ -13,11 +13,13 @@ class EventPredictor:
         self.markov_chain = markov_chain
         self.event_list = event_list
 
-        self.mdp = MDP()  # TODO: IMPLEMENT ADDING THIS
+        self.mdp = MDP()
         self.current_markov_state_visible = True
 
         if self.current_markov_state_visible:
             self.__create_automaton_single_initial_state_only_reachables()
+        else:
+            raise NotImplementedError("Not Fully Visible Markov state not implemented yet")
 
 
     def optimal_policy_infinite_horizon(self, epsilon_of_convergence: float):
@@ -132,8 +134,6 @@ class EventPredictor:
         v0.is_initial = True
         self.mdp.add_state(v0)
         self.mdp.initial_state = v0
-
-        # TODO: finish implementing this
 
         queue = []
         queue_names = []
