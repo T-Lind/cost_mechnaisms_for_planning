@@ -2,6 +2,21 @@
 
 ### Author: T-Lind
 
+## Installation
+Prerequisites:
+- Python 3.9 (*later versions do not work*)
+- pip
+
+To install the required packages, run the following command:
+```bash
+# Create venv
+python -m venv venv
+# Activate venv
+source venv/bin/activate
+# Install requirements
+pip install -r requirements.txt
+```
+
 ## Overview
 
 The "Planning to Chronicle" paper proposed an approach to probabilistic planning that minimizes the expected number of

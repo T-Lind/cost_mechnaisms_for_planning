@@ -23,8 +23,10 @@ class EventPredictor:
 
     def optimal_policy_infinite_horizon(self, epsilon_of_convergence: float):
         len_mdp_states = len(self.mdp.states)
-        G = [[0.0 for _ in [0, 1]] for _ in range(len_mdp_states + 1)]
+        G = [[0.0 for _ in [0, 1]] for _ in range(len_mdp_states)]
         A = ["" for _ in range(len_mdp_states)]
+
+        print("G", G, "A", A)
 
         print("G starting", G)
 
@@ -114,7 +116,6 @@ class EventPredictor:
         while i < max_steps:
             if dfa_state in self.dfa.accept_states:
                 return i, story
-
 
             predicted_event = policy[dfa_state][state.name]
             state_2 = self.markov_chain.next_state(state)
