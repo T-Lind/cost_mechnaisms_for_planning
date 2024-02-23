@@ -1,149 +1,16 @@
+from typing import Union
+
 from automata.fa.dfa import DFA
 from automata.fa.nfa import NFA
 
-"""
-Create the powerset of a given set of alphabet
-"""
-from builtins import str
 
-
-def createPowerSet(alphabet):
-    sets = [set([])]
-
-    for n in alphabet:
-        sets.extend([s | {n} for s in sets])
-
-    # sets[0] = set()
-
-    return sets
-
-
-"""
-Create the dfa that accepts over a given alphabet, the language that consists of all strings 
-that contain all letters of the alphabet
-"""
-
-
-def dfaToSeeAllLetters(alphabet, additionalLetters, changeStateNames):
-    pwset = createPowerSet(alphabet)
-
-    sets = []
-    states = []
-
-    index = 0
-
-    for st in pwset:
-        sets.append(st)
-        s = str(st)
-        if changeStateNames == True:
-            s = "q" + str(index)
-        states.append(s)
-        index += 1
-        # print(s)
-
-    initial_state = states[0]
-    final_states = set()
-    final_states.add(states[len(states) - 1])
-
-    transitions = {}
-
-    for i in range(len(states)):
-        s = states[i]
-        st1 = sets[i]
-        transitions[s] = {}
-        for a in alphabet:
-            newSt = st1.copy()
-            # print(type(newSt))
-            if not (a in newSt):
-                newSt.add(a)
-            i = sets.index(newSt)
-            transitions[s][a] = states[i]
-        for b in additionalLetters:
-            transitions[s][b] = s
-
-    for c in additionalLetters:
-        alphabet.add(c)
-
-    dfa = DFA(states=set(states), input_symbols=alphabet, transitions=transitions, initial_state=initial_state,
-              final_states=final_states)
-
-    return dfa
-
-
-"""
-Creates a DFA whose language is the set of all words containing each letter of alphabet once.
-"""
-
-
-def dfaToSeeAllLettersEachOnce(alphabet, additionalLetters, changeStateNames):
-    pwset = createPowerSet(alphabet)
-
-    sets = []
-    states = []
-
-    index = 0
-
-    for st in pwset:
-        sets.append(st)
-        s = str(st)
-        if changeStateNames == True:
-            s = "q" + str(index)
-        states.append(s)
-        index += 1
-        # print(s)
-
-    initial_state = states[0]
-    final_states = set()
-    final_states.add(states[len(states) - 1])
-
-    transitions = {}
-
-    trp = "trp"
-    transitions[trp] = {}
-
-    for i in range(len(states)):
-        s = states[i]
-        st1 = sets[i]
-        transitions[s] = {}
-        for a in alphabet:
-            if a in st1:
-                transitions[s][a] = trp
-                continue
-            newSt = st1.copy()
-            # print(type(newSt))
-            if not (a in newSt):
-                newSt.add(a)
-            i = sets.index(newSt)
-            transitions[s][a] = states[i]
-        for b in additionalLetters:
-            transitions[s][b] = s
-
-    trp = "trp"
-    transitions[trp] = {}
-
-    for a in alphabet:
-        transitions[trp][a] = trp
-    for a in additionalLetters:
-        transitions[trp][a] = trp
-
-    states.append(trp)
-
-    for c in additionalLetters:
-        alphabet.add(c)
-
-    dfa = DFA(states=set(states), input_symbols=alphabet, transitions=transitions, initial_state=initial_state,
-              final_states=final_states)
-
-    return dfa
-
-
-def dfaAcceptingASequence(sequence, alphabet):
+def dfa_accepting_a_sequence(sequence, alphabet):
     states = []
 
     transitions = {}
-    currState = "q0"
-    prevState = currState
-    states.append(currState)
+    current_state = "q0"
+    prev_state = current_state
+    states.append(current_state)
 
     q_trap = "q_trap"
     states.append(q_trap)
@@ -151,17 +18,17 @@ def dfaAcceptingASequence(sequence, alphabet):
     i = 1
 
     for a in sequence:
-        currState = "q_" + a + "_" + str(i)
-        states.append(currState)
-        transitions[prevState] = {}
-        transitions[prevState][a] = currState
+        current_state = "q_" + a + "_" + str(i)
+        states.append(current_state)
+        transitions[prev_state] = {}
+        transitions[prev_state][a] = current_state
         for b in alphabet:
             if b != a:
-                transitions[prevState][b] = q_trap
-        prevState = currState
+                transitions[prev_state][b] = q_trap
+        prev_state = current_state
         i = i + 1
 
-    q_final = prevState
+    q_final = prev_state
     transitions[q_trap] = {}
     transitions[q_final] = {}
 
@@ -179,279 +46,35 @@ def dfaAcceptingASequence(sequence, alphabet):
     return dfa
 
 
-"""
-def dfaAcceptingASeq1PlusSeq2(seq1,  seq2, alphabet):
-         
-    states = []
-     
-    transitions = {}
-    currState = "q0"
-    prevState = currState
-    states.append(currState)
-    
-    q_trap = "q_trap"
-    states.append(q_trap)
-    
-    i = 1
-    
-    for a in seq1:
-        currState = "q_"+a+"_"+str(i)+"_1"
-        states.append(currState)
-        transitions[prevState] = {}
-        transitions[prevState][a] = currState
-        for b in alphabet:
-            if b != a:
-                transitions[prevState][b] = q_trap
-        prevState = currState
-        i = i + 1
-    
-    q_final1 = prevState
-    transitions[q_trap] = {}
-    transitions[q_final1] = {}
-    
-    for a in alphabet:
-        transitions[q_trap][a] = q_trap
-        if a != seq1[1]:        
-            transitions[q_final1][a] = "q0"
-        else:
-            transitions[q_final1][a] = "q0"
-    
-                
-           
-    initial_state = states[0]
-    final_states = set()
-    final_states.add(q_final)
-        
-    dfa = DFA(states=set(states), input_symbols=alphabet, transitions=transitions, initial_state=initial_state, final_states=final_states)
-    
-    return dfa
-"""
-
-
-def dfaToSeeAllLettersInOrder(orderedAlphabet, additionalLetters, changeStateNames):
-    states = []
-
-    index = 0
-
-    transitions = {}
-    currState = "q0"
-    prevState = currState
-    states.append(currState)
-
-    for a in orderedAlphabet:
-        currState = "q_" + a
-        states.append(currState)
-        transitions[prevState] = {}
-        transitions[prevState][a] = currState
-        prevState = currState
-
-    q_final = prevState
-    currState = "q_trap"
-    q_trap = currState
-    transitions[q_trap] = {}
-    states.append(currState)
-    transitions[prevState] = {}
-    transitions[prevState][a] = currState
-
-    initial_state = states[0]
-    final_states = set()
-    final_states.add(q_final)
-
-    for i in range(len(states) - 1):
-        for k in range(i):
-            transitions[states[i]][orderedAlphabet[k]] = states[i]
-        for j in range(i + 1, len(orderedAlphabet)):
-            transitions[states[i]][orderedAlphabet[j]] = q_trap
-
-    for a in orderedAlphabet:
-        transitions[q_trap][a] = q_trap
-
-    for c in additionalLetters:
-        orderedAlphabet.append(c)
-        for i in range(len(states)):
-            transitions[states[i]][c] = states[i]
-
-    dfa = DFA(states=set(states), input_symbols=orderedAlphabet, transitions=transitions, initial_state=initial_state,
-              final_states=final_states)
-
-    return dfa
-
-
-def nfaToSeeAllLettersInOrder(orderedAlphabet, additionalLetters, changeStateNames):
-    states = []
-
-    index = 0
-
-    transitions = {}
-    currState = "q0"
-    prevState = currState
-    states.append(currState)
-
-    for a in orderedAlphabet:
-        currState = "q_" + a
-        states.append(currState)
-        transitions[prevState] = {}
-        transitions[prevState][a] = {prevState, currState}
-        for b in orderedAlphabet:
-            if b != a:
-                transitions[prevState][b] = {prevState}
-        for c in additionalLetters:
-            transitions[prevState][c] = {prevState}
-        prevState = currState
-
-    q_final = prevState
-    transitions[prevState] = {}
-    for b in orderedAlphabet:
-        transitions[prevState][b] = {prevState}
-    for c in additionalLetters:
-        transitions[prevState][c] = {prevState}
-
-    initial_state = states[0]
-    final_states = set()
-    final_states.add(q_final)
-
-    for c in additionalLetters:
-        orderedAlphabet.append(c)
-
-    nfa = NFA(states=set(states), input_symbols=orderedAlphabet, transitions=transitions, initial_state=initial_state,
-              final_states=final_states)
-
-    return nfa
-
-
-def levenshtein_automaton_for_a_term(term, k, alphabet):
-    n = len(term)
-
-    states = []
-    transitions = {}
-    final_states = set()
-    for i in range(n + 1):
-        for j in range(k + 1):
-            s = str(i) + "_" + str(j)
-            states.append(s)
-            transitions[s] = {}
-            for a in alphabet:
-                transitions[s][a] = set()
-                transitions[s][''] = set()
-
-            """ Add the transition for getting the next character of the term"""
-            if i < n:
-                transitions[s][term[i]].add(str(i + 1) + "_" + str(j))
-                # print("t for next of ("+s+", "+term[i]+")="+str(transitions[s][term[i]]))
-
-            """ Add the transitions for inserting a character """
-            if j < k:
-                for a in alphabet:
-                    transitions[s][a].add(str(i) + "_" + str(j + 1))
-                    # print("t for next of ("+s+", "+a+")="+str(i)+"_"+str(j+1))
-
-            """ Add the transitions for getting a wrong character """
-            if i < n and j < k:
-                for a in alphabet:
-                    transitions[s][a].add(str(i + 1) + "_" + str(j + 1))
-                    # print("t for next of ("+s+", "+a+")="+str(i+1)+"_"+str(j+1))
-
-            """ Add the transitions for skipping a character """
-            if i < n and j < k:
-                for a in alphabet:
-                    transitions[s][''].add(str(i + 1) + "_" + str(j + 1))
-                    # print("t for next of ("+s+", '')="+str(i+1)+"_"+str(j+1))
-
-            if i == n:
-                final_states.add(str(i) + "_" + str(j))
-
-    initial_state = states[0]
-
-    nfa = NFA(states=set(states), input_symbols=alphabet, transitions=transitions, initial_state=initial_state,
-              final_states=final_states)
-    dfa = DFA.from_nfa(nfa)
-    return dfa
-
-
-def levenshtein_automaton_for_a_dfa(dfa, k, alphabet):
-    n = len(dfa.states)
-
-    S = []
-    for s in dfa.states:
-        S.append(s)
-
-    states = []
-    transitions = {}
-    final_states = set()
-    for i in range(n):
-        for j in range(k + 1):
-            s = S[i] + "_" + str(j)
-            states.append(s)
-            transitions[s] = {}
-            for a in alphabet:
-                transitions[s][a] = set()
-                transitions[s][''] = set()
-
-            """ Add the transitions of the same level """
-            for a in alphabet:
-                transitions[s][a].add(dfa.transitions[S[i]][a] + "_" + str(j))
-                # print("("+s+", "+a+")="+dfa.transitions[S[i]][a])
-
-            """ Add the transitions for inserting a character """
-            if j < k:
-                for a in alphabet:
-                    transitions[s][a].add(S[i] + "_" + str(j + 1))
-                    # print("("+s+", "+a+")="+S[i]+"_"+str(j+1))
-
-            """ Add the transitions for getting a wrong character """
-            if j < k:
-                for a in alphabet:
-                    for b in alphabet:
-                        transitions[s][b].add(dfa.transitions[S[i]][a] + "_" + str(j + 1))
-                        # print("("+s+", "+b+")="+dfa.transitions[S[i]][a]+"_"+str(j+1))
-
-            """ Add the transitions for skipping a character """
-            if j < k:
-                for a in alphabet:
-                    transitions[s][''].add(dfa.transitions[S[i]][a] + "_" + str(j + 1))
-                    # print("("+s+", '')="+dfa.transitions[S[i]][a]+"_"+str(j+1))
-
-    initial_state = dfa.initial_state + "_0"
-    for s in dfa.final_states:
-        for j in range(k + 1):
-            final_states.add(s + "_" + str(j))
-
-    nfa = NFA(states=set(states), input_symbols=alphabet, transitions=transitions, initial_state=initial_state,
-              final_states=final_states)
-    dfa = DFA.from_nfa(nfa)
-
-    return nfa
-
-
-def union(dfa1, dfa2):
+def union(dfa_1, dfa_2):
     states = []
     s0 = "q0"
     states.append(s0)
-    for s in dfa1.states:
+    for s in dfa_1.states:
         states.append(s + "_1")
-    for s in dfa2.states:
+    for s in dfa_2.states:
         states.append(s + "_2")
-    alphabet = dfa1.input_symbols
+    alphabet = dfa_1.input_symbols
     transitions = {}
-    for s in dfa1.states:
+    for s in dfa_1.states:
         transitions[s + "_1"] = {}
         for a in alphabet:
             transitions[s + "_1"][a] = set()
-            transitions[s + "_1"][a].add(dfa1.transitions[s][a] + "_1")
-    for s in dfa2.states:
+            transitions[s + "_1"][a].add(dfa_1.transitions[s][a] + "_1")
+    for s in dfa_2.states:
         transitions[s + "_2"] = {}
         for a in alphabet:
             transitions[s + "_2"][a] = set()
-            transitions[s + "_2"][a].add(dfa2.transitions[s][a] + "_2")
+            transitions[s + "_2"][a].add(dfa_2.transitions[s][a] + "_2")
     transitions[s0] = {}
     transitions[s0][''] = set()
-    transitions[s0][''].add(dfa1.initial_state + "_1")
-    transitions[s0][''].add(dfa2.initial_state + "_2")
+    transitions[s0][''].add(dfa_1.initial_state + "_1")
+    transitions[s0][''].add(dfa_2.initial_state + "_2")
 
     final_states = set()
-    for s in dfa1.final_states:
+    for s in dfa_1.final_states:
         final_states.add(s + "_1")
-    for s in dfa2.final_states:
+    for s in dfa_2.final_states:
         final_states.add(s + "_2")
 
     nfa = NFA(states=set(states), input_symbols=alphabet, transitions=transitions, initial_state=s0,
@@ -481,7 +104,8 @@ def intersection(dfa1, dfa2):
     return dfa
 
 
-def superSequence(dfa):
+def super_sequence(dfa):
+    # Copy over the various states form the DFA to create the NFA
     states = dfa.states.copy()
     input_symbols = dfa.input_symbols.copy()
     transitions = dfa.transitions
@@ -496,12 +120,10 @@ def superSequence(dfa):
     nfa = NFA(states=set(states), input_symbols=input_symbols, transitions=nfa_transitions, initial_state=initial_state,
               final_states=final_states)
 
-    superSeqDFA = DFA.from_nfa(nfa)
-
-    return superSeqDFA
+    return DFA.from_nfa(nfa)
 
 
-def closurePlus(dfa):
+def closure_plus(dfa):
     states = dfa.states.copy()
     input_symbols = dfa.input_symbols.copy()
     transitions = dfa.transitions
@@ -518,9 +140,9 @@ def closurePlus(dfa):
     nfa = NFA(states=set(states), input_symbols=input_symbols, transitions=nfa_transitions, initial_state=initial_state,
               final_states=final_states)
 
-    superSeqDFA = DFA.from_nfa(nfa)
+    super_seq_dfa = DFA.from_nfa(nfa)
 
-    return superSeqDFA
+    return super_seq_dfa
 
 
 def concatenate(dfa1, dfa2):
@@ -542,110 +164,87 @@ def concatenate(dfa1, dfa2):
         if q in final_states:
             nfa_transitions[q][''] = {initial_state2}
 
-    newStates = []
-    dictNewStates = {}
+    new_states = []
+    new_states_dict = {}
 
     for q in dfa2.states:
         s = q
         while s in states:
             s = s + "_2"
-        newStates.append((s, q))
-        dictNewStates[q] = s
+        new_states.append((s, q))
+        new_states_dict[q] = s
         states.add(s)
 
-    for t in newStates:
+    for t in new_states:
         s = t[0]
         q = t[1]
         nfa_transitions[s] = {}
         for a in input_symbols:
-            nfa_transitions[s][a] = {dictNewStates[transitions2[q][a]]}
+            nfa_transitions[s][a] = {new_states_dict[transitions2[q][a]]}
 
     for q in states:
         if q in final_states:
-            nfa_transitions[q][''] = {dictNewStates[dfa2.initial_state]}
+            nfa_transitions[q][''] = {new_states_dict[dfa2.initial_state]}
 
     final_states2 = set()
     for q in dfa2.final_states:
-        final_states2.add(dictNewStates[q])
+        final_states2.add(new_states_dict[q])
 
     nfa = NFA(states=set(states), input_symbols=input_symbols, transitions=nfa_transitions, initial_state=initial_state,
               final_states=final_states2)
 
-    superSeqDFA = DFA.from_nfa(nfa)
-
-    return superSeqDFA
+    return DFA.from_nfa(nfa)
 
 
-def newStateNames(dfa):
-    states = dfa.states.copy()
+def new_state_names(dfa):
     input_symbols = dfa.input_symbols.copy()
     transitions = dfa.transitions
 
-    newStates = set()
+    new_states = set()
 
     pairs = []
-    dictOldNew = {}
+    dict_previous_new = {}
     i = 0
     for q in dfa.states:
         s = str(i)
         pairs.append((s, q))
-        dictOldNew[q] = s
-        newStates.add(s)
+        dict_previous_new[q] = s
+        new_states.add(s)
         i = i + 1
 
-    newTransitios = {}
+    new_transitions = {}
     for q in dfa.states:
-        newTransitios[dictOldNew[q]] = {}
+        new_transitions[dict_previous_new[q]] = {}
         for a in input_symbols:
-            newTransitios[dictOldNew[q]][a] = dictOldNew[transitions[q][a]]
+            new_transitions[dict_previous_new[q]][a] = dict_previous_new[transitions[q][a]]
 
     final_states = set()
 
     for q in dfa.final_states:
-        if q in dictOldNew.keys():
-            final_states.add(dictOldNew[q])
+        if q in dict_previous_new.keys():
+            final_states.add(dict_previous_new[q])
         else:
             print("Key " + q + " was not found in the dictionary 'dictOldNew'")
 
-    initial_state = dictOldNew[dfa.initial_state]
+    initial_state = dict_previous_new[dfa.initial_state]
 
-    dfa = DFA(states=set(newStates), input_symbols=input_symbols, transitions=newTransitios,
-              initial_state=initial_state, final_states=final_states)
-
-    return dfa
+    return DFA(states=set(new_states), input_symbols=input_symbols, transitions=new_transitions,
+               initial_state=initial_state, final_states=final_states)
 
 
-def makeFinalStatesAbsorbing(dfa):
-    for q in dfa.final_states:
-        for a in dfa.input_symbols:
-            dfa.transitions[q][a] = q
-
-
-def printDFA(dfa):
-    print("------------------------------------- print DFA ------------------------------------------------")
-    print("Initial State: " + dfa.initial_state)
+def print_dfa(automaton: Union[DFA, NFA]):
+    print(f"{type(automaton).__name__}:".center(40, "-"))
+    print("Initial State: " + automaton.initial_state)
     print("States and Transitions:")
-    for t in dfa.transitions.items():
+    for t in automaton.transitions.items():
         print(t)
     print("Final States:")
-    for f in dfa.final_states:
+    for f in automaton.final_states:
         print(f)
-    print("-------------------------------------------------------------------------------------------------")
+    print("-" * 40)
 
 
-def printNFA(nfa):
-    print("------------------------------------- print DFA ------------------------------------------------")
-    print("Initial State: " + nfa.initial_state)
-    print("States and Transitions:")
-    for t in nfa.transitions.items():
-        print(t)
-    print("Final States:")
-    for f in nfa.final_states:
-        print(f)
-    print("-------------------------------------------------------------------------------------------------")
-
-
-def getNonSelfLoopLetters(dfa, state):
+def get_non_self_loop_letters(dfa: DFA, state):
     result = []
     for a in dfa.input_symbols:
         if dfa.transitions[state][a] != state:

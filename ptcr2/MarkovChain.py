@@ -25,26 +25,26 @@ class MarkovState:
 
 class MarkovChain:
 
-    def __init__(self, stateNames, stateEvents, transitionMatrix, initialDistribution, initialStateIndex=0,
+    def __init__(self, state_names, state_events, transitionMatrix, initial_distribution, initialStateIndex=0,
                  hasEvidence=False, evidenceList=[]):
         self.states = []
-        self.stateNames = stateNames
-        self.stateEvents = stateEvents
+        self.stateNames = state_names
+        self.stateEvents = state_events
         self.initialStateIndex = initialStateIndex
-        self.__createStates(stateNames, stateEvents)
-        self.initialDistribution = initialDistribution
+        self.__create_states(state_names, state_events)
+        self.initialDistribution = initial_distribution
         self.transitionMatrix = transitionMatrix
         self.events = set()
         for s in self.states:
             for e in s.events:
                 if not (e in self.events):
                     self.events.add(e)
-        self.initialState = self.states[initialStateIndex]
-        self.nullState = MarkovState("none", "none")
-        self.hasEvidence = hasEvidence
-        self.evidenceList = evidenceList
+        self.initial_state = self.states[initialStateIndex]
+        self.null_state = MarkovState("none", "none")
+        self.has_evidence = hasEvidence
+        self.evidence_list = evidenceList
 
-    def __createStates(self, stateNames, stateEvents):
+    def __create_states(self, stateNames, stateEvents):
         self.states = []
 
         i = 0
@@ -81,10 +81,10 @@ class MarkovChain:
 
     def pomdp_raiseEvidence(self, currentState):
         # print("currentState.evidenceDistribution: "+str(currentState.evidenceDistribution))
-        return numpy.random.choice(self.evidenceList, p=currentState.evidenceDistribution)
+        return numpy.random.choice(self.evidence_list, p=currentState.evidenceDistribution)
 
     def nextState(self, currentState):
-        if currentState == self.nullState:
+        if currentState == self.null_state:
             return numpy.random.choice(self.states, p=self.initialDistribution)
         # print("len(states)="+str(len(self.states)))
         # print("len(self.transitionMatrix[currentState.index])="+str(len(self.transitionMatrix[currentState.index])))
@@ -192,13 +192,13 @@ class MarkovChain:
 
         for i in range(len(self.states)):
             for j in range(len(markovChain.states)):
-                if self.states[i] == self.initialState and markovChain.states[j] != markovChain.initialState:
+                if self.states[i] == self.initial_state and markovChain.states[j] != markovChain.initial_state:
                     print("not to make")
                     continue
-                if markovChain.states[j] == markovChain.initialState and self.states[i] != self.initialState:
+                if markovChain.states[j] == markovChain.initial_state and self.states[i] != self.initial_state:
                     print("not to make")
                     continue
-                if self.states[i] == self.initialState and markovChain.states[j] == markovChain.initialState:
+                if self.states[i] == self.initial_state and markovChain.states[j] == markovChain.initial_state:
                     initialStateIndex = k
                 s1 = self.states[i]
                 s2 = markovChain.states[j]
@@ -221,7 +221,7 @@ class MarkovChain:
                 k = k + 1
 
         numStates = k
-        # numStates = len(markovChain.states)*len(self.states)
+        # numStates = len(markov_chain.states)*len(self.states)
 
         transitionMatrix = [[0 for j in range(numStates)] for i in range(numStates)]
 
@@ -267,7 +267,7 @@ class MarkovChain:
             for j in range(len(markovChain.states)):
                 s1 = self.states[i]
                 s2 = markovChain.states[j]
-                # initialDistribution.append(self.initialDistribution[i]*markovChain.initialDistribution[j])
+                # initial_distribution.append(self.initial_distribution[i]*markov_chain.initial_distribution[j])
                 stateName = s1.name + "_" + s2.name
                 stateNames.append(stateName)
                 eventSet = s1.events.union(s2.events)

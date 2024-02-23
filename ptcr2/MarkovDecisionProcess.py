@@ -13,14 +13,14 @@ from ptcr2.BeliefTree import BeliefTree, BeliefTreeNode, BeliefTreeEdge
 class MDPState:
     # name = ""
     # anchor = None
-    # isInitial = False
+    # is_initial = False
     # isGoal = False
     # index = -1
 
     def __init__(self, name="", anchor=None):
         self.name = name
         self.anchor = anchor
-        self.isInitial = False
+        self.is_initial = False
         self.isGoal = False
         self.index = -1
         self.transitions = []
@@ -185,7 +185,7 @@ class MDP:
     def __init__(self):
         self.states = []
         self.actions = []
-        self.initialState = MDPState()
+        self.initial_state = MDPState()
         self.goalStates = []
         self.transitions = []
         self.transitionsDict = {}
@@ -218,7 +218,7 @@ class MDP:
         self.statesDictByName = {}
 
         """
-        The property evidenceList contains only the original evidence and not the results of whether the prediction was right or not.
+        The property evidence_list contains only the original evidence and not the results of whether the prediction was right or not.
         We make new list of evidences here.  
         """
         self.evidenceTupleList = []
@@ -242,7 +242,7 @@ class MDP:
 
     def createAnInitialBeleifState(self):
         beleif = [0.0] * len(self.states)
-        beleif[self.initialState.index] = 1.0
+        beleif[self.initial_state.index] = 1.0
         return beleif
 
     """
@@ -262,7 +262,7 @@ class MDP:
         return self.states[chosenIndex]
 
     """
-    Given that the current beleif state over the mdp is beleif, give from the list eventList, an event that highest probability to happen in the next time step
+    Given that the current beleif state over the mdp is beleif, give from the list actions, an event that highest probability to happen in the next time step
     """
 
     def getNexTimeMostPlausibleEvent(self, beleif, eventList, markovChain):
@@ -451,7 +451,7 @@ class MDP:
             # print("x.index="+str(x.index))
         return total
 
-    def addState(self, mdpState):
+    def add_state(self, mdpState):
         mdpState.index = len(self.states)
         self.states.append(mdpState)
         self.statesDictByName[mdpState.name] = mdpState
@@ -572,8 +572,8 @@ class MDP:
         for state in self.states:
             state.visited = False
         stack = []
-        stack.append(self.initialState)
-        state = self.initialState
+        stack.append(self.initial_state)
+        state = self.initial_state
         state.visited = True
 
     def sccTopologicalOrderHelper(self, scc):
@@ -632,7 +632,7 @@ class MDP:
             scc.Leader = state
             # scc.name = "C"+str(len(self.strgConnCompoments))
             self.strgConnCompoments.append(scc)
-            if state == self.initialState:
+            if state == self.initial_state:
                 self.initialSCC = scc
             hasPopedState = False
             while hasPopedState == False:
@@ -723,7 +723,7 @@ class MDP:
         self.visited = [False] * len(self.states)
         for state in self.states:
             state.reachable = False
-        self.dfs(self.initialState)
+        self.dfs(self.initial_state)
 
     def dfs(self, state):
         # print("DFS "+str(state))
@@ -976,12 +976,12 @@ class MDP:
         for i in range(len(self.states)):
             beleif[i] = 0
 
-        j = self.states.index(self.initialState)
+        j = self.states.index(self.initial_state)
         beleif[j] = 1
 
         node = BeliefTreeNode(beleif)
         node.height = 0
-        if self.initialState in self.goalStates:
+        if self.initial_state in self.goalStates:
             node.goalAvgValue = 1
 
         bt = BeliefTree(node)
@@ -1090,7 +1090,7 @@ class MDP:
         st += "<Entry>" + "\n"
         st += "<Instance>-</Instance>" + "\n"
         st += "<ProbTable>"
-        indexOfInitialState = self.states.index(self.initialState)
+        indexOfInitialState = self.states.index(self.initial_state)
         for i in range(len(self.states)):
             if i == indexOfInitialState:
                 st += "1 "
@@ -1287,7 +1287,7 @@ class MDP:
         st += "<Entry>" + "\n"
         st += "<Instance>-</Instance>" + "\n"
         st += "<ProbTable>"
-        indexOfInitialState = self.states.index(self.initialState)
+        indexOfInitialState = self.states.index(self.initial_state)
         for i in range(len(self.states)):
             if i == indexOfInitialState:
                 st += "1 "
@@ -1394,10 +1394,10 @@ class MDP:
         st += "</ObsVar>" + "\n"
 
         """
-        if self.hasEvidence:
+        if self.has_evidence:
             st += "<ObsVar vname='evidence'>"+"\n"
             st += "<ValueEnum>"
-            for ev in self.evidenceList:
+            for ev in self.evidence_list:
                 st = st + ev + " " 
             st += "</ValueEnum>"+"\n"
             st += "</ObsVar>"+"\n"
@@ -1422,7 +1422,7 @@ class MDP:
         st += "<Entry>" + "\n"
         st += "<Instance>-</Instance>" + "\n"
         st += "<ProbTable>"
-        indexOfInitialState = self.states.index(self.initialState)
+        indexOfInitialState = self.states.index(self.initial_state)
         for i in range(len(self.states)):
             if i == indexOfInitialState:
                 st += "1 "
@@ -1493,7 +1493,7 @@ class MDP:
             if s.isGoal == False:
                 continue
             s2 = MDPState(s.name + "_shadow", s)
-            self.addState(s2)
+            self.add_state(s2)
             for o in self.observations:
                 self.observationFunction[o][s2] = {}
                 for a in self.actions:
@@ -2313,7 +2313,7 @@ class MDP:
                 policyValues.append(self.computeNumstepsAndSatisProbOfAPolicy(self.states, policy, [], True))
             expectedVectCosts = []
             for policyVal in policyValues:
-                expectedVectCosts.append(policyVal[self.initialState.name])
+                expectedVectCosts.append(policyVal[self.initial_state.name])
             policycomptime = time_elapsed
             return policies, policyValues, expectedVectCosts, policycomptime
 
@@ -3044,7 +3044,7 @@ class MDP:
 
                 # print("r="+str(r))
 
-                # for action in self.eventList:
+                # for action in self.actions:
                 # print("#Available actions for "+str(state)+": "+str(len(state.availableActions)))
 
                 if len(state.availableActions) == 0:
@@ -3114,8 +3114,8 @@ class MDP:
 
         time_elapsed = (time.time() - time_start)
 
-        # return G[0][self.mdp.initialState.index]
-        return (optPolicy, G, G[0][self.initialState.index], time_elapsed)
+        # return G[0][self.mdp.initial_state.index]
+        return (optPolicy, G, G[0][self.initial_state.index], time_elapsed)
 
     def write_POMDPX_XML(self, filePath):
         f = open(filePath, "w+")
