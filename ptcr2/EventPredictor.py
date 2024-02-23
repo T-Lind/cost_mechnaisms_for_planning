@@ -15,20 +15,18 @@ class EventPredictor:
         self.actions = actions
         self.verbose = verbose
         self.mdp = None
-        self.currentMarkovStateVisibile = markov_state_visible
+        self.current_markov_state_visible = markov_state_visible
         if markov_state_visible:
             self.__create_product_automaton_single_initial_state_onlyreachables()
         else:
             self.__create_product_automaton_where_current_markov_state_invisible()
 
     def __create_product_automaton_single_initial_state_onlyreachables(self):
-        if self.verbose == True:
-            print("---------------creating product automata-----------------")
         dfa = self.dfa
         mc = self.markov_chain
         mdp = MDP()
-        mdp.hasEvidence = mc.has_evidence
-        mdp.evidenceList = mc.evidence_list
+        mdp.has_evidence = mc.has_evidence
+        mdp.evidence_list = mc.evidence_list
         self.mdp = mdp
 
         mdp.actions = self.actions
@@ -38,135 +36,78 @@ class EventPredictor:
         """
         t0 = (dfa.initial_state, mc.initial_state)
         v0 = MDPState(dfa.initial_state + "_" + mc.initial_state.name, t0)
-        v0.evidenceDistribution = mc.initial_state.evidenceDistribution
-        q0 = dfa.initial_state
+        v0.evidence_distribution = mc.initial_state.evidence_distribution
         v0.is_initial = True
         mdp.add_state(v0)
         mdp.initial_state = v0
 
         queue = []
-        queueNames = []
+        queue_names = []
         queue.append(v0)
-        queueNames.append(v0.name)
+        queue_names.append(v0.name)
 
         cnt = 0
         i = 0
         while queue:
             i += 1
             v = queue.pop(0)
-            vName = queueNames.pop(0)
             t = v.anchor
             q = t[0]
             s = t[1]
             # for e in self.actions:
             for s2 in mc.states:
-                probability = mc.getTransitionProbability(s, s2)
+                probability = mc.get_transition_probability(s, s2)
                 if probability == 0:
                     continue
                 for e in self.actions:
                     if e not in s2.events:
                         continue
-                    # print("Entereded the for loop")
                     q2 = self.dfa.transitions[q][e]
-                    v2Name = q2 + "_" + s2.name
-                    v2wasInMDP = False
-                    if v2Name in mdp.statesDictByName.keys():
-                        v2 = mdp.statesDictByName[v2Name]
-                        v2wasInMDP = True
+                    v2_name = q2 + "_" + s2.name
+                    v2_was_in_mdp = False
+                    if v2_name in mdp.states_dict_by_name.keys():
+                        v2 = mdp.states_dict_by_name[v2_name]
+                        v2_was_in_mdp = True
                     else:
                         t2 = (q2, s2)
-                        v2 = MDPState(v2Name, t2)
-                        v2.evidenceDistribution = s2.evidenceDistribution
+                        v2 = MDPState(v2_name, t2)
+                        v2.evidence_distribution = s2.evidence_distribution
                         mdp.add_state(v2)
                         cnt += 1
                         if q2 in dfa.final_states:
-                            v2.isGoal = True
-                            mdp.setAsGoal(v2)
-                    if v2Name not in queueNames and v2wasInMDP == False:
+                            v2.is_goal = True
+                            mdp.set_as_goal(v2)
+                    if v2_name not in queue_names and not v2_was_in_mdp:
                         queue.append(v2)
-                        queueNames.append(v2Name)
+                        queue_names.append(v2_name)
                     tran = MDPTransition(v, v2, e, s2.events, probability)
-                    mdp.addTransition(tran)
+                    mdp.add_transition(tran)
                 for e in self.actions:
                     if e in s2.events:
                         continue
-                    v2Name = q + "_" + s2.name
-                    v2wasInMDP = False
-                    if v2Name in mdp.statesDictByName.keys():
-                        v2 = mdp.statesDictByName[v2Name]
-                        v2wasInMDP = True
+                    v2_name = q + "_" + s2.name
+                    v2_was_in_mdp = False
+                    if v2_name in mdp.states_dict_by_name.keys():
+                        v2 = mdp.states_dict_by_name[v2_name]
+                        v2_was_in_mdp = True
                     else:
                         t2 = (q, s2)
-                        v2 = MDPState(v2Name, t2)
-                        v2.evidenceDistribution = s2.evidenceDistribution
+                        v2 = MDPState(v2_name, t2)
+                        v2.evidence_distribution = s2.evidence_distribution
                         mdp.add_state(v2)
                         cnt += 1
                         if q in dfa.final_states:
-                            v2.isGoal = True
-                            mdp.setAsGoal(v2)
-                    if v2Name not in queueNames and v2wasInMDP == False:
+                            v2.is_goal = True
+                            mdp.set_as_goal(v2)
+                    if v2_name not in queue_names and not v2_was_in_mdp:
                         queue.append(v2)
-                        queueNames.append(v2Name)
+                        queue_names.append(v2_name)
                     tran = MDPTransition(v, v2, e, s2.events, probability)
-                    mdp.addTransition(tran)
-        #                 for e in self.actions:
-        #                     if dfa.transitions[q][e] != q:
-        #                         continue
-        #                     v2Name = q+"_"+s2.name
-        #                     v2 = mdp.statesDictByName[v2Name]
-        #                     tran = v.getTranisionByDistAndAction(v2, e)
-        #                     tran.probability += mc.getTransitionProbability(s, s2)
+                    mdp.add_transition(tran)
+        self.mdp.remove_un_reachable_states()
+        self.mdp.compute_states_available_actions()
 
-        #         """
-        #         Create transitions
-        #         """
-        #         for v1 in mdp.states:
-        #             #if v1 == v0:
-        #             #    continue
-        #             q = v1.anchor[0]
-        #             s = v1.anchor[1]
-        #
-        #             for v2 in mdp.states:
-        #                 """
-        #                 There should be no transition to the initial state of the MDP
-        #                 """
-        #                 #if v2 == v0:
-        #                  #   continue
-        #                 q2 = v2.anchor[0]
-        #                 s2 = v2.anchor[1]
-        #                 if mc.getTransitionProbability(s, s2) == 0:
-        #                     continue
-        #
-        #                 if v1 == v2:
-        #                     for e1 in self.actions:
-        #                         p = mc.getTransitionProbability(s, s2)
-        #                         trans = MDPTransition(v1, v2, e1, s2.events, p)
-        #                         mdp.addTransition(trans)
-        #                     continue
-        #
-        #                 for e in s2.events:
-        #                     if dfa.transitions[q][e] == q2:
-        #                         p = mc.getTransitionProbability(s, s2)
-        #                         trans = MDPTransition(v1, v2, e, s2.events, p)
-        #                         mdp.addTransition(trans)
-        #                 if q == q2:
-        #                     for e1 in self.actions:
-        #                         if e1 in s2.events:
-        #                             continue
-        #                         p = mc.getTransitionProbability(s, s2)
-        #                         trans = MDPTransition(v1, v2, e1, s2.events, p)
-        #                         mdp.addTransition(trans)
-
-        print("Number of added states = " + str(cnt))
-
-        self.mdp.removeUnReachableStates()
-        self.mdp.computeStatesAvailableActions()
-
-        self.mdp.makeObservationFunction()
-
-        if self.verbose == True:
-            print("the product automata has been computed. It has " + str(len(mdp.states)) + " states")
-            print("----------------------------------------------")
+        self.mdp.make_observation_function()
 
     def __create_product_automaton_where_current_markov_state_invisible(self):
         dfa = self.dfa
@@ -181,7 +122,7 @@ class EventPredictor:
         """
         s0s = set()
         for i in range(len(mc.states)):
-            if mc.initialDistribution[i] > 0:
+            if mc.initial_distribution[i] > 0:
                 s0s.add(mc.states[i])
         t0 = (dfa.initial_state, s0s)
         v0 = MDPState(dfa.initial_state + "," + str(s0s), t0)
@@ -204,7 +145,7 @@ class EventPredictor:
                 ________________________________begin_________________________________________
                 Add from transition (v1, e, v2) where v2 is C_{e+}(v1)
                 """
-                sts2 = mc.getSetSuccessorsHavingEvent(sts1, e)
+                sts2 = mc.get_set_successors_having_event(sts1, e)
                 p1 = 0
                 p2 = 0
                 if len(sts2) != 0:
@@ -223,16 +164,16 @@ class EventPredictor:
                     p = 0
                     for s in sts1:
                         for s2 in sts2:
-                            p = p + mc.transitionMatrix[s.index][s2.index]
+                            p = p + mc.transition_matrix[s.index][s2.index]
                             # print("p1="+str(p)+", len(sts1)="+str(len(sts1)))
                     p = p / len(sts1)
                     p1 = p
                     # print("p1="+str(p))
                     trans = MDPTransition(v1, v2, e, evs, p)
                     trans.eventPositive = True
-                    mdp.addTransition(trans)
+                    mdp.add_transition(trans)
                     if q2 in dfa.final_states:
-                        mdp.setAsGoal(v2)
+                        mdp.set_as_goal(v2)
                 """
                 _________________________________end__________________________________________
                 Add from transition (v1, e, v2) where v2 is C_{e+}(v1)
@@ -244,7 +185,7 @@ class EventPredictor:
                 ________________________________begin_________________________________________
                 Add from transition (v1, e, v3) where v3 is C_{e-}(v1)
                 """
-                sts3 = mc.getSetSuccessorsNotHavingEvent(sts1, e)
+                sts3 = mc.get_set_successors_not_having_event(sts1, e)
                 if len(sts3) != 0:
                     t3 = (q1, sts3)
                     v3 = mdp.getStateByAnchor(t3)
@@ -260,14 +201,14 @@ class EventPredictor:
                     p = 0
                     for s in sts1:
                         for s3 in sts3:
-                            p = p + mc.transitionMatrix[s.index][s3.index]
+                            p = p + mc.transition_matrix[s.index][s3.index]
                             # print("p2="+str(p)+", len(sts1)="+str(len(sts1)))
                     p = p / len(sts1)
                     p2 = p
                     # print("p2="+str(p))
                     trans = MDPTransition(v1, v3, e, evs, p)
                     trans.eventNegative = True
-                    mdp.addTransition(trans)
+                    mdp.add_transition(trans)
                     if p1 + p2 != 1:
                         print("p1+p2=" + str(p1 + p2))
                         p2 = 1.0 - p1
@@ -288,7 +229,7 @@ class EventPredictor:
         A = [["" for j in range(n)] for i in range(F + 1)]
 
         for j in range(n):
-            if (self.mdp.states[j].isGoal):
+            if (self.mdp.states[j].is_goal):
                 G[F][j] = 0.0
                 A[F][j] = "STOP"
             else:
@@ -297,7 +238,7 @@ class EventPredictor:
         for i in range(F - 1, -1, -1):
             # print(i)
             for j in range(n):
-                if self.mdp.states[j].isGoal == True:
+                if self.mdp.states[j].is_goal == True:
                     A[i][j] = "STOP"
                     G[i][j] = 0.0
                     continue
@@ -308,7 +249,7 @@ class EventPredictor:
 
                 for action in self.actions:
                     val = 0.0
-                    if state.isGoal == False:
+                    if state.is_goal == False:
                         val += 1
                     for k in range(n):
                         term = G[i + 1][k] * self.mdp.conditionalProbability(k, j, action)
@@ -357,7 +298,7 @@ class EventPredictor:
         A = ["" for j in range(n)]
 
         for j in range(n):
-            if (self.mdp.states[j].isGoal):
+            if (self.mdp.states[j].is_goal):
                 G[j][0] = 0.0
                 G[j][1] = 0.0
                 A[j] = "STOP"
@@ -385,7 +326,7 @@ class EventPredictor:
             maxDif = 0
 
             for j in range(n):
-                if self.mdp.states[j].isGoal == True:
+                if self.mdp.states[j].is_goal == True:
                     continue
 
                 if self.mdp.states[j].reachable == False:
@@ -407,7 +348,7 @@ class EventPredictor:
                         if action in state.avoidActions:
                             continue
                     val = 0.0
-                    if state.isGoal == False:
+                    if state.is_goal == False:
                         val += 1
                     # for k in range(n):
                     #    term = G[k][1]*self.mdp.conditionalProbability(k, j, action)
@@ -456,267 +397,26 @@ class EventPredictor:
         # return G[0][self.mdp.initial_state.index]
         return optPolicy, G, G[0][self.mdp.initial_state.index], time_elapsed
 
-    def optimalPolicyInfiniteHorizonForLayeredDAG(self, epsilonOfConvergance, printPolicy,
-                                                  computeAvoidableActions=False):
-        if self.verbose == True:
-            print("------computing optimal policy for finite horizon--------------")
-        n = len(self.mdp.states)
-
-        # for state in self.mdp.states:
-        # state.computeAvailableActions()
-
-        if computeAvoidableActions == True:
-            if self.mdp.availableActionsComputed == False:
-                self.mdp.computeAvoidableActions()
-
-        G = [[0.0 for j in [0, 1]] for i in range(n)]
-        A = ["" for j in range(n)]
-
-        for j in range(n):
-            if (self.mdp.states[j].isGoal):
-                G[j][0] = 0.0
-                G[j][1] = 0.0
-                A[j] = "STOP"
-
-        if computeAvoidableActions == True:
-            for j in range(n):
-                if self.mdp.states[j].aGoalIsReachable == False:
-                    G[j][0] = G[j][1] = float("inf")
-                    A[j] = "DeadEnd"
-                    print("Set optimal action for dead end state " + self.mdp.states[j].name)
-
-        dif = float_info.max
-
-        numIterations = 0
-
-        r = 0
-
-        time_start = time.time()
-
-        if self.mdp.initialSCC == None:
-            self.mdp.decomposeToStrngConnComponents()
-            self.mdp.computeSCCTopologicalOrder()
-
-        for scc in self.mdp.sccTopologicalOrder:
-            dif = float("inf")
-            if len(scc.states) == 0:
-                continue
-            if scc.states[0].isGoal:
-                continue
-            firstTimeComputeDif = True
-            # print("Start Computing Optimal Policy for states within SCC "+scc.name)
-            while dif > epsilonOfConvergance:
-                numIterations += 1
-                maxDif = 0
-                for state in scc.states:
-                    if state.isGoal == True:
-                        continue
-
-                    if state.reachable == False:
-                        continue
-
-                    if computeAvoidableActions == True and state.aGoalIsReachable == False:
-                        A[j] = "DeadEnd"
-                        G[j][0] = G[j][1] = float("inf")
-                        continue
-
-                    minVal = float_info.max
-                    optAction = ""
-
-                    if len(state.availableActions) == 0:
-                        print("Number of available actions of state " + str(state) + " is " + str(
-                            len(state.availableActions)))
-
-                    for action in state.availableActions:
-                        if computeAvoidableActions == True:
-                            if action in state.avoidActions:
-                                continue
-
-                        val = 0.0
-
-                        if state.isGoal == False:
-                            val += 1
-                        for tran in state.actionsTransitions[action]:
-                            # term = G[tran.dstState.index][1]*self.mdp.conditionalProbability(tran.dstState.index, state.index, action)
-                            term = G[tran.dstState.index][1] * tran.probability
-                            val += term
-                        # r += 1
-                        # print("r="+str(r))
-                        if val < minVal:
-                            minVal = val
-                            optAction = action
-
-                            # if minVal-G[j][0] > maxDif:
-                    # maxDif = minVal-G[j][0]
-
-                    maxDif = max(maxDif, minVal - G[state.index][0])
-
-                    if state == scc.Leader:
-                        dif = minVal - G[state.index][0]
-
-                    G[state.index][0] = minVal
-                    A[state.index] = optAction
-
-                for s in scc.states:
-                    G[s.index][1] = G[s.index][0]
-                dif = maxDif
-                print("numIterations=" + str(numIterations) + ", dif = " + str(dif))
-            print("Optimal Policy for states within SCC " + scc.name + " was computed")
-
-        optPolicy = {}
-        for q in self.dfa.states:
-            optPolicy[q] = {}
-
-        for j in range(n):
-            optPolicy[self.mdp.states[j].anchor[0]][str(self.mdp.states[j].anchor[1])] = A[j]
-            if printPolicy == True:
-                print("\pi(" + self.mdp.states[j].anchor[0] + "," + str(self.mdp.states[j].anchor[1]) + ")=" + A[j])
-                print(
-                    "M(" + self.mdp.states[j].anchor[0] + "," + str(self.mdp.states[j].anchor[1]) + ")=" + str(G[j][0]))
-
-        if self.verbose == True:
-            print("optimal policy for infinite horizon has been computed in " + str(numIterations) + " iterations")
-            print("Initial state is: " + str(self.mdp.initial_state.name))
-
-        time_elapsed = (time.time() - time_start)
-
-        # return G[0][self.mdp.initial_state.index]
-        return (optPolicy, G, G[0][self.mdp.initial_state.index], time_elapsed)
-
-    def optimalPolicyInfiniteHorizon_Only4ReachableStates(self, epsilonOfConvergance, printPolicy):
-        if self.verbose == True:
-            print("------computing optimal policy for finite horizon--------------")
-        n = len(self.mdp.states)
-
-        self.mdp.computeStatesAvailableActions()
-        # for state in self.mdp.states:
-        # state.computeAvailableActions()
-
-        G = [[0.0 for j in [0, 1]] for i in range(n)]
-        A = ["" for j in range(n)]
-
-        for j in range(n):
-            if (self.mdp.states[j].isGoal):
-                G[j][0] = 0.0
-                G[j][1] = 0.0
-                A[j] = "STOP"
-
-        # dif = float_info.max
-
-        dif = float("inf")
-
-        numIterations = 0
-
-        time_start = time.time()
-
-        r = 0
-
-        while dif > epsilonOfConvergance:
-            numIterations += 1
-
-            print("dif=" + str(dif))
-
-            # print("r="+str(r))
-
-            # if numIterations > 1000:
-            # break
-
-            maxDif = 0
-
-            for j in range(n):
-                if self.mdp.states[j].isGoal == True:
-                    continue
-
-                if self.mdp.states[j].reachable == False:
-                    continue
-
-                if self.mdp.states[j].aGoalIsReachable == False:
-                    continue
-
-                minVal = float_info.max
-                optAction = ""
-                state = self.mdp.states[j]
-
-                # print("r="+str(r))
-
-                # for action in self.actions:
-                # print("#Available actions for "+str(state)+": "+str(len(state.availableActions)))
-                for action in state.availableActions:
-                    if action in state.avoidActions:
-                        continue
-                    val = 0.0
-                    if state.isGoal == False:
-                        val += 1
-                    # for k in range(n):
-                    #    term = G[k][1]*self.mdp.conditionalProbability(k, j, action)
-                    #    val += term
-                    for tran in state.actionsTransitions[action]:
-                        term = G[tran.dstState.index][1] * tran.probability
-                        val += term
-                        # r += 1
-                        # print("r="+str(r))
-                    if val < minVal:
-                        minVal = val
-                        optAction = action
-
-                        # if minVal-G[j][0] > maxDif:
-                    # maxDif = minVal-G[j][0]
-
-                if j == 0:
-                    dif = minVal - G[j][0]
-
-                maxDif = max(maxDif, minVal - G[j][0])
-
-                G[j][0] = minVal
-                A[j] = optAction
-
-            for j in range(n):
-                G[j][1] = G[j][0]
-
-            dif = maxDif
-
-        optPolicy = {}
-        for q in self.dfa.states:
-            optPolicy[q] = {}
-
-        for j in range(n):
-            optPolicy[self.mdp.states[j].anchor[0]][str(self.mdp.states[j].anchor[1])] = A[j]
-            if printPolicy == True:
-                print("\pi(" + self.mdp.states[j].anchor[0] + "," + str(self.mdp.states[j].anchor[1]) + ")=" + A[j])
-                print(
-                    "M(" + self.mdp.states[j].anchor[0] + "," + str(self.mdp.states[j].anchor[1]) + ")=" + str(G[j][0]))
-
-        if self.verbose == True:
-            print("optimal policy for infinite horizon has been computed in " + str(numIterations) + " iterations")
-
-        time_elapsed = (time.time() - time_start)
-
-        # return G[0][self.mdp.initial_state.index]
-        return (optPolicy, G, G[0][self.mdp.initial_state.index], time_elapsed)
-
-    def simulate(self, policy, printOutput=True):
-        if self.currentMarkovStateVisibile == True:
-            return self.__simulate_markovStateVisible(policy, printOutput)
+    def simulate(self, policy):
+        if self.current_markov_state_visible:
+            return self.__simulate_markov_state_visible(policy)
         else:
-            return self.__simulate_markovStateInvisible(policy, printOutput)
+            return self.__simulate_markov_state_invisible(policy)
 
     def simulate_greedy_algorithm(self, printOutput=False):
-        if self.currentMarkovStateVisibile == True:
+        if self.current_markov_state_visible:
             return self.__simulate_markovStateVisible_greedyalgorithm(printOutput)
-        # else:
-        #    return self.__simulate_markovStateInvisible( policy, printOutput)     
+        else:
+            raise NotImplementedError('Invisible Markov state is not implemented yet')
 
-    def simulate_greedyAlgorithm_pomdp(self, printOutput=True):
-        # if self.markov_state_visible == True:
-        return self.__simulate_markovStateVisible_pomdp_greedyalgorithm(printOutput)
 
     def simulate_general_and_greedy_algorithms(self, policy, printOutput=False):
-        if self.currentMarkovStateVisibile == True:
+        if self.current_markov_state_visible:
             return self.__simulate_markovStateVisible_generalAndGreedy(policy, printOutput)
-        # else:
-        #    return self.__simulate_markovStateInvisible( policy, printOutput)         
+        else:
+            raise NotImplementedError('Invisible Markov state is not implemented yet')
 
-    def __simulate_markovStateVisible(self, policy, printOutput=True, ):
+    def __simulate_markov_state_visible(self, policy, printOutput=False, ):
         story = ""
         # s = self.markov_chain.null_state
         s = self.markov_chain.initial_state
@@ -729,7 +429,7 @@ class EventPredictor:
             if (s.name in policy[q].keys()) == False:
                 print("q=" + q + ", s=" + s.name)
             predictedEvent = policy[q][s.name]
-            s2 = self.markov_chain.nextState(s)
+            s2 = self.markov_chain.next_state(s)
 
             q_previous = q
             if predictedEvent in s2.events:
@@ -764,7 +464,7 @@ class EventPredictor:
             if (s.name in policy[q].keys()) == False:
                 print("q=" + q + ", s=" + s.name)
 
-            s2 = self.markov_chain.nextState(s)
+            s2 = self.markov_chain.next_state(s)
 
             if q not in self.dfa.final_states:
                 steps += 1
@@ -780,7 +480,7 @@ class EventPredictor:
                 eventLisToPredict = AutomataUtility.get_non_self_loop_letters(self.dfa, q2)
                 print("eventLisToPredict: " + str(eventLisToPredict))
                 print("s=" + str(s))
-                predictedEvent2 = self.markov_chain.getNexTimeMostPlausibleEvent(eventLisToPredict, s)
+                predictedEvent2 = self.markov_chain.get_next_time_most_plausible_event(eventLisToPredict, s)
                 q2_previous = q2
                 if predictedEvent2 in s2.events:
                     q2 = self.dfa.transitions[q2][predictedEvent2]
@@ -813,8 +513,8 @@ class EventPredictor:
 
             eventLisToPredict = AutomataUtility.get_non_self_loop_letters(self.dfa, q)
 
-            predictedEvent = self.markov_chain.getNexTimeMostPlausibleEvent(eventLisToPredict, s)
-            s2 = self.markov_chain.nextState(s)
+            predictedEvent = self.markov_chain.get_next_time_most_plausible_event(eventLisToPredict, s)
+            s2 = self.markov_chain.next_state(s)
 
             q_previous = q
             if predictedEvent in s2.events:
@@ -858,13 +558,13 @@ class EventPredictor:
             if useStateWithMaxProb == True:
                 x = mdp.getMostPlausibleState(b)
                 x_s = x.anchor[1]
-                predictedEvent = self.markov_chain.getNexTimeMostPlausibleEvent(eventLisToPredict, x_s)
+                predictedEvent = self.markov_chain.get_next_time_most_plausible_event(eventLisToPredict, x_s)
             else:
-                predictedEvent = self.mdp.getNexTimeMostPlausibleEvent(b, eventLisToPredict, mc)
+                predictedEvent = self.mdp.get_next_time_most_plausible_event(b, eventLisToPredict, mc)
 
             # print("beleif = "+str(b)+", predictedEvent="+predictedEvent)
 
-            s2 = self.markov_chain.nextState(s)
+            s2 = self.markov_chain.next_state(s)
 
             q_previous = q
 
@@ -901,23 +601,23 @@ class EventPredictor:
 
         return (i, story)
 
-    def __simulate_markovStateInvisible(self, policy, printOutput=True):
+    def __simulate_markov_state_invisible(self, policy, printOutput=True):
         story = ""
         sts = set()
         for i in range(len(self.markov_chain.states)):
-            if self.markov_chain.initialDistribution[i] > 0:
+            if self.markov_chain.initial_distribution[i] > 0:
                 sts.add(self.markov_chain.states[i])
         q = self.dfa.initial_state
         q_previous = q
         i = 1
-        s = self.markov_chain.nextState(self.markov_chain.null_state)
+        s = self.markov_chain.next_state(self.markov_chain.null_state)
         m = self.mdp.initial_state
         while True:
             if q in self.dfa.final_states:
                 return (i - 1, story)
 
             predictedEvent = policy[q][str(sts)]
-            s2 = self.markov_chain.nextState(s)
+            s2 = self.markov_chain.next_state(s)
 
             q_previous = q
             if predictedEvent in s2.events:

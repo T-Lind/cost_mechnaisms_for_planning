@@ -89,7 +89,7 @@ class MarkovDecisionProcessOld:
     def get_transition_prob(self, current_state: Union[int, str], action: Union[int, str],
                             next_state: Union[int, str]) -> float:
         """
-        Get the transition probability P(srcState' | srcState, a).
+        Get the transition probability P(src_state' | src_state, a).
 
         Parameters:
         - current_state: Current state index or label
@@ -114,7 +114,7 @@ class MarkovDecisionProcessOld:
 
     def get_reward(self, current_state: Union[int, str], action: Union[int, str]) -> float:
         """
-        Get the immediate reward R(srcState, a).
+        Get the immediate reward R(src_state, a).
 
         Parameters:
         - current_state: Current state index or label
@@ -241,7 +241,7 @@ class MarkovDecisionProcessOld:
     def simulate_policy(self, policy: Dict[Union[int, str], Union[int, str]], num_steps: int = 10,
                         verbose=True) -> tuple[list[str], list[float]]:
         """
-        Simulate the agent'srcState behavior based on the given policy and print the states visited.
+        Simulate the agent'src_state behavior based on the given policy and print the states visited.
 
         Parameters:
         - policy: Dictionary mapping state to action

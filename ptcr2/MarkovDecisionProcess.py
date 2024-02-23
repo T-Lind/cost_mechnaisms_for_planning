@@ -14,18 +14,18 @@ class MDPState:
     # name = ""
     # anchor = None
     # is_initial = False
-    # isGoal = False
+    # is_goal = False
     # index = -1
 
     def __init__(self, name="", anchor=None):
         self.name = name
         self.anchor = anchor
         self.is_initial = False
-        self.isGoal = False
+        self.is_goal = False
         self.index = -1
         self.transitions = []
         self.reachable = True
-        self.evidenceDistribution = []
+        self.evidence_distribution = []
         self.sumProbabilityTransitions = 0
 
         self.availableActions = []
@@ -67,7 +67,7 @@ class MDPState:
     def __repr__(self):
         return self.name
 
-    def addTransition(self, trans):
+    def add_transition(self, trans):
         if trans in self.transitions:
             return
         if trans.probability > 1:
@@ -77,23 +77,23 @@ class MDPState:
         self.sumProbabilityTransitions += trans.probability
 
         # if self.sumProbabilityTransitions > 1:
-        # print("summed_step_numbers probability greater than 1: state="+trans.srcState.name+", prob="+str(self.sumProbabilityTransitions))
+        # print("summed_step_numbers probability greater than 1: state="+trans.src_state.name+", prob="+str(self.sumProbabilityTransitions))
 
         self.transitions.append(trans)
 
-    def addTransitionTo(self, trans):
+    def add_transition_to(self, trans):
         if trans in self.transitionsTo:
             return
         self.transitionsTo.append(trans)
 
-    def computeAvailableActions(self):
+    def compute_available_actions(self):
         for tran in self.transitions:
             if tran.action not in self.availableActions:
                 self.actionsTransitions[tran.action] = []
                 self.availableActions.append(tran.action)
             self.actionsTransitions[tran.action].append(tran)
 
-    def getTranisionByDistAndAction(self, dstState, action):
+    def get_tranision_by_dist_and_action(self, dstState, action):
         for tran in self.transitions:
             if tran.action != action and tran.dstState == dstState:
                 return tran
@@ -163,7 +163,7 @@ class MDPStrgConnComponent:
     def isASingularGoal(self):
         if len(self.states) > 1:
             return False
-        if self.states[0].isGoal == False:
+        if self.states[0].is_goal == False:
             return False
         return True
 
@@ -190,8 +190,8 @@ class MDP:
         self.transitions = []
         self.transitionsDict = {}
         self.madeTransitionDict = False
-        self.hasEvidence = False
-        self.evidenceList = []
+        self.has_evidence = False
+        self.evidence_list = []
         self.observations = []
 
         """
@@ -215,7 +215,7 @@ class MDP:
         """
         self.topologicalOrder = []
 
-        self.statesDictByName = {}
+        self.states_dict_by_name = {}
 
         """
         The property evidence_list contains only the original evidence and not the results of whether the prediction was right or not.
@@ -276,7 +276,7 @@ class MDP:
                     continue
                 x = self.states[i]
                 s = x.anchor[1]
-                prob += markovChain.possbilityOfHappeningInNextStep(s, event)
+                prob += markovChain.p_of_happening_in_next_step(s, event)
             if prob > maxProb:
                 maxProb = prob
             probs[j] = prob
@@ -321,12 +321,12 @@ class MDP:
                 cnt += 1
         return cnt
 
-    def makeObservationFunction(self):
+    def make_observation_function(self):
         # if self.verbose:
         print("Start making observation function")
         self.observations = []
-        if len(self.evidenceList) > 0:
-            for ev in self.evidenceList:
+        if len(self.evidence_list) > 0:
+            for ev in self.evidence_list:
                 o1 = (True, ev)
                 o2 = (False, ev)
                 self.observations.append(o1)
@@ -338,26 +338,26 @@ class MDP:
 
         self.createObservationFunctionDict()
 
-        if len(self.evidenceList) > 0:
+        if len(self.evidence_list) > 0:
             for x in self.states:
                 s = x.anchor[1]  # The state of event model
                 for a in self.actions:  # Event
-                    for i in range(len(self.evidenceList)):
-                        y = self.evidenceList[i]
+                    for i in range(len(self.evidence_list)):
+                        y = self.evidence_list[i]
                         o1 = self.getObservationOfTuple(True, y)
                         o2 = self.getObservationOfTuple(False, y)
                         o3 = self.goal_reached_observation
-                        if x.isGoal:
+                        if x.is_goal:
                             self.observationFunction[o1][x][a] = 0
                             self.observationFunction[o2][x][a] = 0
                             self.observationFunction[o3][x][a] = 1
                         else:
                             self.observationFunction[o3][x][a] = 0
                             if a in s.events:
-                                self.observationFunction[o1][x][a] = s.evidenceDistribution[i]
+                                self.observationFunction[o1][x][a] = s.evidence_distribution[i]
                                 self.observationFunction[o2][x][a] = 0
                             else:
-                                self.observationFunction[o2][x][a] = s.evidenceDistribution[i]
+                                self.observationFunction[o2][x][a] = s.evidence_distribution[i]
                                 self.observationFunction[o1][x][a] = 0
         else:
             for x in self.states:
@@ -366,7 +366,7 @@ class MDP:
                     o1 = self.getBooleanObservation(True)
                     o2 = self.getBooleanObservation(False)
                     o3 = self.goal_reached_observation
-                    if x.isGoal:
+                    if x.is_goal:
                         self.observationFunction[o1][x][a] = 0
                         self.observationFunction[o2][x][a] = 0
                         self.observationFunction[o3][x][a] = 1
@@ -395,11 +395,11 @@ class MDP:
     def sumTransitionProbs(self, dstState, action, beleifState):
         total = 0
         #         for t in self.transitions:
-        #             if t.dstState != dstState:
+        #             if t.dst_state != dst_state:
         #                 continue
         #             if t.action != action:
         #                 continue
-        #             total += beleifState[t.srcState.index]*t.probability
+        #             total += beleifState[t.src_state.index]*t.probability
         #         return total
         for srcState in self.states:
             total += beleifState[srcState.index] * self.conditionalProbability(dstState.index, srcState.index, action)
@@ -454,24 +454,24 @@ class MDP:
     def add_state(self, mdpState):
         mdpState.index = len(self.states)
         self.states.append(mdpState)
-        self.statesDictByName[mdpState.name] = mdpState
+        self.states_dict_by_name[mdpState.name] = mdpState
 
-    def setAsGoal(self, mdpState):
-        mdpState.isGoal = True
+    def set_as_goal(self, mdpState):
+        mdpState.is_goal = True
         if not (mdpState in self.goalStates):
             self.goalStates.append(mdpState)
 
-    def addTransition(self, mdpTransition):
+    def add_transition(self, mdpTransition):
         # if mdpTransition in self.transitions:
         #    print("Error. Transition has been added before")
         #    return
 
-        # if self.hasTransition(mdpTransition.srcState, mdpTransition.dstState, mdpTransition.action):
+        # if self.hasTransition(mdpTransition.src_state, mdpTransition.dst_state, mdpTransition.action):
         #    return
 
         self.transitions.append(mdpTransition)
-        mdpTransition.srcState.addTransition(mdpTransition)
-        mdpTransition.dstState.addTransitionTo(mdpTransition)
+        mdpTransition.srcState.add_transition(mdpTransition)
+        mdpTransition.dstState.add_transition_to(mdpTransition)
 
     def hasTransition(self, srcState, dstState, event):
         for t in self.transitions:
@@ -497,14 +497,14 @@ class MDP:
 
         queue = []
         for state in self.states:
-            if state.isGoal == True:
+            if state.is_goal == True:
                 queue.append(state)
                 state.aGoalIsReachable = True
 
         while queue:
             state = queue.pop(0)
             for t in state.transitionsTo:
-                # if t.dstState != state:
+                # if t.dst_state != state:
                 #    continue
                 allReachToGoals = True
                 for t2 in t.srcState.actionsTransitions[t.action]:
@@ -660,9 +660,9 @@ class MDP:
         print(
             "------------------------- End Printing The Graph of Strongly Connected Components ----------------------")
 
-    def computeStatesAvailableActions(self):
+    def compute_states_available_actions(self):
         for state in self.states:
-            state.computeAvailableActions()
+            state.compute_available_actions()
         self.availableActionsComputed = True
 
     def reindexStates(self):
@@ -671,7 +671,7 @@ class MDP:
             state.index = i
             i += 1
 
-    def removeUnReachableStates(self):
+    def remove_un_reachable_states(self):
         self.recognizeReachableStates()
         if self.verbose:
             print("Unreachable state have been recognized")
@@ -790,7 +790,7 @@ class MDP:
         A = [["" for j in range(n)] for i in range(F + 1)]
 
         for j in range(n):
-            if (self.states[j].isGoal):
+            if (self.states[j].is_goal):
                 G[F][j] = 0.0
             else:
                 G[F][j] = 10000.0
@@ -798,7 +798,7 @@ class MDP:
         for i in range(F - 1, -1, -1):
             # print(i)
             for j in range(n):
-                if self.states[j].isGoal == True:
+                if self.states[j].is_goal == True:
                     A[i][j] = "STOP"
                     G[i][j] = 0.0
                     continue
@@ -809,7 +809,7 @@ class MDP:
 
                 for action in self.actions:
                     val = 0.0
-                    if state.isGoal == False:
+                    if state.is_goal == False:
                         val += 1
                     for k in range(n):
                         term = G[i + 1][k] * self.conditionalProbability(k, j, action)
@@ -878,7 +878,7 @@ class MDP:
         cnt = 0
 
         for t in self.transitions:
-            if t.srcState.isGoal == False:
+            if t.srcState.is_goal == False:
                 continue
 
             if t.srcState != t.dstState:
@@ -886,7 +886,7 @@ class MDP:
                 cnt = cnt + 1
 
         for s in self.states:
-            if s.isGoal == False:
+            if s.is_goal == False:
                 continue
 
             for t in s.transitions:
@@ -899,7 +899,7 @@ class MDP:
 
         cnt = 0
         for t in self.transitions:
-            if t.srcState.isGoal:
+            if t.srcState.is_goal:
                 if t.srcState != t.dstState:
                     cnt = cnt + 1
 
@@ -936,8 +936,8 @@ class MDP:
                         recentT.probability = 1 - (sum - recentT.probability)
                     else:
                         print("Could not fix the error")
-                        notFixed += "Could not fix error for: state=" + s.name + ", isGoal=" + str(
-                            s.isGoal) + ", action=" + str(a) + ", prob=" + str(sum) + ", numOfTrans=" + str(
+                        notFixed += "Could not fix error for: state=" + s.name + ", is_goal=" + str(
+                            s.is_goal) + ", action=" + str(a) + ", prob=" + str(sum) + ", numOfTrans=" + str(
                             numOfTrans) + ". " + str(trans) + "\n"
 
         if notFixed != "":
@@ -1063,10 +1063,10 @@ class MDP:
         st += "<ValueEnum>correct wrong goal_reached</ValueEnum>" + "\n"
         st += "</ObsVar>" + "\n"
 
-        if self.hasEvidence:
+        if self.has_evidence:
             st += "<ObsVar vname='evidence'>" + "\n"
             st += "<ValueEnum>"
-            for ev in self.evidenceList:
+            for ev in self.evidence_list:
                 st = st + ev + " "
             st += "</ValueEnum>" + "\n"
             st += "</ObsVar>" + "\n"
@@ -1108,9 +1108,9 @@ class MDP:
         st += "<Parent>predicted_event state_0</Parent>"
         st += "<Parameter type = 'TBL'>" + "\n"
         for t in self.transitions:
-            # if t.dstState.reachable == False:
+            # if t.dst_state.reachable == False:
             #    continue
-            if t.srcState.isGoal == True:  ## Added for testing
+            if t.srcState.is_goal == True:  ## Added for testing
                 print("Not making a transition for the goal state " + t.srcState.name)
                 continue
             st += "<Entry>" + "\n"
@@ -1119,7 +1119,7 @@ class MDP:
             st += "</Entry>" + "\n"
         for a in self.actions:
             for s in self.states:
-                if s.isGoal == False:
+                if s.is_goal == False:
                     continue
                 st += "<Entry>" + "\n"
                 st += "<Instance>" + a + " " + s.name + " " + s.name + "</Instance>" + "\n"
@@ -1138,7 +1138,7 @@ class MDP:
             for a in self.actions:
                 # if self.states[i].reachable == False:
                 #    continue
-                if self.states[i].isGoal:
+                if self.states[i].is_goal:
 
                     st += "<Entry>" + "\n"
                     st += "<Instance>" + a + " " + self.states[i].name + " goal_reached" + "</Instance>" + "\n"
@@ -1190,7 +1190,7 @@ class MDP:
         st += "</CondProb>" + "\n"
         # st += "</ObsFunction>" + "\n"
 
-        if self.hasEvidence:
+        if self.has_evidence:
             # st += "<ObsFunction>" + "\n"
             st += "<CondProb>" + "\n"
             st += "<Var>evidence</Var>" + "\n"
@@ -1199,10 +1199,10 @@ class MDP:
             for s in self.states:
                 # if s.reachable == False:
                 #    continue
-                for j in range(len(self.evidenceList)):
+                for j in range(len(self.evidence_list)):
                     st += "<Entry>" + "\n"
-                    st += "<Instance>" + s.name + " " + self.evidenceList[j] + "</Instance>" + "\n"
-                    st += "<ProbTable>" + str(s.evidenceDistribution[j]) + "</ProbTable>" + "\n"
+                    st += "<Instance>" + s.name + " " + self.evidence_list[j] + "</Instance>" + "\n"
+                    st += "<ProbTable>" + str(s.evidence_distribution[j]) + "</ProbTable>" + "\n"
                     st += "</Entry>" + "\n"
 
             st += "</Parameter>" + "\n"
@@ -1222,11 +1222,11 @@ class MDP:
             for a in self.actions:
                 st += "<Entry>" + "\n"
                 st += "<Instance>" + a + " " + self.states[i].name + "</Instance>" + "\n"
-                if self.states[i].isGoal:
+                if self.states[i].is_goal:
                     st += "<ValueTable>0</ValueTable>" + "\n"
                 else:
                     st += "<ValueTable>-1</ValueTable>" + "\n"
-                # if self.states[i].isGoal == False:
+                # if self.states[i].is_goal == False:
                 #    st += "<ValueTable>-1</ValueTable>"+"\n"                    
                 st += "</Entry>" + "\n"
         st += "</Parameter>" + "\n"
@@ -1258,7 +1258,7 @@ class MDP:
         st += "</StateVar>" + "\n"
 
         observationTitle = "predictionResult"
-        if len(self.evidenceList) > 0:
+        if len(self.evidence_list) > 0:
             observationTitle += "Evidence"
 
         st += "<ObsVar vname='" + observationTitle + "'>" + "\n"
@@ -1305,9 +1305,9 @@ class MDP:
         st += "<Parent>predicted_event state_0</Parent>"
         st += "<Parameter type = 'TBL'>" + "\n"
         for t in self.transitions:
-            # if t.dstState.reachable == False:
+            # if t.dst_state.reachable == False:
             #    continue
-            if t.srcState.isGoal == True:  ## Added for testing
+            if t.srcState.is_goal == True:  ## Added for testing
                 continue
             st += "<Entry>" + "\n"
             st += "<Instance>" + t.action + " " + t.srcState.name + " " + t.dstState.name + "</Instance>" + "\n"
@@ -1315,7 +1315,7 @@ class MDP:
             st += "</Entry>" + "\n"
         for a in self.actions:
             for s in self.states:
-                if s.isGoal == False:
+                if s.is_goal == False:
                     continue
                 st += "<Entry>" + "\n"
                 st += "<Instance>" + a + " " + s.name + " " + s.name + "</Instance>" + "\n"
@@ -1357,11 +1357,11 @@ class MDP:
             for a in self.actions:
                 st += "<Entry>" + "\n"
                 st += "<Instance>" + a + " " + self.states[i].name + "</Instance>" + "\n"
-                if self.states[i].isGoal:
+                if self.states[i].is_goal:
                     st += "<ValueTable>0</ValueTable>" + "\n"
                 else:
                     st += "<ValueTable>-1</ValueTable>" + "\n"
-                # if self.states[i].isGoal == False:
+                # if self.states[i].is_goal == False:
                 #    st += "<ValueTable>-1</ValueTable>"+"\n"                    
                 st += "</Entry>" + "\n"
         st += "</Parameter>" + "\n"
@@ -1477,7 +1477,7 @@ class MDP:
             for a in self.actions:
                 st += "<Entry>" + "\n"
                 st += "<Instance>" + a + " " + self.states[i].name + "</Instance>" + "\n"
-                if self.states[i].isGoal:
+                if self.states[i].is_goal:
                     st += "<ValueTable>1</ValueTable>" + "\n"
                 else:
                     st += "<ValueTable>0</ValueTable>" + "\n"
@@ -1490,7 +1490,7 @@ class MDP:
 
     def addShadowStatesForGoalStates(self):
         for s in self.states:
-            if s.isGoal == False:
+            if s.is_goal == False:
                 continue
             s2 = MDPState(s.name + "_shadow", s)
             self.add_state(s2)
@@ -1500,17 +1500,17 @@ class MDP:
                     self.observationFunction[o][s2][a] = self.observationFunction[o][s][a]
 
         for t in self.transitions:
-            if t.srcState.isGoal == False:
+            if t.srcState.is_goal == False:
                 continue
             if t.dstState.isGoal == False:
                 continue
             srcStateShadow = self.getStateByAnchor(t.srcState)
             dstStateShadow = self.getStateByAnchor(t.dstState)
             t2 = MDPTransition(srcStateShadow, dstStateShadow, t.action, t.natureAction, t.probability)
-            self.addTransition(t2)
+            self.add_transition(t2)
 
         for t in self.transitions:
-            if t.srcState.isGoal == False:
+            if t.srcState.is_goal == False:
                 continue
             dstStateShadow = self.getStateByAnchor(t.dstState)
             t.dstState = dstStateShadow
@@ -1661,13 +1661,13 @@ class MDP:
         queue = []
         for s in self.goalStates:
             for t in s.transitionsTo:
-                if t.srcState not in queue and (not t.srcState.isGoal):
+                if t.srcState not in queue and (not t.srcState.is_goal):
                     queue.append(t.srcState)
         i = 0
         while i < len(queue):
             s = queue[i]
             for t in s.transitionsTo:
-                if t.srcState not in queue and (not t.srcState.isGoal):
+                if t.srcState not in queue and (not t.srcState.is_goal):
                     queue.append(t.srcState)
             i += 1
         return queue
@@ -1684,7 +1684,7 @@ class MDP:
         for s in self.states:
             softConstProbVect = [0] * m
             # vect = None
-            if s.isGoal:
+            if s.is_goal:
                 for k in range(m):
                     softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
                 vect = (0, softConstProbVect)
@@ -1699,7 +1699,7 @@ class MDP:
         maxCnt = 500
         while cnt < maxCnt:
             for s in states:
-                if s.isGoal:
+                if s.is_goal:
                     continue
                 # print(f"self.availableActionsComputed: {self.availableActionsComputed}")
                 # if self.availableActionsComputed and not s.aGoalIsReachable:
@@ -1770,7 +1770,7 @@ class MDP:
     def selectARandomPolicy(self, V_O, V_O_Actions):
         policy = [None] * len(self.states)
         for s in self.states:
-            if s.isGoal:
+            if s.is_goal:
                 policy[s.index] = V_O_Actions[s.name]
             else:
                 policy[s.index] = random.choice(V_O_Actions[s.name])
@@ -2037,7 +2037,7 @@ class MDP:
         for s in self.states:
             softConstProbVect = [0] * m
             # vect = None
-            if s.isGoal:
+            if s.is_goal:
                 for k in range(m):
                     softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
                 vect = (0, softConstProbVect)
@@ -2047,7 +2047,7 @@ class MDP:
 
         V_O_Actions = {}
         for s in self.states:
-            if s.isGoal:
+            if s.is_goal:
                 V_O_Actions[s.name] = ["STOP"]
             else:
                 V_O_Actions[s.name] = []
@@ -2062,7 +2062,7 @@ class MDP:
                 Q_D[s.name][a] = []
                 Q_D_Before[s.name][a] = []
                 softConstProbVect = [0] * m
-                if s.isGoal:
+                if s.is_goal:
                     for k in range(m):
                         softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
                 vect = (0, softConstProbVect)
@@ -2096,7 +2096,7 @@ class MDP:
                         Q_D_Before[s.name][a] = Q_D[s.name][a]
 
                 for s in scc.states:
-                    if s.isGoal:
+                    if s.is_goal:
                         continue
                     if s.reachable == False:
                         continue
@@ -2157,7 +2157,7 @@ class MDP:
                             sizes = [0]*n2
                             for j in range(0, n2):
                                 tran = s.actionsTransitions[a][j]
-                                s2 = tran.dstState
+                                s2 = tran.dst_state
                                 sizes[j] = len(Q_D_s2_s[s2.name])
                             print(f"Sizes before sampling: {sizes}")
                             stopDivision = False
@@ -2171,7 +2171,7 @@ class MDP:
                             print(f"Sizes after sampling: {sizes}")
                             for j in range(0, n2):
                                 tran = s.actionsTransitions[a][j]
-                                s2 = tran.dstState
+                                s2 = tran.dst_state
                                 Q_D_s2_s[s2.name] = sample(Q_D_s2_s[s2.name], sizes[j])
                                 
                         '''
@@ -2190,7 +2190,7 @@ class MDP:
                             # print(f"Q_Hull[{s2.name}]: {Q_Hull}")
 
                         #                         for tran in s.actionsTransitions[a]:
-                        #                             s2 = tran.dstState
+                        #                             s2 = tran.dst_state
                         #                             for a2 in s2.availableActions:
                         #                                 print(f"Q_D_Before[{s2.name}][{a2}]: {Q_D_Before[s2.name][a2]}")
 
@@ -2262,7 +2262,7 @@ class MDP:
                 cnt += 1
 
             for s in scc.states:
-                if s.isGoal:
+                if s.is_goal:
                     continue
                 Q_Ds = []
                 for a in self.actions:
@@ -2328,7 +2328,7 @@ class MDP:
             # print("success")
             # raise Exception("")
             for s in self.states:
-                if s.isGoal:
+                if s.is_goal:
                     continue
                 Q[s.name] = {}
                 for a in s.availableActions:
@@ -2349,7 +2349,7 @@ class MDP:
             P = {}
             C = {}
             for s in self.states:
-                if s.isGoal:
+                if s.is_goal:
                     P[s.name] = "STOP"
                     C[s.name] = 0
                     continue
@@ -2388,7 +2388,7 @@ class MDP:
         for s in self.states:
             softConstProbVect = [0] * m
             # vect = None
-            if s.isGoal:
+            if s.is_goal:
                 for k in range(m):
                     softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
                 vect = (0, softConstProbVect)
@@ -2398,7 +2398,7 @@ class MDP:
 
         V_O_Actions = {}
         for s in self.states:
-            if s.isGoal:
+            if s.is_goal:
                 V_O_Actions[s] = ["STOP"]
             else:
                 V_O_Actions[s] = []
@@ -2410,7 +2410,7 @@ class MDP:
             for a in self.actions:
                 Q_D[s.name][a] = []
                 softConstProbVect = [0] * m
-                if s.isGoal:
+                if s.is_goal:
                     for k in range(m):
                         softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
                 vect = (0, softConstProbVect)
@@ -2428,13 +2428,13 @@ class MDP:
             while cnt <= maxCnt:
 
                 for s in scc.states:
-                    if s.isGoal:
+                    if s.is_goal:
                         continue
                     # for a in s.availableActions:
                     #    Q_D[s.name][a] = []
 
                 for s in scc.states:
-                    if s.isGoal:
+                    if s.is_goal:
                         continue
                     for a in s.availableActions:
                         # print("s: "+s.name+", a: "+a)
@@ -2498,7 +2498,7 @@ class MDP:
                         print("Q_D[" + str(s.name) + "][" + str(a) + "]:" + str(Q_D[s.name][a]))
 
                 for s in scc.states:
-                    if s.isGoal:
+                    if s.is_goal:
                         continue
                     Q_Ds = []
                     for a in self.actions:
@@ -2543,7 +2543,7 @@ class MDP:
         for s in self.states:
             softConstProbVect = [0] * m
             # vect = None
-            if s.isGoal:
+            if s.is_goal:
                 for k in range(m):
                     softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
                 vect = (0, softConstProbVect)
@@ -2553,7 +2553,7 @@ class MDP:
 
         V_O_Actions = {}
         for s in self.states:
-            if s.isGoal:
+            if s.is_goal:
                 V_O_Actions[s] = ["STOP"]
             else:
                 V_O_Actions[s] = []
@@ -2577,13 +2577,13 @@ class MDP:
             while cnt <= maxCnt:
 
                 for s in scc.states:
-                    if s.isGoal:
+                    if s.is_goal:
                         continue
                     for a in s.availableActions:
                         Q_D[s.name][a] = []
 
                 for s in scc.states:
-                    if s.isGoal:
+                    if s.is_goal:
                         continue
                     for a in s.availableActions:
                         # print("s: "+s.name+", a: "+a)
@@ -2633,7 +2633,7 @@ class MDP:
                                 Q_D[s.name][a].append(tple)
 
                 for s in scc.states:
-                    if s.isGoal:
+                    if s.is_goal:
                         continue
                     Q_Ds = []
                     for a in self.actions:
@@ -2678,7 +2678,7 @@ class MDP:
         for s in self.states:
             softConstProbVect = [0] * m
             # vect = None
-            if s.isGoal:
+            if s.is_goal:
                 for k in range(m):
                     softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
                 vect = (0, softConstProbVect)
@@ -2688,7 +2688,7 @@ class MDP:
 
         V_O_Actions = {}
         for s in self.states:
-            if s.isGoal:
+            if s.is_goal:
                 V_O_Actions[s.name] = ["STOP"]
             else:
                 V_O_Actions[s.name] = []
@@ -2706,13 +2706,13 @@ class MDP:
         while cnt <= maxCnt:
 
             for s in self.states:
-                if s.isGoal:
+                if s.is_goal:
                     continue
                 for a in s.availableActions:
                     Q_D[s.name][a] = []
 
             for s in stateQueue:
-                if s.isGoal:
+                if s.is_goal:
                     continue
                 for a in s.availableActions:
                     # print("s: "+s.name+", a: "+a)
@@ -2771,7 +2771,7 @@ class MDP:
                     # f.close()
 
             for s in self.states:
-                if s.isGoal:
+                if s.is_goal:
                     continue
                 Q_Ds = []
                 for a in self.actions:
@@ -2831,7 +2831,7 @@ class MDP:
         for s in self.states:
             softConstProbVect = [0] * m
             # vect = None
-            if s.isGoal:
+            if s.is_goal:
                 for k in range(m):
                     softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
                 vect = (0, softConstProbVect)
@@ -2841,7 +2841,7 @@ class MDP:
 
         V_O_Actions = {}
         for s in self.states:
-            if s.isGoal:
+            if s.is_goal:
                 V_O_Actions[s.name] = ["STOP"]
             else:
                 V_O_Actions[s.name] = []
@@ -2863,13 +2863,13 @@ class MDP:
         while cnt <= maxCnt:
 
             for s in self.states:
-                if s.isGoal:
+                if s.is_goal:
                     continue
                 for a in s.availableActions:
                     Q_D[s.name][a] = []
 
             for s in stateQueue:
-                if s.isGoal:
+                if s.is_goal:
                     continue
                 for a in s.availableActions:
                     # print("s: "+s.name+", a: "+a)
@@ -2932,7 +2932,7 @@ class MDP:
                     # f.close()
 
             for s in self.states:
-                if s.isGoal:
+                if s.is_goal:
                     continue
                 Q_Ds = []
                 for a in self.actions:
@@ -2977,7 +2977,7 @@ class MDP:
 
     def are_policies_consistent(self, policies, fromState, fromAction):
         for s in self.states:
-            if s.isGoal:
+            if s.is_goal:
                 continue
 
     def optimalPolicy_PreferencePlanning_InfiniteHorizon(self, epsilonOfConvergance=0.0001, printPolicy=True,
@@ -2999,7 +2999,7 @@ class MDP:
         A = ["" for j in range(n)]
 
         for j in range(n):
-            if (self.states[j].isGoal):
+            if (self.states[j].is_goal):
                 for k in range(m):
                     G[j][0][k] = 1.0 if self.states[j].weightBVector[k] else 0.0
                     G[j][1][k] = 1.0 if self.states[j].weightBVector[k] else 0.0
@@ -3028,7 +3028,7 @@ class MDP:
             maxDif = 0
 
             for j in range(n):
-                if self.states[j].isGoal == True:
+                if self.states[j].is_goal == True:
                     continue
 
                 if self.states[j].reachable == False:
