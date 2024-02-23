@@ -1,0 +1,55 @@
+{
+  "start_state": "start",
+  "accept_states": [
+    "q(k,h,c-t)"
+  ],
+  "states": [
+    "q0",
+    "q1",
+    "q2"
+  ],
+  "alphabet": [
+    "h",
+    "k",
+    "t",
+    "c"
+  ],
+  "transitions": {
+    "start": {
+      "h": "q(h)",
+      "k": "q(k)",
+      "t": "q(c-t)",
+      "c": "q(c-t)"
+    },
+    "q(h)": {
+      "h": "q(h)",
+      "k": "q(k, j)",
+      "t": "q(k,c-t)",
+      "c": "q(k,c-t)"
+    },
+    "q(c-t)": {
+      "t": "q(c-t)",
+      "c": "q(c-t)",
+      "h": "q(h,c-t)",
+      "k": "q(k,c-t)"
+    },
+    "q(h,c-t)": {
+      "h": "q(h,c-t)",
+      "t": "q(h,c-t)",
+      "c": "q(h,c-t)",
+      "k": "q(k,h,c-t)"
+    },
+    "q(k,c-t)": {
+      "k": "q(k,c-t)",
+      "t": "q(k,c-t)",
+      "c": "q(k,c-t)",
+      "h": "q(k,h,c-t)"
+    },
+    "q(k,h,c-t)": {
+      "k": "q(k,h,c-t)",
+      "h": "q(k,h,c-t)",
+      "t": "q(k,h,c-t)",
+      "c": "q(k,h,c-t)"
+    }
+  }
+}
