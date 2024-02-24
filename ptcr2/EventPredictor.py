@@ -307,6 +307,8 @@ class EventPredictor:
             num_iterations += 1
             max_dif = 0
 
+            print(f"dif={dif}")
+
             for j in range(n):
                 if self.mdp.states[j].is_goal:
                     continue
