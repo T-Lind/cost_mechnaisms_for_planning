@@ -297,17 +297,22 @@ class EventPredictor:
                 A[j] = "STOP"
 
 
-        dif = float("inf")
+        difference = float("inf")
 
         num_iterations = 0
 
+        diff_tracker = []
+
         time_start = time.time()
 
-        while dif > epsilon_of_convergence:
+        while difference > epsilon_of_convergence:
             num_iterations += 1
             max_dif = 0
 
-            print(f"dif={dif}")
+            print(f"dif={difference:.4f}")
+
+            if difference != float("inf"):
+                diff_tracker.append(difference)
 
             for j in range(n):
                 if self.mdp.states[j].is_goal:
@@ -339,7 +344,7 @@ class EventPredictor:
                         opt_action = action
 
                 if j == 0:
-                    dif = min_val - G[j][0]
+                    difference = min_val - G[j][0]
 
                 max_dif = max(max_dif, min_val - G[j][0])
 
@@ -349,7 +354,7 @@ class EventPredictor:
             for j in range(n):
                 G[j][1] = G[j][0]
 
-            dif = max_dif
+            difference = max_dif
 
         optimal_policy = {}
         for q in self.dfa.states:
@@ -360,7 +365,7 @@ class EventPredictor:
 
         time_elapsed = (time.time() - time_start)
 
-        return optimal_policy, G, G[0][self.mdp.initial_state.index], time_elapsed
+        return optimal_policy, G, G[0][self.mdp.initial_state.index], time_elapsed, diff_tracker
 
     def simulate(self, policy):
         if self.current_markov_state_visible:

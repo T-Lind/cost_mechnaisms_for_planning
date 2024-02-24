@@ -27,17 +27,17 @@ class BaseCaseStudy(ABC):
     def simulate(self, spec: dict):
         if not self.computed_policy:
             self.compute_optimal_policy(spec)
-        policy, _, expected, policy_comp_time = self.computed_policy
+        policy, _, expected, policy_comp_time, diff_tracker = self.computed_policy
         run_number_of_steps, recorded_story = self.ep.simulate(policy)
-        return expected, run_number_of_steps, recorded_story, policy_comp_time
+        return expected, run_number_of_steps, recorded_story, policy_comp_time, diff_tracker
 
-    def simulate_greedy_algorithm(self):
+    def simulate_greedy_algorithm(self, spec: dict):
         if not self.ep:
-            self.make_event_predictor()
+            self.make_event_predictor(spec)
         return self.ep.simulate_greedy_algorithm()
 
     def simulate_general_and_greedy_algorithms(self, spec: dict):
         if not self.computed_policy:
             self.compute_optimal_policy(spec)
-        policy, _, expected, policy_comp_time, d = self.computed_policy
+        policy, _, expected, policy_comp_time, d, diff_tracker = self.computed_policy
         return self.ep.simulate_general_and_greedy_algorithms(policy)

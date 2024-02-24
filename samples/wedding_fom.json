@@ -43,5 +43,5 @@
   "alphabet": ["e1", "b1", "c1", "d1", "s1", "e2", "b2", "c2", "d2", "s2", "d12", "e3", "b3", "c3", "d3", "s3", "d23"],
 
   "plot": true,
-  "log": false
+  "log": true
 }

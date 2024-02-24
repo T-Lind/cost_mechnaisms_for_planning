@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     story_counts = {}
 
-    n_simulations = 100
+    n_simulations = 10_000
 
     n_steps_list = []
     recorded_times = []
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     for i in range(n_simulations):
         start = timer()
 
-        expected_number_of_steps, run_number_of_steps, recorded_story, policy_comp_time = wedding_fom.simulate(spec)
+        expected_number_of_steps, run_number_of_steps, recorded_story, policy_comp_time, diff_tracker = wedding_fom.simulate(spec)
         if recorded_story in story_counts:
             story_counts[recorded_story] += 1
         else:
@@ -35,6 +35,7 @@ if __name__ == "__main__":
         n_steps_list.append(run_number_of_steps)
         expected_list.append(expected_number_of_steps)
 
+    print("Number of iterations to compute optimal policy", len(diff_tracker))
     print("Expected average:", sum(expected_list) / n_simulations)
     print("Average number of steps:", sum(n_steps_list) / n_simulations)
     print("Average time:", sum(recorded_times) / n_simulations)
@@ -52,16 +53,28 @@ if __name__ == "__main__":
     if spec['plot']:
         import matplotlib.pyplot as plt
 
-        # create three histograms in one window
+        # create four histograms in one window
         plt.figure()
-        plt.subplot(311)
+        plt.subplot(2, 2, 1)
+        plt.plot(diff_tracker, label='Calculated Difference')
+        plt.legend()
+        plt.ylabel("Difference")
+        plt.xlabel("Iteration")
+        plt.title('Optimal Policy Calculation')
+        plt.subplot(2, 2, 2)
         plt.hist(n_steps_list, bins=20)
-        plt.title('Number of steps')
-        plt.subplot(312)
+        plt.title(f'Actual Number of Steps ({n_simulations} simulations)')
+        plt.ylabel("Frequency")
+        plt.xlabel("Number of Steps")
+        plt.subplot(2, 2, 3)
         plt.hist(expected_list, bins=20, range=(30.11, 30.13))
-        plt.title('Expected number of steps')
-        plt.subplot(313)
+        plt.title(f'Expected Number of Steps ({n_simulations} simulations)')
+        plt.ylabel("Frequency")
+        plt.xlabel("Number of Steps")
+        plt.subplot(2, 2, 4)
         plt.hist(recorded_times, bins=20, range=(0.0005, 0.0015))
-        plt.title('Compute time (s)')
+        plt.title(f'Compute Time ({n_simulations} simulations)')
+        plt.ylabel("Frequency")
+        plt.xlabel("Time (s)")
         plt.tight_layout()
         plt.show()
