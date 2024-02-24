@@ -26,16 +26,16 @@ class MDPState:
         self.transitions = []
         self.reachable = True
         self.evidence_distribution = []
-        self.sumProbabilityTransitions = 0
+        self.sum_probability_transitions = 0
 
-        self.availableActions = []
-        self.actionsTransitions = {}
+        self.available_actions = []
+        self.actions_transitions = {}
 
         ''' 
          The following three fields are used for decomposing the graph into strongly connected components
         '''
-        self.sccIndex = -1
-        self.lowlink = -1
+        self.scc_index = -1
+        self.low_link = -1
         self.scc = None
 
         """
@@ -47,19 +47,19 @@ class MDPState:
         This keeps the actions that the robot should avoid to do. 
         Doing any of them makes the robot to reach a dead end, a state from which no goal state is reachable.
         """
-        self.avoidActions = []
+        self.avoid_actions = []
 
-        self.aGoalIsReachable = False
+        self.a_goal_is_reachable = False
 
         """
         Set of transitions whose destination state is this
         """
-        self.transitionsTo = []
+        self.transitions_to = []
 
         """
         A Boolean vector assigned to the state as the weight of the state
         """
-        self.weightBVector = []
+        self.weight_b_vector = []
 
     def __str__(self):
         return self.name
@@ -70,68 +70,62 @@ class MDPState:
     def add_transition(self, trans):
         if trans in self.transitions:
             return
-        if trans.probability > 1:
-            print("state with probability greater than 1: state=" + trans.srcState.name + ", prob=" + str(
-                trans.probability))
 
-        self.sumProbabilityTransitions += trans.probability
-
-        # if self.sumProbabilityTransitions > 1:
-        # print("summed_step_numbers probability greater than 1: state="+trans.src_state.name+", prob="+str(self.sumProbabilityTransitions))
+        self.sum_probability_transitions += trans.probability
 
         self.transitions.append(trans)
 
     def add_transition_to(self, trans):
-        if trans in self.transitionsTo:
+        if trans in self.transitions_to:
             return
-        self.transitionsTo.append(trans)
+        self.transitions_to.append(trans)
 
     def compute_available_actions(self):
         for tran in self.transitions:
-            if tran.action not in self.availableActions:
-                self.actionsTransitions[tran.action] = []
-                self.availableActions.append(tran.action)
-            self.actionsTransitions[tran.action].append(tran)
+            if tran.action not in self.available_actions:
+                self.actions_transitions[tran.action] = []
+                self.available_actions.append(tran.action)
+            self.actions_transitions[tran.action].append(tran)
 
-    def get_tranision_by_dist_and_action(self, dstState, action):
+    def get_transition_by_dist_and_action(self, dst_state, action):
         for tran in self.transitions:
-            if tran.action != action and tran.dstState == dstState:
+            if tran.action != action and tran.dst_state == dst_state:
                 return tran
         return None
 
 
 class MDPTransition:
 
-    def __init__(self, srcState, dstState, action, natureAction, probability):
-        self.srcState = srcState
-        self.dstState = dstState
+    def __init__(self, src_state, dst_state, action, nature_action, probability):
+        self.src_state = src_state
+        self.dst_state = dst_state
         self.action = action
-        self.natureAction = natureAction
+        self.nature_action = nature_action
         self.probability = probability
         self.eventPositive = False
-        self.eventNegative = False
+        self.event_negative = False
 
     def __str__(self):
-        return str(self.srcState) + "--" + str(self.action) + "--" + str(self.probability) + "-->" + str(self.dstState)
+        return str(self.src_state) + "--" + str(self.action) + "--" + str(self.probability) + "-->" + str(self.dst_state)
 
     def __repr__(self):
-        return str(self.srcState) + "--" + str(self.action) + "--" + str(self.probability) + "-->" + str(self.dstState)
+        return str(self.src_state) + "--" + str(self.action) + "--" + str(self.probability) + "-->" + str(self.dst_state)
 
 
 class MDPStrgConnComponent:
     def __init__(self):
         self.states = []
         self.name = ""
-        self.sccTransitions = []
+        self.scc_transitions = []
 
-        self.Leader = None
+        self.leader = None
 
         """
         Used for DFS purposes
         """
         self.visited = False
 
-    def addState(self, state):
+    def add_state(self, state):
         self.states.append(state)
 
     def __str__(self):
@@ -140,7 +134,7 @@ class MDPStrgConnComponent:
     def __repr__(self):
         return self.name
 
-    def getFullName(self):
+    def get_full_name(self):
         result = "[name:" + self.name + ", states: {"
         i = 0
         for state in self.states:
@@ -149,36 +143,30 @@ class MDPStrgConnComponent:
         result += "} ]"
         return result
 
-    def hasSCCTransitionTo(self, dstSCC):
-        for scc in self.sccTransitions:
-            if scc.dstSCC == dstSCC:
+    def has_scc_transition_to(self, dst_scc):
+        for scc in self.scc_transitions:
+            if scc.dst_scc == dst_scc:
                 return True
         return False
 
-    def isSingular(self):
-        if len(self.states) <= 1:
-            return True
-        return False
+    def is_singular(self):
+        return len(self.states) <= 1
 
-    def isASingularGoal(self):
-        if len(self.states) > 1:
-            return False
-        if self.states[0].is_goal == False:
-            return False
-        return True
+    def is_a_singular_goal(self):
+        return not (len(self.states) > 1 or not self.states[0].is_goal)
 
 
 class SCCTransition:
-    def __init__(self, srcSCC, dstSCC):
-        self.srcSCC = srcSCC
-        self.dstSCC = dstSCC
+    def __init__(self, src_scc, dst_scc):
+        self.src_scc = src_scc
+        self.dst_scc = dst_scc
 
     def __str__(self):
-        result = "[" + self.srcSCC.name + ", " + self.dstSCC.name + "]"
+        result = "[" + self.src_scc.name + ", " + self.dst_scc.name + "]"
         return result
 
     def __repr__(self):
-        return "[" + self.srcSCC.name + ", " + self.dstSCC + "]"
+        return "[" + self.src_scc.name + ", " + self.dst_scc + "]"
 
 
 class MDP:
@@ -188,32 +176,32 @@ class MDP:
         self.initial_state = MDPState()
         self.goalStates = []
         self.transitions = []
-        self.transitionsDict = {}
-        self.madeTransitionDict = False
+        self.transitions_dict = {}
+        self.made_transition_dict = False
         self.has_evidence = False
         self.evidence_list = []
         self.observations = []
 
         """
-        To access an entry of the observation function use observationFunction[o][s][a], where
+        To access an entry of the observation function use observation_function[o][s][a], where
         'o' is an action, 's' is a state, and 'a' is an action.
         """
-        self.observationFunction = {}
+        self.observation_function = {}
         self.verbose = True
         self.beliefTree = None
 
         """
         These fields are used for decomposing the MDP into strongly connected components
         """
-        self.strgConnCompoments = []
-        self.initialSCC = None
-        self.sccTransitions = []
-        self.sccTopologicalOrder = []  # The strongly connected components are saved in a reverse topological ordering
+        self.strg_conn_compoments = []
+        self.initial_scc = None
+        self.scc_transitions = []
+        self.scc_topological_order = []  # The strongly connected components are saved in a reverse topological ordering
 
         """
         This field is used for saving a topological ordering of the states 
         """
-        self.topologicalOrder = []
+        self.topological_order = []
 
         self.states_dict_by_name = {}
 
@@ -221,326 +209,149 @@ class MDP:
         The property evidence_list contains only the original evidence and not the results of whether the prediction was right or not.
         We make new list of evidences here.  
         """
-        self.evidenceTupleList = []
+        self.evidence_tuple_list = []
 
         """
         The observation that a goal state is reached
         """
         self.goal_reached_observation = "goal_reached"
 
-        self.availableActionsComputed = False
+        self.available_actions_computed = False
 
-        self.baseNum4CostLiniarization = 10
+        self.base_num4_cost_linearization = 10
 
-    def getObservationString(self, o):
-        result = ""
+    def get_observation_string(self, o):
         if isinstance(o, tuple):
-            result = str(o[0]) + "_" + str(o[1])
+            return str(o[0]) + "_" + str(o[1])
         else:
-            result = str(o)
-        return result
-
-    def createAnInitialBeleifState(self):
-        beleif = [0.0] * len(self.states)
-        beleif[self.initial_state.index] = 1.0
-        return beleif
-
-    """
-    Given a belief state over the POMDP, return a state that has the highest outcome in the beleif state
-    """
-
-    def getMostPlausibleState(self, beleif):
-        maxOutCome = 0
-        for i in range(len(beleif)):
-            if beleif[i] > maxOutCome:
-                maxOutCome = beleif[i]
-        maxIndices = []
-        for i in range(len((beleif))):
-            if beleif[i] == maxOutCome:
-                maxIndices.append(i)
-        chosenIndex = random.choice(maxIndices)
-        return self.states[chosenIndex]
-
-    """
-    Given that the current beleif state over the mdp is beleif, give from the list actions, an event that highest probability to happen in the next time step
-    """
-
-    def getNexTimeMostPlausibleEvent(self, beleif, eventList, markovChain):
-        maxProb = 0
-        probs = [0] * len(eventList)
-        for j in range(len(eventList)):
-            event = eventList[j]
-            prob = 0
-            for i in range(len(beleif)):
-                if beleif[i] == 0:
-                    continue
-                x = self.states[i]
-                s = x.anchor[1]
-                prob += markovChain.p_of_happening_in_next_step(s, event)
-            if prob > maxProb:
-                maxProb = prob
-            probs[j] = prob
-        eventsToBeChosen = []
-        for j in range(len(eventList)):
-            if probs[j] == maxProb:
-                eventsToBeChosen.append(eventList[j])
-        if len(eventsToBeChosen) > 0:
-            return random.choice(eventsToBeChosen)
-        return None
+            return str(o)
 
     """
     prediction_result: True, False (whether the predicted event happened). evidence: raised from the event model
     """
-
-    def getObservationOfTuple(self, prediction_result, evidence):
+    def create_observation_function_dict(self):
+        self.observation_function = {}
         for o in self.observations:
-            if o[0] != prediction_result:
-                continue
-            if o[1] != evidence:
-                continue
-            return o
-        return None
-
-    def getBooleanObservation(self, booleanValue):
-        for o in self.observations:
-            if o == booleanValue:
-                return o
-        return None
-
-    def noOfSingularSCCs(self):
-        cnt = 0
-        for scc in self.strgConnCompoments:
-            if scc.isSingular() == True:
-                cnt += 1
-        return cnt
-
-    def noOfSingularGoalSCCs(self):
-        cnt = 0
-        for scc in self.strgConnCompoments:
-            if scc.isASingularGoal() == True:
-                cnt += 1
-        return cnt
-
-    def make_observation_function(self):
-        # if self.verbose:
-        print("Start making observation function")
-        self.observations = []
-        if len(self.evidence_list) > 0:
-            for ev in self.evidence_list:
-                o1 = (True, ev)
-                o2 = (False, ev)
-                self.observations.append(o1)
-                self.observations.append(o2)
-        else:
-            self.observations.append(True)
-            self.observations.append(False)
-        self.observations.append(self.goal_reached_observation)
-
-        self.createObservationFunctionDict()
-
-        if len(self.evidence_list) > 0:
+            self.observation_function[o] = {}
             for x in self.states:
-                s = x.anchor[1]  # The state of event model
-                for a in self.actions:  # Event
-                    for i in range(len(self.evidence_list)):
-                        y = self.evidence_list[i]
-                        o1 = self.getObservationOfTuple(True, y)
-                        o2 = self.getObservationOfTuple(False, y)
-                        o3 = self.goal_reached_observation
-                        if x.is_goal:
-                            self.observationFunction[o1][x][a] = 0
-                            self.observationFunction[o2][x][a] = 0
-                            self.observationFunction[o3][x][a] = 1
-                        else:
-                            self.observationFunction[o3][x][a] = 0
-                            if a in s.events:
-                                self.observationFunction[o1][x][a] = s.evidence_distribution[i]
-                                self.observationFunction[o2][x][a] = 0
-                            else:
-                                self.observationFunction[o2][x][a] = s.evidence_distribution[i]
-                                self.observationFunction[o1][x][a] = 0
-        else:
-            for x in self.states:
-                s = x.anchor[1]
-                for a in self.actions:
-                    o1 = self.getBooleanObservation(True)
-                    o2 = self.getBooleanObservation(False)
-                    o3 = self.goal_reached_observation
-                    if x.is_goal:
-                        self.observationFunction[o1][x][a] = 0
-                        self.observationFunction[o2][x][a] = 0
-                        self.observationFunction[o3][x][a] = 1
-                    else:
-                        self.observationFunction[o3][x][a] = 0
-                        if a in s.events:
-                            self.observationFunction[o1][x][a] = 1
-                            self.observationFunction[o2][x][a] = 0
-                        else:
-                            self.observationFunction[o2][x][a] = 1
-                            self.observationFunction[o1][x][a] = 0
-
-        # print("observations = "+str(self.observations))
-        # print("observationFunction = "+str(self.observationFunction))
-
-    def createObservationFunctionDict(self):
-        self.observationFunction = {}
-        for o in self.observations:
-            self.observationFunction[o] = {}
-            for x in self.states:
-                self.observationFunction[o][x] = {}
+                self.observation_function[o][x] = {}
                 for e in self.actions:
-                    self.observationFunction[o][x][e] = 0
-        # print(str(self.observationFunction))
+                    self.observation_function[o][x][e] = 0
 
-    def sumTransitionProbs(self, dstState, action, beleifState):
+    def sum_transition_probs(self, dstState, action, beleifState):
         total = 0
-        #         for t in self.transitions:
-        #             if t.dst_state != dst_state:
-        #                 continue
-        #             if t.action != action:
-        #                 continue
-        #             total += beleifState[t.src_state.index]*t.probability
-        #         return total
         for srcState in self.states:
             total += beleifState[srcState.index] * self.conditionalProbability(dstState.index, srcState.index, action)
         return total
 
-    def probabilityObservationGivenActionAndbeleif(self, observation, action, beleifState):
+    def probability_observation_given_action_andbeleif(self, observation, action, belief_state):
         total = 0
         for x in self.states:
-            total += self.observationFunction[observation][x][action] * self.sumTransitionProbs(x, action, beleifState)
+            total += self.observation_function[observation][x][action] * self.sum_transition_probs(x, action, belief_state)
         return total
 
-    def createBeleif(self, beleif, action, observation):
+    def create_belief(self, belief, action, observation):
         b = [0] * len(self.states)
-        # probObsAction = self.probabilityObservationGivenActionAndbeleif(observation, action, beleif)
-        probObsAction = 0
-        sumTransProbs = {}
-        sumOfThem = 0
+        prob_obs_action = 0
+        sum_trans_probs = {}
 
         for x in self.states:
-            stp = self.sumTransitionProbs(x, action, beleif)
-            sumTransProbs[x] = stp
-            probObsAction += self.observationFunction[observation][x][action] * stp
+            stp = self.sum_transition_probs(x, action, belief)
+            sum_trans_probs[x] = stp
+            prob_obs_action += self.observation_function[observation][x][action] * stp
 
         for x in self.states:
-            # total = self.sumTransitionProbs(x, action, beleif)
-            total = sumTransProbs[x]
-            if total == 0 or self.observationFunction[observation][x][action] == 0:
+            # total = self.sumTransitionProbs(x, action, belief)
+            total = sum_trans_probs[x]
+            if total == 0 or self.observation_function[observation][x][action] == 0:
                 b[x.index] = 0
             else:
-                b[x.index] = (self.observationFunction[observation][x][action] * total) / probObsAction
+                b[x.index] = (self.observation_function[observation][x][action] * total) / prob_obs_action
                 """
-            if self.observationFunction[observation][x][action] ==0 and self.probabilityObservationGivenActionAndbeleif(observation, action, beleif) == 0:
+            if self.observation_function[observation][x][action] ==0 and self.probabilityObservationGivenActionAndbeleif(observation, action, belief) == 0:
                 print("O["+str(observation)+"]["+str(x)+"]["+str(action)+"]")
                 b[x.index]
             else:
-                if self.probabilityObservationGivenActionAndbeleif(observation, action, beleif) == 0:
-                    print("b:"+ str(beleif))
-                    print("O["+str(observation)+"]["+str(x)+"]["+str(action)+"]="+str(self.observationFunction[observation][x][action]))
+                if self.probabilityObservationGivenActionAndbeleif(observation, action, belief) == 0:
+                    print("b:"+ str(belief))
+                    print("O["+str(observation)+"]["+str(x)+"]["+str(action)+"]="+str(self.observation_function[observation][x][action]))
                    
-                b[x.index]=(self.observationFunction[observation][x][action]*total)/self.probabilityObservationGivenActionAndbeleif(observation, action, beleif)
+                b[x.index]=(self.observation_function[observation][x][action]*total)/self.probabilityObservationGivenActionAndbeleif(observation, action, belief)
                 """
         # print("b="+str(b))
         return b
 
-    def getGoalAvgValue(self, beleif):
+    def get_goal_avg_value(self, belief):
         total = 0
         for x in self.goalStates:
-            total += beleif[x.index]
-            # print("x.index="+str(x.index))
+            total += belief[x.index]
         return total
 
-    def add_state(self, mdpState):
-        mdpState.index = len(self.states)
-        self.states.append(mdpState)
-        self.states_dict_by_name[mdpState.name] = mdpState
+    def add_state(self, mdp_state):
+        mdp_state.index = len(self.states)
+        self.states.append(mdp_state)
+        self.states_dict_by_name[mdp_state.name] = mdp_state
 
-    def set_as_goal(self, mdpState):
-        mdpState.is_goal = True
-        if not (mdpState in self.goalStates):
-            self.goalStates.append(mdpState)
+    def set_as_goal(self, mdp_state):
+        mdp_state.is_goal = True
+        if mdp_state not in self.goalStates:
+            self.goalStates.append(mdp_state)
 
-    def add_transition(self, mdpTransition):
-        # if mdpTransition in self.transitions:
-        #    print("Error. Transition has been added before")
-        #    return
+    def add_transition(self, mdp_transition):
+        self.transitions.append(mdp_transition)
+        mdp_transition.src_state.add_transition(mdp_transition)
+        mdp_transition.dst_state.add_transition_to(mdp_transition)
 
-        # if self.hasTransition(mdpTransition.src_state, mdpTransition.dst_state, mdpTransition.action):
-        #    return
-
-        self.transitions.append(mdpTransition)
-        mdpTransition.srcState.add_transition(mdpTransition)
-        mdpTransition.dstState.add_transition_to(mdpTransition)
-
-    def hasTransition(self, srcState, dstState, event):
-        for t in self.transitions:
-            if t.srcState == srcState:
-                if t.dstState == dstState:
-                    if t.action == event:
-                        return True
-
-        return False
-
-    def getTransition(self, srcState, dstState, action):
-        for t in srcState.transitions:
-            if t.dstState == dstState and t.action == action:
-                return t
-
-        return None
-
-    def computeAvoidableActions(self, printResults=False):
-        print("Start computing avoidable actions")
-
+    def compute_avoidable_actions(self):
         for state in self.states:
-            state.aGoalIsReachable = False
+            state.a_goal_is_reachable = False
 
         queue = []
         for state in self.states:
-            if state.is_goal == True:
+            if state.is_goal:
                 queue.append(state)
-                state.aGoalIsReachable = True
+                state.a_goal_is_reachable = True
 
         while queue:
             state = queue.pop(0)
-            for t in state.transitionsTo:
+            for t in state.transitions_to:
                 # if t.dst_state != state:
                 #    continue
                 allReachToGoals = True
-                for t2 in t.srcState.actionsTransitions[t.action]:
+                for t2 in t.src_state.actions_transitions[t.action]:
                     # if t2.action != t.action:
                     #    continue 
-                    if t2.dstState.aGoalIsReachable == False:
+                    if t2.dst_state.a_goal_is_reachable == False:
                         allReachToGoals = True
-                if allReachToGoals == True and t.srcState.aGoalIsReachable == False:
-                    t.srcState.aGoalIsReachable = True
-                    queue.append(t.srcState)
+                if allReachToGoals == True and t.src_state.a_goal_is_reachable == False:
+                    t.src_state.a_goal_is_reachable = True
+                    queue.append(t.src_state)
         for state in self.states:
             for action in self.actions:
                 allDstReachable = True
-                # if action not in state.actionsTransitions.keys():
+                # if action not in state.actions_transitions.keys():
                 #    continue
-                if action not in state.actionsTransitions.keys():
+                if action not in state.actions_transitions.keys():
                     print("Action " + str(
-                        action) + " has no key in dictionary state.actionsTransitions for state " + state.name)
+                        action) + " has no key in dictionary state.actions_transitions for state " + state.name)
                 else:
-                    for trans in state.actionsTransitions[action]:
-                        if trans.dstState.aGoalIsReachable == False:
+                    for trans in state.actions_transitions[action]:
+                        if trans.dst_state.a_goal_is_reachable == False:
                             allDstReachable = False
                             break
                 if allDstReachable == False:
-                    state.avoidActions.append(action)
+                    state.avoid_actions.append(action)
 
         if printResults:
             for state in self.states:
-                print("State: " + str(state.name) + ", aGoalIsReachable: " + str(state.aGoalIsReachable))
+                print("State: " + str(state.name) + ", a_goal_is_reachable: " + str(state.a_goal_is_reachable))
 
         if printResults:
             for state in self.states:
-                if state.aGoalIsReachable == False:
+                if state.a_goal_is_reachable == False:
                     continue
-                # print("State: "+str(state.name)+", aGoalIsReachable: "+str(state.aGoalIsReachable))
-                for action in state.avoidActions:
+                # print("State: "+str(state.name)+", a_goal_is_reachable: "+str(state.a_goal_is_reachable))
+                for action in state.avoid_actions:
                     print("Avoid " + str(action) + " in state " + state.name)
 
         print("End computing avoidable actions ")
@@ -548,19 +359,19 @@ class MDP:
     def topologicalOrderHelper(self, state):
         state.visited = True
         for tran in state.transitions:
-            if tran.dstState.visited == False:
-                self.topologicalOrderHelper(tran.dstState)
-        self.topologicalOrder.append(state)
+            if tran.dst_state.visited == False:
+                self.topologicalOrderHelper(tran.dst_state)
+        self.topological_order.append(state)
 
     def topologicalOrderStack(self, state):
         state.visited = True
         for tran in state.transitions:
-            if tran.dstState.visited == False:
-                self.topologicalOrderHelper(tran.dstState)
-        self.topologicalOrder.append(state)
+            if tran.dst_state.visited == False:
+                self.topologicalOrderHelper(tran.dst_state)
+        self.topological_order.append(state)
 
     def computeTopologicalOrder(self):
-        self.topologicalOrder = []
+        self.topological_order = []
         for state in self.states:
             state.visited = False
         for state in self.states:
@@ -568,7 +379,7 @@ class MDP:
                 self.topologicalOrderHelper(state)
 
     def computeTopologicalOrderRecursive(self):
-        self.topologicalOrder = []
+        self.topological_order = []
         for state in self.states:
             state.visited = False
         stack = []
@@ -578,84 +389,84 @@ class MDP:
 
     def sccTopologicalOrderHelper(self, scc):
         scc.visited = True
-        for sccTrans in scc.sccTransitions:
-            if sccTrans.dstSCC.visited == False:
-                self.sccTopologicalOrderHelper(sccTrans.dstSCC)
-        self.sccTopologicalOrder.append(scc)
+        for sccTrans in scc.scc_transitions:
+            if sccTrans.dst_scc.visited == False:
+                self.sccTopologicalOrderHelper(sccTrans.dst_scc)
+        self.scc_topological_order.append(scc)
 
     def computeSCCTopologicalOrder(self):
-        self.sccTopologicalOrder = []
-        for scc in self.strgConnCompoments:
+        self.scc_topological_order = []
+        for scc in self.strg_conn_compoments:
             scc.visited = False
-        for scc in self.strgConnCompoments:
+        for scc in self.strg_conn_compoments:
             if scc.visited == False:
                 self.sccTopologicalOrderHelper(scc)
 
     def makeSCCTransitions(self):
-        for scc in self.strgConnCompoments:
+        for scc in self.strg_conn_compoments:
             for state in scc.states:
                 for trans in state.transitions:
-                    if trans.dstState.scc == scc:
+                    if trans.dst_state.scc == scc:
                         continue
-                    if state.scc.hasSCCTransitionTo(trans.dstState.scc) == False:
-                        sccTransition = SCCTransition(scc, trans.dstState.scc)
-                        self.sccTransitions.append(sccTransition)
-                        state.scc.sccTransitions.append(sccTransition)
+                    if state.scc.has_scc_transition_to(trans.dst_state.scc) == False:
+                        sccTransition = SCCTransition(scc, trans.dst_state.scc)
+                        self.scc_transitions.append(sccTransition)
+                        state.scc.scc_transitions.append(sccTransition)
 
     def decomposeToStrngConnComponents(self):
         self.sccIndex = 0
         self.stack4scc = []
         for state in self.states:
-            if state.sccIndex == -1:
+            if state.scc_index == -1:
                 self.strongconnect(state)
 
-        for i in range(len(self.strgConnCompoments)):
-            self.strgConnCompoments[i].name = "C" + str(len(self.strgConnCompoments) - i - 1)
+        for i in range(len(self.strg_conn_compoments)):
+            self.strg_conn_compoments[i].name = "C" + str(len(self.strg_conn_compoments) - i - 1)
         self.makeSCCTransitions()
 
     def strongconnect(self, state):
-        state.sccIndex = self.sccIndex
-        state.lowlink = self.sccIndex
+        state.scc_index = self.sccIndex
+        state.low_link = self.sccIndex
         self.sccIndex = self.sccIndex + 1
         self.stack4scc.append(state)
         state.onStack = True
         for trans in state.transitions:
-            state2 = trans.dstState
-            if state2.sccIndex == -1:
+            state2 = trans.dst_state
+            if state2.scc_index == -1:
                 self.strongconnect(state2)
-                state.lowlink = min(state.lowlink, state2.lowlink)
+                state.low_link = min(state.low_link, state2.low_link)
             elif state2.onStack:
-                state.lowlink = min(state.lowlink, state2.lowlink)
+                state.low_link = min(state.low_link, state2.low_link)
 
-        if state.sccIndex == state.lowlink:
+        if state.scc_index == state.low_link:
             scc = MDPStrgConnComponent()
-            scc.Leader = state
-            # scc.name = "C"+str(len(self.strgConnCompoments))
-            self.strgConnCompoments.append(scc)
+            scc.leader = state
+            # scc.name = "C"+str(len(self.strg_conn_compoments))
+            self.strg_conn_compoments.append(scc)
             if state == self.initial_state:
-                self.initialSCC = scc
+                self.initial_scc = scc
             hasPopedState = False
             while hasPopedState == False:
                 state2 = self.stack4scc.pop()
                 state2.onStack = False
-                scc.addState(state2)
+                scc.add_state(state2)
                 state2.scc = scc
                 if state2 == state:
                     hasPopedState = True
 
     def printStrgConnComponents(self):
         print("------------------------- Start Printing Strongly Connected Components ----------------------")
-        print("The MDP has " + str(len(self.strgConnCompoments)) + " strongly connected components")
-        for scc in self.strgConnCompoments:
-            print(scc.getFullName())
+        print("The MDP has " + str(len(self.strg_conn_compoments)) + " strongly connected components")
+        for scc in self.strg_conn_compoments:
+            print(scc.get_full_name())
         print("------------------------- End Printing Strongly Connected Components ----------------------")
 
     def printGraphOfStrgConnComponents(self):
         print(
             "------------------------- Start Printing The Graph of Strongly Connected Components ----------------------")
-        print("The MDP has " + str(len(self.strgConnCompoments)) + " strongly connected components")
-        print("Initial SCC:" + self.initialSCC.name)
-        for sccTrans in self.sccTransitions:
+        print("The MDP has " + str(len(self.strg_conn_compoments)) + " strongly connected components")
+        print("Initial SCC:" + self.initial_scc.name)
+        for sccTrans in self.scc_transitions:
             print(str(sccTrans))
         print(
             "------------------------- End Printing The Graph of Strongly Connected Components ----------------------")
@@ -663,7 +474,7 @@ class MDP:
     def compute_states_available_actions(self):
         for state in self.states:
             state.compute_available_actions()
-        self.availableActionsComputed = True
+        self.available_actions_computed = True
 
     def reindexStates(self):
         i = 0
@@ -684,7 +495,7 @@ class MDP:
             print("Start checking transitions to remove")
             print("Number of transitions: " + str(len(self.transitions)))
         for trans in self.transitions:
-            if trans.srcState.reachable == False or trans.dstState.reachable == False:
+            if trans.src_state.reachable == False or trans.dst_state.reachable == False:
                 transitionsToRemove.append(trans)
         if self.verbose:
             print("End checking transitions to remove")
@@ -730,9 +541,9 @@ class MDP:
         self.visited[state.index] = True
         state.reachable = True
         for t in state.transitions:
-            if self.visited[t.dstState.index]:
+            if self.visited[t.dst_state.index]:
                 continue
-            self.dfs(t.dstState)
+            self.dfs(t.dst_state)
 
     def getStateByAnchor(self, anchor):
         for s in self.states:
@@ -757,29 +568,29 @@ class MDP:
 
     def getNextStateForEventPositive(self, state, event):
         for t in self.transitions:
-            if t.srcState == state and t.action == event and t.eventPositive == True:
-                return t.dstState
+            if t.src_state == state and t.action == event and t.eventPositive == True:
+                return t.dst_state
         return None
 
     def getNextStateForEventNegative(self, state, event):
         for t in self.transitions:
-            if t.srcState == state and t.action == event and t.eventNegative == True:
-                return t.dstState
+            if t.src_state == state and t.action == event and t.event_negative == True:
+                return t.dst_state
         return None
 
     def makeTransitionsDict(self):
 
         n = len(self.states)
-        self.transitionsDict = {}
+        self.transitions_dict = {}
         for a in self.actions:
-            self.transitionsDict[a] = {}
+            self.transitions_dict[a] = {}
             for i in range(n):
-                self.transitionsDict[a][i] = {}
+                self.transitions_dict[a][i] = {}
                 for j in range(n):
-                    self.transitionsDict[a][i][j] = 0
+                    self.transitions_dict[a][i][j] = 0
         for t in self.transitions:
-            self.transitionsDict[t.action][t.srcState.index][t.dstState.index] = t.probability
-        self.madeTransitionDict = True
+            self.transitions_dict[t.action][t.src_state.index][t.dst_state.index] = t.probability
+        self.made_transition_dict = True
         print("TransitionsDict has been made")
 
     def finiteHorizonOptimalPolicy(self, F, verbose):
@@ -833,9 +644,9 @@ class MDP:
         return optPolicy
 
     def conditionalProbability(self, nextStateIndex, currentStateIndex, action):
-        if self.madeTransitionDict == False:
+        if self.made_transition_dict == False:
             self.makeTransitionsDict()
-        return self.transitionsDict[action][currentStateIndex][nextStateIndex]
+        return self.transitions_dict[action][currentStateIndex][nextStateIndex]
 
     def printAll(self):
         print("-------------------------------------------MDP--------------------------------------------")
@@ -878,11 +689,11 @@ class MDP:
         cnt = 0
 
         for t in self.transitions:
-            if t.srcState.is_goal == False:
+            if t.src_state.is_goal == False:
                 continue
 
-            if t.srcState != t.dstState:
-                t.dstState = t.srcState
+            if t.src_state != t.dst_state:
+                t.dst_state = t.src_state
                 cnt = cnt + 1
 
         for s in self.states:
@@ -890,8 +701,8 @@ class MDP:
                 continue
 
             for t in s.transitions:
-                if t.srcState != t.dstState:
-                    t.dstState = t.srcState
+                if t.src_state != t.dst_state:
+                    t.dst_state = t.src_state
 
         self.makeTransitionsDict()
 
@@ -899,8 +710,8 @@ class MDP:
 
         cnt = 0
         for t in self.transitions:
-            if t.srcState.is_goal:
-                if t.srcState != t.dstState:
+            if t.src_state.is_goal:
+                if t.src_state != t.dst_state:
                     cnt = cnt + 1
 
         print("Number of remained transitions from goal states:" + str(cnt))
@@ -910,8 +721,8 @@ class MDP:
         notFixed = ""
         for s in self.states:
             for a in self.actions:
-                if self.availableActionsComputed:
-                    if a not in s.availableActions:
+                if self.available_actions_computed:
+                    if a not in s.available_actions:
                         continue
                 sum = 0
                 numOfTrans = 0
@@ -947,16 +758,16 @@ class MDP:
 
     """
     It checks whether
-    \Sigma_{o \in observations} observationFunction[o][s][a] = 1
+    \Sigma_{o \in observations} observation_function[o][s][a] = 1
     """
 
-    def checkObservationFunction(self):
+    def checkobservation_function(self):
         ok = True
         for a in self.actions:
             for s in self.states:
                 sumProb = 0
                 for o in self.observations:
-                    sumProb += self.observationFunction[o][s][a]
+                    sumProb += self.observation_function[o][s][a]
                 if sumProb != 1:
                     ok = False
                     print("The summed_step_numbers of observations for s=" + str(
@@ -968,7 +779,7 @@ class MDP:
 
         if self.verbose:
             print("Start making the belief Tree with height " + str(H))
-            print("The size of the beleif tree will be in the order of (" + str(len(self.actions)) + "*" + str(
+            print("The size of the belief tree will be in the order of (" + str(len(self.actions)) + "*" + str(
                 len(self.observations)) + ")^" + str(H) + ", " + str(
                 pow(len(self.actions) * len(self.observations), H)))
 
@@ -999,11 +810,11 @@ class MDP:
                 continue
             for a in self.actions:
                 for o in self.observations:
-                    b2 = self.createBeleif(b, a, o)
+                    b2 = self.create_belief(b, a, o)
                     node2 = BeliefTreeNode(b2)
-                    node2.goalAvgValue = self.getGoalAvgValue(b2)
+                    node2.goalAvgValue = self.get_goal_avg_value(b2)
                     node2.height = node.height + 1
-                    prob = self.probabilityObservationGivenActionAndbeleif(o, a, b)
+                    prob = self.probability_observation_given_action_andbeleif(o, a, b)
                     edge = BeliefTreeEdge(node, node2, a, o, prob)
                     node.addEdge(edge)
                     node2.probabilityTo = node.probabilityTo * prob
@@ -1036,7 +847,7 @@ class MDP:
         #         else:
         #             print("Transition function is fine")
         #
-        #         obserFunOk = self.checkObservationFunction()
+        #         obserFunOk = self.checkobservation_function()
         #         print("Checking observation function")
         #         if obserFunOk == False:
         #             print("Observation function is not a distribution")
@@ -1110,11 +921,11 @@ class MDP:
         for t in self.transitions:
             # if t.dst_state.reachable == False:
             #    continue
-            if t.srcState.is_goal == True:  ## Added for testing
-                print("Not making a transition for the goal state " + t.srcState.name)
+            if t.src_state.is_goal == True:  ## Added for testing
+                print("Not making a transition for the goal state " + t.src_state.name)
                 continue
             st += "<Entry>" + "\n"
-            st += "<Instance>" + t.action + " " + t.srcState.name + " " + t.dstState.name + "</Instance>" + "\n"
+            st += "<Instance>" + t.action + " " + t.src_state.name + " " + t.dst_state.name + "</Instance>" + "\n"
             st += "<ProbTable>" + str(t.probability) + "</ProbTable>" + "\n"
             st += "</Entry>" + "\n"
         for a in self.actions:
@@ -1236,7 +1047,7 @@ class MDP:
         return st
 
     """
-    In this version, the observation function of the pomdpx comes directly from the field observationFunction of this object
+    In this version, the observation function of the pomdpx comes directly from the field observation_function of this object
     """
 
     def getPOMDPX_XML2(self):
@@ -1264,7 +1075,7 @@ class MDP:
         st += "<ObsVar vname='" + observationTitle + "'>" + "\n"
         st += "<ValueEnum>" + "\n"
         for o in self.observations:
-            st += self.getObservationString(o) + " "
+            st += self.get_observation_string(o) + " "
         st += "</ValueEnum>" + "\n"
         st += "</ObsVar>" + "\n"
 
@@ -1307,10 +1118,10 @@ class MDP:
         for t in self.transitions:
             # if t.dst_state.reachable == False:
             #    continue
-            if t.srcState.is_goal == True:  ## Added for testing
+            if t.src_state.is_goal == True:  ## Added for testing
                 continue
             st += "<Entry>" + "\n"
-            st += "<Instance>" + t.action + " " + t.srcState.name + " " + t.dstState.name + "</Instance>" + "\n"
+            st += "<Instance>" + t.action + " " + t.src_state.name + " " + t.dst_state.name + "</Instance>" + "\n"
             st += "<ProbTable>" + str(t.probability) + "</ProbTable>" + "\n"
             st += "</Entry>" + "\n"
         for a in self.actions:
@@ -1337,9 +1148,9 @@ class MDP:
                 #    continue
                 for o in self.observations:
                     st += "<Entry>" + "\n"
-                    st += "<Instance>" + a + " " + s.name + " " + self.getObservationString(
+                    st += "<Instance>" + a + " " + s.name + " " + self.get_observation_string(
                         o) + " " + "</Instance>" + "\n"
-                    st += "<ProbTable>" + str(self.observationFunction[o][s][a]) + "</ProbTable>" + "\n"
+                    st += "<ProbTable>" + str(self.observation_function[o][s][a]) + "</ProbTable>" + "\n"
                     st += "</Entry>" + "\n"
 
         st += "</Parameter>" + "\n"
@@ -1442,7 +1253,7 @@ class MDP:
         st += "<Parameter type = 'TBL'>" + "\n"
         for t in self.transitions:
             st += "<Entry>" + "\n"
-            st += "<Instance>" + t.action + " " + t.srcState.name + " " + t.dstState.name + "</Instance>" + "\n"
+            st += "<Instance>" + t.action + " " + t.src_state.name + " " + t.dst_state.name + "</Instance>" + "\n"
             st += "<ProbTable>" + str(t.probability) + "</ProbTable>" + "\n"
             st += "</Entry>" + "\n"
         st += "</Parameter>" + "\n"
@@ -1460,7 +1271,7 @@ class MDP:
                     st += "<Entry>" + "\n"
                     st += "<Instance>" + x.name + " " + e + " " + str(o).replace(", ", "_").replace("(", "").replace(
                         ")", "") + "</Instance>" + "\n"
-                    st += "<ProbTable>" + str(self.observationFunction[o][x][e]) + "</ProbTable>" + "\n"
+                    st += "<ProbTable>" + str(self.observation_function[o][x][e]) + "</ProbTable>" + "\n"
                     st += "</Entry>" + "\n"
 
         st += "</Parameter>" + "\n"
@@ -1495,25 +1306,25 @@ class MDP:
             s2 = MDPState(s.name + "_shadow", s)
             self.add_state(s2)
             for o in self.observations:
-                self.observationFunction[o][s2] = {}
+                self.observation_function[o][s2] = {}
                 for a in self.actions:
-                    self.observationFunction[o][s2][a] = self.observationFunction[o][s][a]
+                    self.observation_function[o][s2][a] = self.observation_function[o][s][a]
 
         for t in self.transitions:
-            if t.srcState.is_goal == False:
+            if t.src_state.is_goal == False:
                 continue
-            if t.dstState.isGoal == False:
+            if t.dst_state.isGoal == False:
                 continue
-            srcStateShadow = self.getStateByAnchor(t.srcState)
-            dstStateShadow = self.getStateByAnchor(t.dstState)
-            t2 = MDPTransition(srcStateShadow, dstStateShadow, t.action, t.natureAction, t.probability)
+            srcStateShadow = self.getStateByAnchor(t.src_state)
+            dstStateShadow = self.getStateByAnchor(t.dst_state)
+            t2 = MDPTransition(srcStateShadow, dstStateShadow, t.action, t.nature_action, t.probability)
             self.add_transition(t2)
 
         for t in self.transitions:
-            if t.srcState.is_goal == False:
+            if t.src_state.is_goal == False:
                 continue
-            dstStateShadow = self.getStateByAnchor(t.dstState)
-            t.dstState = dstStateShadow
+            dstStateShadow = self.getStateByAnchor(t.dst_state)
+            t.dst_state = dstStateShadow
 
     def getPreferenceValueBooleanVector(self, booleanVector):
         m = len(booleanVector)
@@ -1660,15 +1471,15 @@ class MDP:
     def getOrder4ComputingPolicy(self):
         queue = []
         for s in self.goalStates:
-            for t in s.transitionsTo:
-                if t.srcState not in queue and (not t.srcState.is_goal):
-                    queue.append(t.srcState)
+            for t in s.transitions_to:
+                if t.src_state not in queue and (not t.src_state.is_goal):
+                    queue.append(t.src_state)
         i = 0
         while i < len(queue):
             s = queue[i]
-            for t in s.transitionsTo:
-                if t.srcState not in queue and (not t.srcState.is_goal):
-                    queue.append(t.srcState)
+            for t in s.transitions_to:
+                if t.src_state not in queue and (not t.src_state.is_goal):
+                    queue.append(t.src_state)
             i += 1
         return queue
 
@@ -1680,13 +1491,13 @@ class MDP:
             V = {}
         else:
             V = [() for i in range(len(self.states))]
-        m = len(self.goalStates[0].weightBVector)
+        m = len(self.goalStates[0].weight_b_vector)
         for s in self.states:
             softConstProbVect = [0] * m
             # vect = None
             if s.is_goal:
                 for k in range(m):
-                    softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
+                    softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
                 vect = (0, softConstProbVect)
             else:
                 vect = (0, softConstProbVect)
@@ -1701,8 +1512,8 @@ class MDP:
             for s in states:
                 if s.is_goal:
                     continue
-                # print(f"self.availableActionsComputed: {self.availableActionsComputed}")
-                # if self.availableActionsComputed and not s.aGoalIsReachable:
+                # print(f"self.available_actions_computed: {self.available_actions_computed}")
+                # if self.available_actions_computed and not s.a_goal_is_reachable:
                 #    continue
                 if byStateNameOrIndex:
                     a = policy[s.name]
@@ -1710,16 +1521,16 @@ class MDP:
                     a = policy[s.index]
                 steps = 1
                 soft_probs = [0] * m
-                if a not in s.availableActions:
+                if a not in s.available_actions:
                     print(f"Error1: Action {a} is not in availableActions of state {s}")
                     print("Action: " + str(a))
-                if a not in s.actionsTransitions.keys():
+                if a not in s.actions_transitions.keys():
                     print(f"Error2: Action {a} is not in availableActions of state {s}")
                     print("Action: " + str(a))
                     self.printActions()
                     continue
-                for tran in s.actionsTransitions[a]:
-                    s2 = tran.dstState
+                for tran in s.actions_transitions[a]:
+                    s2 = tran.dst_state
                     if byStateNameOrIndex:
                         v_vect = V[s2.name]
                     else:
@@ -1842,7 +1653,7 @@ class MDP:
     def compViolationCostsAndConct(self, valueVectors, baseNum4CostLiniarization):
         for i in range(len(valueVectors)):
             violationCost = 0.0
-            m = len(self.goalStates[0].weightBVector)
+            m = len(self.goalStates[0].weight_b_vector)
             for j in range(m):
                 violationCost += (1 - valueVectors[i][1][j]) * math.pow(baseNum4CostLiniarization, m - j - 1)
             valueVectors[i] = valueVectors[i] + (violationCost,)
@@ -1912,7 +1723,7 @@ class MDP:
         return lower[:-1] + upper[:-1]
 
     def mergeTwoConvexHulls_TwoNextStates(self, tran1, tran2, hull1, hull2, applyLimitedPrecision, precision):
-        m = len(self.goalStates[0].weightBVector)
+        m = len(self.goalStates[0].weight_b_vector)
         Q_L = []
         for q1 in hull1:
             for q2 in hull2:
@@ -1940,7 +1751,7 @@ class MDP:
         return Q_L
 
     def mergeSumConvexHullandNextStateConvexHull(self, tran2, hull1, hull2, applyLimitedPrecision, precision):
-        m = len(self.goalStates[0].weightBVector)
+        m = len(self.goalStates[0].weight_b_vector)
         Q_L = []
         # print(f"-------mergeSumConvexHullandNextStateConvexHull--------------")
         # print(f"tran2: {tran2}")
@@ -1982,13 +1793,13 @@ class MDP:
         return Q_L
 
     def QDValuesDifferLess(self, Q_D1, Q_D2, epsilonExpcNumSteps, epsilonSoftConstSatis):
-        m = len(self.goalStates[0].weightBVector)
+        m = len(self.goalStates[0].weight_b_vector)
 
         Q_1 = []
         for vec in Q_D1:
             violationCost = 0.0
             for j in range(m):
-                violationCost += (1 - vec[1][j]) * math.pow(self.baseNum4CostLiniarization, m - j - 1)
+                violationCost += (1 - vec[1][j]) * math.pow(self.base_num4_cost_linearization, m - j - 1)
             vec2 = (vec[0], vec[1], violationCost)
             Q_1.append(vec2)
         Q_1 = sorted(Q_1, key=lambda k: [k[0], k[1]])
@@ -1997,7 +1808,7 @@ class MDP:
         for vec in Q_D2:
             violationCost = 0.0
             for j in range(m):
-                violationCost += (1 - vec[1][j]) * math.pow(self.baseNum4CostLiniarization, m - j - 1)
+                violationCost += (1 - vec[1][j]) * math.pow(self.base_num4_cost_linearization, m - j - 1)
             vec2 = (vec[0], vec[1], violationCost)
             Q_2.append(vec2)
         Q_2 = sorted(Q_2, key=lambda k: [k[0], k[2]])
@@ -2028,10 +1839,10 @@ class MDP:
         time_start = time.time()
 
         if compAvoidActions == True:
-            # if self.availableActionsComputed == False:
-            self.computeAvoidableActions(True)
+            # if self.available_actions_computed == False:
+            self.compute_avoidable_actions(True)
 
-        m = len(self.goalStates[0].weightBVector)
+        m = len(self.goalStates[0].weight_b_vector)
 
         V_O = {}
         for s in self.states:
@@ -2039,7 +1850,7 @@ class MDP:
             # vect = None
             if s.is_goal:
                 for k in range(m):
-                    softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
+                    softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
                 vect = (0, softConstProbVect)
             else:
                 vect = (0, softConstProbVect)
@@ -2064,7 +1875,7 @@ class MDP:
                 softConstProbVect = [0] * m
                 if s.is_goal:
                     for k in range(m):
-                        softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
+                        softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
                 vect = (0, softConstProbVect)
                 Q_D[s.name][a].append(vect)
                 Q_D_Before[s.name][a].append(vect)
@@ -2072,13 +1883,13 @@ class MDP:
         maxCnt = 120
         cnt = 1
         stateQueue = self.getOrder4ComputingPolicy()
-        if self.initialSCC == None:
+        if self.initial_scc == None:
             self.decomposeToStrngConnComponents()
             self.computeSCCTopologicalOrder()
 
         useConvergance = True
 
-        for scc in self.sccTopologicalOrder:
+        for scc in self.scc_topological_order:
             cnt = 1
             # while cnt <= maxCnt:
             converged = False
@@ -2089,10 +1900,10 @@ class MDP:
                 print(
                     f"Computing Q_D values of states within SCC {scc.name}, which has {len(scc.states)} states, in the {cnt}'th iteration")
 
-                # for a in s.availableActions:
+                # for a in s.available_actions:
                 #    Q_D[s.name][a] = []
                 for s in scc.states:
-                    for a in s.availableActions:
+                    for a in s.available_actions:
                         Q_D_Before[s.name][a] = Q_D[s.name][a]
 
                 for s in scc.states:
@@ -2101,23 +1912,23 @@ class MDP:
                     if s.reachable == False:
                         continue
 
-                    if compAvoidActions and not s.aGoalIsReachable:
+                    if compAvoidActions and not s.a_goal_is_reachable:
                         # print(f"State {s.name} is a dead-end state")
                         continue
 
-                    # if computeAvoidableActions == True and s.aGoalIsReachable == False:
+                    # if compute_avoidable_actions == True and s.a_goal_is_reachable == False:
                     #    continue
 
-                    for a in s.availableActions:
+                    for a in s.available_actions:
 
                         # print(f"Computing Q_D[{s.name}][{a}]")
 
-                        if compAvoidActions and a in s.avoidActions:
+                        if compAvoidActions and a in s.avoid_actions:
                             # print(f"Action {a} should be avoided at state {s.name}")
                             continue
 
-                            # if computeAvoidableActions == True:
-                        #    if a in s.avoidActions:
+                            # if compute_avoidable_actions == True:
+                        #    if a in s.avoid_actions:
                         #        continue
 
                         # Q_D_Before[s.name][a] = Q_D[s.name][a]
@@ -2129,11 +1940,11 @@ class MDP:
                         # print(f"----------------s: {s.name}, a:{a}----------------------")
                         Q_D_s2_s = {}
                         maxNumOfVals = 1
-                        for tran in s.actionsTransitions[a]:
-                            s2 = tran.dstState
+                        for tran in s.actions_transitions[a]:
+                            s2 = tran.dst_state
                             Q_D_s2_s[s2.name] = []
-                            for a2 in s2.availableActions:
-                                # if computeAvoidableActions and a2 in s2.avoidActions:
+                            for a2 in s2.available_actions:
+                                # if compute_avoidable_actions and a2 in s2.avoid_actions:
                                 #    continue
                                 # print(f"Q_D_Before[{s2.name}][{a2}]: {Q_D_Before[s2.name][a2]}")
                                 for vc in Q_D_Before[s2.name][a2]:
@@ -2145,7 +1956,7 @@ class MDP:
                             # if s2.name.find("q5") > -1:
                             #    return
 
-                        n2 = len(s.actionsTransitions[a])
+                        n2 = len(s.actions_transitions[a])
 
                         '''
                         Determine if there is any need for sampling or not 
@@ -2156,7 +1967,7 @@ class MDP:
                             print(f"Maximum value per states has reached for Q[{s.name}][{a}] and it is {maxNumOfVals}")
                             sizes = [0]*n2
                             for j in range(0, n2):
-                                tran = s.actionsTransitions[a][j]
+                                tran = s.actions_transitions[a][j]
                                 s2 = tran.dst_state
                                 sizes[j] = len(Q_D_s2_s[s2.name])
                             print(f"Sizes before sampling: {sizes}")
@@ -2170,7 +1981,7 @@ class MDP:
                                     stopDivision = True
                             print(f"Sizes after sampling: {sizes}")
                             for j in range(0, n2):
-                                tran = s.actionsTransitions[a][j]
+                                tran = s.actions_transitions[a][j]
                                 s2 = tran.dst_state
                                 Q_D_s2_s[s2.name] = sample(Q_D_s2_s[s2.name], sizes[j])
                                 
@@ -2178,8 +1989,8 @@ class MDP:
 
                         Q_Hull = []
                         if n2 > 0:
-                            tran = s.actionsTransitions[a][0]
-                            s2 = tran.dstState
+                            tran = s.actions_transitions[a][0]
+                            s2 = tran.dst_state
                             for q in Q_D_s2_s[s2.name]:
                                 q2 = deepcopy(q)
                                 q_ls = list(q2)
@@ -2189,9 +2000,9 @@ class MDP:
                                 Q_Hull.append(tuple(q_ls))
                             # print(f"Q_Hull[{s2.name}]: {Q_Hull}")
 
-                        #                         for tran in s.actionsTransitions[a]:
+                        #                         for tran in s.actions_transitions[a]:
                         #                             s2 = tran.dst_state
-                        #                             for a2 in s2.availableActions:
+                        #                             for a2 in s2.available_actions:
                         #                                 print(f"Q_D_Before[{s2.name}][{a2}]: {Q_D_Before[s2.name][a2]}")
 
                         # print("s.name: "+s.name)
@@ -2200,8 +2011,8 @@ class MDP:
                         # print("Q_Hull["+s2.name+"]: "+str(Q_Hull))
 
                         for j in range(1, n2):
-                            tran = s.actionsTransitions[a][j]
-                            s2 = tran.dstState
+                            tran = s.actions_transitions[a][j]
+                            s2 = tran.dst_state
                             Q_Hull2 = Q_D_s2_s[s2.name]
                             # print("tran:"+str(tran))
                             # print("Q_Hull2["+s2.name+"]: "+str(Q_Hull2))
@@ -2241,7 +2052,7 @@ class MDP:
                     for s in scc.states:
                         if converged == False:
                             break
-                        for a in s.availableActions:
+                        for a in s.available_actions:
                             if len(Q_D_Before[s.name][a]) != len(Q_D[s.name][a]):
                                 converged = False
                                 print(f"len(Q_D_Before[{s.name}][{a}]): {len(Q_D_Before[s.name][a])}")
@@ -2251,7 +2062,7 @@ class MDP:
                     for s in scc.states:
                         if converged == False:
                             break
-                        for a in s.availableActions:
+                        for a in s.available_actions:
                             if not self.QDValuesDifferLess(Q_D_Before[s.name][a], Q_D[s.name][a], epsilonExpcNumSteps,
                                                            epsilonSoftConstSatis):
                                 converged = False
@@ -2266,7 +2077,7 @@ class MDP:
                     continue
                 Q_Ds = []
                 for a in self.actions:
-                    if a not in s.availableActions:
+                    if a not in s.available_actions:
                         continue
                     for vect in Q_D[s.name][a]:
                         tple = (a, vect)
@@ -2319,7 +2130,7 @@ class MDP:
 
     def chooseBestPolicesBaseOnWeights(self, Q_D, weights, numOfDigits):
         Q = {}
-        m = len(self.goalStates[0].weightBVector)
+        m = len(self.goalStates[0].weight_b_vector)
         policies = []
         for weightVect in weights:
             # if len(weightVect) == 2 and weightVect[0] == 0 and weightVect[1] == 1:
@@ -2331,8 +2142,8 @@ class MDP:
                 if s.is_goal:
                     continue
                 Q[s.name] = {}
-                for a in s.availableActions:
-                    if self.availableActionsComputed and (a in s.avoidActions):
+                for a in s.available_actions:
+                    if self.available_actions_computed and (a in s.avoid_actions):
                         continue
                     minCost = float_info.max
                     for i in range(len(Q_D[s.name][a])):
@@ -2354,8 +2165,8 @@ class MDP:
                     C[s.name] = 0
                     continue
                 minCost = float_info.max
-                for a in s.availableActions:
-                    if self.availableActionsComputed and (a in s.avoidActions):
+                for a in s.available_actions:
+                    if self.available_actions_computed and (a in s.avoid_actions):
                         continue
                     if Q[s.name][a] < minCost:
                         minCost = Q[s.name][a]
@@ -2380,9 +2191,9 @@ class MDP:
         n = len(self.states)
 
         if computeAvoidableActions == True:
-            self.computeAvoidableActions()
+            self.compute_avoidable_actions()
 
-        m = len(self.goalStates[0].weightBVector)
+        m = len(self.goalStates[0].weight_b_vector)
 
         V_O = {}
         for s in self.states:
@@ -2390,7 +2201,7 @@ class MDP:
             # vect = None
             if s.is_goal:
                 for k in range(m):
-                    softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
+                    softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
                 vect = (0, softConstProbVect)
             else:
                 vect = (0, softConstProbVect)
@@ -2412,41 +2223,41 @@ class MDP:
                 softConstProbVect = [0] * m
                 if s.is_goal:
                     for k in range(m):
-                        softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
+                        softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
                 vect = (0, softConstProbVect)
                 Q_D[s.name][a].append(vect)
 
         maxCnt = 120
         cnt = 1
         stateQueue = self.getOrder4ComputingPolicy()
-        if self.initialSCC == None:
+        if self.initial_scc == None:
             self.decomposeToStrngConnComponents()
             self.computeSCCTopologicalOrder()
 
-        for scc in self.sccTopologicalOrder:
+        for scc in self.scc_topological_order:
             cnt = 1
             while cnt <= maxCnt:
 
                 for s in scc.states:
                     if s.is_goal:
                         continue
-                    # for a in s.availableActions:
+                    # for a in s.available_actions:
                     #    Q_D[s.name][a] = []
 
                 for s in scc.states:
                     if s.is_goal:
                         continue
-                    for a in s.availableActions:
+                    for a in s.available_actions:
                         # print("s: "+s.name+", a: "+a)
                         """
                         First obtain the successor states of s by a, then obtain a list containing a list
                         of Pareto optimal values for each of those successor states
                         """
                         Q_D_s2_s = {}
-                        for tran in s.actionsTransitions[a]:
-                            s2 = tran.dstState
+                        for tran in s.actions_transitions[a]:
+                            s2 = tran.dst_state
                             Q_D_s2_s[s2.name] = []
-                            for a2 in s2.availableActions:
+                            for a2 in s2.available_actions:
                                 for vc in Q_D[s2.name][a2]:
                                     Q_D_s2_s[s2.name].append(vc)
                             Q_D_s2_s[s2.name] = self.getConvexHull(Q_D_s2_s[s2.name])
@@ -2454,13 +2265,13 @@ class MDP:
                             # if s2.name.find("q5") > -1:
                             #    return
 
-                        n2 = len(s.actionsTransitions[a])
+                        n2 = len(s.actions_transitions[a])
                         V_S2s = []
                         indices = []
 
                         for j in range(n2):
-                            tran = s.actionsTransitions[a][j]
-                            s2 = tran.dstState
+                            tran = s.actions_transitions[a][j]
+                            s2 = tran.dst_state
                             V_S2s.append(Q_D_s2_s[s2.name])
                             indices.append([k for k in range(len(Q_D_s2_s[s2.name]))])
 
@@ -2476,8 +2287,8 @@ class MDP:
                             soft_probs = [0] * m
                             # print("n2: "+str(n2))
                             for j in range(n2):
-                                tran = s.actionsTransitions[a][j]
-                                s2 = tran.dstState
+                                tran = s.actions_transitions[a][j]
+                                s2 = tran.dst_state
                                 v_vect = Vlist[j]
                                 # print("v_vect: "+str(v_vect))
                                 steps += v_vect[0] * tran.probability
@@ -2535,9 +2346,9 @@ class MDP:
         n = len(self.states)
 
         if computeAvoidableActions == True:
-            self.computeAvoidableActions()
+            self.compute_avoidable_actions()
 
-        m = len(self.goalStates[0].weightBVector)
+        m = len(self.goalStates[0].weight_b_vector)
 
         V_O = {}
         for s in self.states:
@@ -2545,7 +2356,7 @@ class MDP:
             # vect = None
             if s.is_goal:
                 for k in range(m):
-                    softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
+                    softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
                 vect = (0, softConstProbVect)
             else:
                 vect = (0, softConstProbVect)
@@ -2568,38 +2379,38 @@ class MDP:
         maxCnt = 20
         cnt = 1
         stateQueue = self.getOrder4ComputingPolicy()
-        if self.initialSCC == None:
+        if self.initial_scc == None:
             self.decomposeToStrngConnComponents()
             self.computeSCCTopologicalOrder()
 
-        for scc in self.sccTopologicalOrder:
+        for scc in self.scc_topological_order:
             cnt = 1
             while cnt <= maxCnt:
 
                 for s in scc.states:
                     if s.is_goal:
                         continue
-                    for a in s.availableActions:
+                    for a in s.available_actions:
                         Q_D[s.name][a] = []
 
                 for s in scc.states:
                     if s.is_goal:
                         continue
-                    for a in s.availableActions:
+                    for a in s.available_actions:
                         # print("s: "+s.name+", a: "+a)
                         """
                         First obtain the successor states of s by a, then obtain a list containing a list
                         of Pareto optimal values for each of those successor states
                         """
-                        n2 = len(s.actionsTransitions[a])
+                        n2 = len(s.actions_transitions[a])
                         V_S2s = []
                         indices = []
                         # print("n2: "+str(n2))
                         # print("len(V_S2s): "+str(len(V_S2s)))
                         for j in range(n2):
-                            tran = s.actionsTransitions[a][j]
+                            tran = s.actions_transitions[a][j]
                             # print("tran: "+str(tran))
-                            s2 = tran.dstState
+                            s2 = tran.dst_state
                             V_S2s.append(V_O[s2.name])
                             indices.append([k for k in range(len(V_O[s2.name]))])
                             # print("s2: "+s2.name)
@@ -2615,8 +2426,8 @@ class MDP:
                             soft_probs = [0] * m
                             # print("n2: "+str(n2))
                             for j in range(n2):
-                                tran = s.actionsTransitions[a][j]
-                                s2 = tran.dstState
+                                tran = s.actions_transitions[a][j]
+                                s2 = tran.dst_state
                                 v_vect = Vlist[j]
                                 # print("v_vect: "+str(v_vect))
                                 steps += v_vect[0] * tran.probability
@@ -2670,9 +2481,9 @@ class MDP:
         n = len(self.states)
 
         if computeAvoidableActions == True:
-            self.computeAvoidableActions()
+            self.compute_avoidable_actions()
 
-        m = len(self.goalStates[0].weightBVector)
+        m = len(self.goalStates[0].weight_b_vector)
 
         V_O = {}
         for s in self.states:
@@ -2680,7 +2491,7 @@ class MDP:
             # vect = None
             if s.is_goal:
                 for k in range(m):
-                    softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
+                    softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
                 vect = (0, softConstProbVect)
             else:
                 vect = (0, softConstProbVect)
@@ -2708,27 +2519,27 @@ class MDP:
             for s in self.states:
                 if s.is_goal:
                     continue
-                for a in s.availableActions:
+                for a in s.available_actions:
                     Q_D[s.name][a] = []
 
             for s in stateQueue:
                 if s.is_goal:
                     continue
-                for a in s.availableActions:
+                for a in s.available_actions:
                     # print("s: "+s.name+", a: "+a)
                     """
                     First obtain the successor states of s by a, then obtain a list containing a list
                     of Pareto optimal values for each of those successor states
                     """
-                    n2 = len(s.actionsTransitions[a])
+                    n2 = len(s.actions_transitions[a])
                     V_S2s = []
                     indices = []
                     # print("n2: "+str(n2))
                     # print("len(V_S2s): "+str(len(V_S2s)))
                     for j in range(n2):
-                        tran = s.actionsTransitions[a][j]
+                        tran = s.actions_transitions[a][j]
                         # print("tran: "+str(tran))
-                        s2 = tran.dstState
+                        s2 = tran.dst_state
                         V_S2s.append(V_O[s2.name])
                         indices.append([k for k in range(len(V_O[s2.name]))])
                         # print("s2: "+s2.name)
@@ -2744,8 +2555,8 @@ class MDP:
                         soft_probs = [0] * m
                         # print("n2: "+str(n2))
                         for j in range(n2):
-                            tran = s.actionsTransitions[a][j]
-                            s2 = tran.dstState
+                            tran = s.actions_transitions[a][j]
+                            s2 = tran.dst_state
                             v_vect = Vlist[j]
                             # print("v_vect: "+str(v_vect))
                             steps += v_vect[0] * tran.probability
@@ -2812,317 +2623,74 @@ class MDP:
 
             cnt += 1
 
-    def paretoOptimalPolicies__Consistentcy_PreferencePlanning_InfiniteHorizon2(self, epsilonOfConvergance=0.01,
-                                                                                printPolicy=True, printPolicy2File=True,
-                                                                                fileName2Output="ParetoOptimalPolcies.txt",
-                                                                                computeAvoidableActions=False,
-                                                                                applyLimitedPrecision=False,
-                                                                                precision=3):
-        if self.verbose == True:
-            print("------computing optimal policy for finite horizon--------------")
-        n = len(self.states)
 
-        if computeAvoidableActions == True:
-            self.computeAvoidableActions()
-
-        m = len(self.goalStates[0].weightBVector)
-
-        V_O = {}
-        for s in self.states:
-            softConstProbVect = [0] * m
-            # vect = None
-            if s.is_goal:
-                for k in range(m):
-                    softConstProbVect[k] = 1.0 if s.weightBVector[k] else 0.0
-                vect = (0, softConstProbVect)
-            else:
-                vect = (0, softConstProbVect)
-            V_O[s.name] = [vect]
-
-        V_O_Actions = {}
-        for s in self.states:
-            if s.is_goal:
-                V_O_Actions[s.name] = ["STOP"]
-            else:
-                V_O_Actions[s.name] = []
-
-        V_O_Policies = {}
-        for s in self.states:
-            V_O_Policies[s.name] = {}
-
-        # Set of Q-vectors which might contain the ones that are dominated. 
-        Q_D = {}
-        for s in self.states:
-            Q_D[s.name] = {}
-            for a in self.actions:
-                Q_D[s.name][a] = []
-
-        maxCnt = 6
-        cnt = 1
-        stateQueue = self.getOrder4ComputingPolicy()
-        while cnt <= maxCnt:
-
-            for s in self.states:
-                if s.is_goal:
-                    continue
-                for a in s.availableActions:
-                    Q_D[s.name][a] = []
-
-            for s in stateQueue:
-                if s.is_goal:
-                    continue
-                for a in s.availableActions:
-                    # print("s: "+s.name+", a: "+a)
-                    """
-                    First obtain the successor states of s by a, then obtain a list containing a list
-                    of Pareto optimal values for each of those successor states
-                    """
-                    n2 = len(s.actionsTransitions[a])
-                    V_S2s = []
-                    V_S2s_policies = []
-                    indices = []
-                    # print("n2: "+str(n2))
-                    # print("len(V_S2s): "+str(len(V_S2s)))
-                    for j in range(n2):
-                        tran = s.actionsTransitions[a][j]
-                        # print("tran: "+str(tran))
-                        s2 = tran.dstState
-                        V_S2s.append(V_O[s2.name])
-                        V_S2s_policies.append(V_O_Policies[s2.name])
-                        indices.append([k for k in range(len(V_O[s2.name]))])
-                        # print("s2: "+s2.name)
-                        # print("V_S2s[j] : "+str(V_S2s[j]))
-
-                    for indexList in itertools.product(*indices):
-                        # print("indexList: "+str(indexList));
-                        Vlist = []
-                        VList_Policies = []
-                        for k in range(n2):
-                            Vlist.append(V_S2s[k][indexList[k]])
-                            VList_Policies.append(V_S2s_policies[k][indexList[k]])
-                        # print("Vlist: "+str(Vlist))
-                        steps = 1
-                        soft_probs = [0] * m
-                        # print("n2: "+str(n2))
-                        for j in range(n2):
-                            tran = s.actionsTransitions[a][j]
-                            s2 = tran.dstState
-                            v_vect = Vlist[j]
-                            # print("v_vect: "+str(v_vect))
-                            steps += v_vect[0] * tran.probability
-                            for k in range(m):
-                                soft_probs[k] += v_vect[1][k] * tran.probability
-                            # print("soft_probs: "+str(soft_probs))
-                        tple = (steps, soft_probs)
-                        if applyLimitedPrecision:
-                            tple = self.roundValueVect(tple, precision)
-                            if not self.containtsValTuple(Q_D[s.name][a], tple):
-                                Q_D[s.name][a].append(tple)
-                        # if tple not in Q_D[s.name][a]:
-                        else:
-                            Q_D[s.name][a].append(tple)
-
-                    # if cnt == maxCnt:
-                    # print("Q_D["+s.name+"]["+str(a)+"]="+str(Q_D[s.name][a]))
-                    # f = open(fileName2Output, "a")
-                    # f.write("Q_D["+s.name+"]["+str(a)+"]="+str(round(Q_D[s.name][a], 3)))
-                    # f.write("Q_D["+s.name+"]["+str(a)+"]="+str(self.roundValueVect(Q_D[s.name][a], 3)))
-
-                    # f.write("Q_D["+s.name+"]["+str(a)+"]="+str([round(num, 3) for num in Q_D[s.name][a]]))
-                    # f.close()
-
-            for s in self.states:
-                if s.is_goal:
-                    continue
-                Q_Ds = []
-                for a in self.actions:
-                    for vect in Q_D[s.name][a]:
-                        tple = (a, vect)
-                        Q_Ds.append(tple)
-                # print("Q_DS for "+s.name+": "+str(Q_Ds))
-                nonDominants = self.getNonDominantActionsAndVectors(Q_Ds)
-                V_O[s.name] = []
-                V_O_Actions[s.name] = []
-                V_O_Policies[s.name] = {}
-                # print("nonDominants: "+str(nonDominants))
-                for action_vect in nonDominants:
-                    V_O[s.name].append(action_vect[1])
-                    V_O_Actions[s.name].append(action_vect[0])
-
-                if cnt == maxCnt:
-                    # print("Update V_O["+s.name+"]="+str(V_O[s.name]))
-                    # print("Update V_O_Actions["+s.name+"]="+str(V_O_Actions[s.name]))
-                    f = open(fileName2Output, "a")
-                    f.write("Update V_O[" + s.name + "]=" + str(V_O[s.name]) + "\n")
-                    # f.write("Update V_O["+s.name+"]="+str(self.roundValueVect(V_O[s.name], 3)))
-                    f.write("Update V_O_Actions[" + s.name + "]=" + str(V_O_Actions[s.name]) + "\n")
-                    f.close()
-
-            if cnt < maxCnt:
-                max_actions_cnt = 0
-                print("V_O_Actions: " + str(V_O_Actions))
-                print("V_O_Actions[q5_s_l_w_l__q1_q1]: " + str(V_O_Actions['q5_s_l_w_l__q1_q1']))
-                print("q5_s_l_w_l__q1_q1")
-                for s in self.states:
-                    action_cnt_list = [(x, V_O_Actions[s.name].count(x)) for x in V_O_Actions[s.name]]
-                    print("action_cnt_list[" + s.name + "]: " + str(action_cnt_list))
-                    for tpl in action_cnt_list:
-                        if tpl[1] > max_actions_cnt:
-                            max_actions_cnt = tpl[1]
-                print("max_actions_cnt: " + str(max_actions_cnt))
-                if max_actions_cnt >= 8:
-                    self.recomputeParetoPoliciesValueFunctions(V_O, V_O_Actions)
-
-            cnt += 1
-
-    def are_policies_consistent(self, policies, fromState, fromAction):
-        for s in self.states:
-            if s.is_goal:
+    def get_observation_of_tuple(self, prediction_result, evidence):
+        for o in self.observations:
+            if o[0] != prediction_result:
                 continue
+            if o[1] != evidence:
+                continue
+            return o
+        return None
 
-    def optimalPolicy_PreferencePlanning_InfiniteHorizon(self, epsilonOfConvergance=0.0001, printPolicy=True,
-                                                         fileName2Output="OptimalPolicies_MinimumViolation.txt",
-                                                         computeAvoidableActions=False):
-        if self.verbose == True:
-            print("------computing optimal policy for finite horizon--------------")
-        n = len(self.states)
+    def get_boolean_observation(self, boolean_value: bool):
+        for o in self.observations:
+            if o == boolean_value:
+                return o
+        return None
+    def make_observation_function(self):
+        self.observations = []
+        if len(self.evidence_list) > 0:
+            for ev in self.evidence_list:
+                o1 = (True, ev)
+                o2 = (False, ev)
+                self.observations.append(o1)
+                self.observations.append(o2)
+        else:
+            self.observations.append(True)
+            self.observations.append(False)
+        self.observations.append(self.goal_reached_observation)
 
-        if computeAvoidableActions == True:
-            self.computeAvoidableActions()
+        self.create_observation_function_dict()
 
-        # for state in self.mdp.states:
-        # state.computeAvailableActions()
+        if len(self.evidence_list) > 0:
+            for x in self.states:
+                s = x.anchor[1]  # The state of event model
+                for a in self.actions:  # Event
+                    for i in range(len(self.evidence_list)):
+                        y = self.evidence_list[i]
+                        o1 = self.get_observation_of_tuple(True, y)
+                        o2 = self.get_observation_of_tuple(False, y)
+                        o3 = self.goal_reached_observation
+                        if x.is_goal:
+                            self.observation_function[o1][x][a] = 0
+                            self.observation_function[o2][x][a] = 0
+                            self.observation_function[o3][x][a] = 1
+                        else:
+                            self.observation_function[o3][x][a] = 0
+                            if a in s.events:
+                                self.observation_function[o1][x][a] = s.evidenceDistribution[i]
+                                self.observation_function[o2][x][a] = 0
+                            else:
+                                self.observation_function[o2][x][a] = s.evidenceDistribution[i]
+                                self.observation_function[o1][x][a] = 0
+        else:
+            for x in self.states:
+                s = x.anchor[1]
+                for a in self.actions:
+                    o1 = self.get_boolean_observation(True)
+                    o2 = self.get_boolean_observation(False)
+                    o3 = self.goal_reached_observation
+                    if x.is_goal:
+                        self.observation_function[o1][x][a] = 0
+                        self.observation_function[o2][x][a] = 0
+                        self.observation_function[o3][x][a] = 1
+                    else:
+                        self.observation_function[o3][x][a] = 0
+                        if a in s.events:
+                            self.observation_function[o1][x][a] = 1
+                            self.observation_function[o2][x][a] = 0
+                        else:
+                            self.observation_function[o2][x][a] = 1
+                            self.observation_function[o1][x][a] = 0
 
-        m = len(self.goalStates[0].weightBVector)
-
-        G = [[[0.0 for m in range(m)] for j in [0, 1]] for i in range(n)]
-        A = ["" for j in range(n)]
-
-        for j in range(n):
-            if (self.states[j].is_goal):
-                for k in range(m):
-                    G[j][0][k] = 1.0 if self.states[j].weightBVector[k] else 0.0
-                    G[j][1][k] = 1.0 if self.states[j].weightBVector[k] else 0.0
-                A[j] = "STOP"
-
-        # dif = float_info.max
-
-        dif = float("inf")
-
-        numIterations = 0
-
-        time_start = time.time()
-
-        r = 0
-
-        while dif > epsilonOfConvergance:
-            numIterations += 1
-
-            print("dif=" + str(dif))
-
-            # print("r="+str(r))
-
-            # if numIterations > 1000:
-            # break
-
-            maxDif = 0
-
-            for j in range(n):
-                if self.states[j].is_goal == True:
-                    continue
-
-                if self.states[j].reachable == False:
-                    continue
-
-                if computeAvoidableActions and self.states[j].aGoalIsReachable == False:
-                    continue
-
-                maxVal = -1
-                maxTerm = [0.0 for _ in range(m)]
-                optAction = ""
-                state = self.states[j]
-
-                # print("r="+str(r))
-
-                # for action in self.actions:
-                # print("#Available actions for "+str(state)+": "+str(len(state.availableActions)))
-
-                if len(state.availableActions) == 0:
-                    print(f"State {self.states[j].name} has no availableActions")
-                    raise Exception("")
-
-                for action in state.availableActions:
-                    if computeAvoidableActions:
-                        if action in state.avoidActions:
-                            continue
-                    val = 0.0
-                    # for k in range(n):
-                    #    term = G[k][1]*self.mdp.conditionalProbability(k, j, action)
-                    #    val += term
-                    term = [0.0 for _ in range(m)]
-                    for tran in state.actionsTransitions[action]:
-                        for k in range(m):
-                            term[k] += G[tran.dstState.index][1][k] * tran.probability
-                    val = self.getPreferenceValueVector(term)
-
-                    # print("term = "+str(term))
-                    # print("val="+str(val))
-                    # r += 1
-                    # print("r="+str(r))
-                    if val > maxVal:
-                        maxVal = val
-                        maxTerm = term
-                        optAction = action
-
-                        # if minVal-G[j][0] > maxDif:
-                    # maxDif = minVal-G[j][0]
-
-                if j == 0:
-                    dif = maxVal - self.getPreferenceValueVector(G[j][0])
-
-                maxDif = max(maxDif, maxVal - self.getPreferenceValueVector(G[j][0]))
-
-                G[j][0] = maxTerm
-                A[j] = optAction
-
-            for j in range(n):
-                G[j][1] = G[j][0]
-
-            dif = maxDif
-
-        optPolicy = {}
-
-        f = open(fileName2Output, "w")
-        # f.seek(0)
-
-        for j in range(n):
-            optPolicy[self.states[j].name] = A[j]
-            if printPolicy == True:
-                print("\pi(" + self.states[j].name + ")=" + str(A[j]))
-                print("M(" + self.states[j].name + ")=" + str(G[j][0]))
-            # f.write("\pi("+self.states[j].name+")="+str(A[j]) + "\n")
-            f.write(f"\pi({self.states[j].name})={str(A[j])} \n")
-            # f.write("M("+self.states[j].name+")="+str(G[j][0]) + "\n")
-            f.write(f"M({self.states[j].name})= {str(G[j][0])} \n")
-
-        f.close()
-
-        if self.verbose == True:
-            print("optimal policy for infinite horizon has been computed in " + str(numIterations) + " iterations")
-
-        self.computeNumstepsAndSatisProbOfAPolicy(self.states, optPolicy, [], True)
-
-        time_elapsed = (time.time() - time_start)
-
-        # return G[0][self.mdp.initial_state.index]
-        return (optPolicy, G, G[0][self.initial_state.index], time_elapsed)
-
-    def write_POMDPX_XML(self, filePath):
-        f = open(filePath, "w+")
-        f.write(self.getPOMDPX_XML2())
-        f.close()
-
-    def write_POMDPX_4_EXMDP_XML(self, filePath):
-        f = open(filePath, "w+")
-        f.write(self.getPOMDPX_4_EXMDP_XML())
-        f.close()

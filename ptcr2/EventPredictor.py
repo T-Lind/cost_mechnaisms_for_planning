@@ -1,11 +1,12 @@
-from ptcr2.MarkovDecisionProcess import MDP, MDPState, MDPTransition
-from sys import float_info
 import queue
+import time
 from builtins import str
+from sys import float_info
 
 import ptcr2.AutomataUtility as AutomataUtility
+from ptcr2.MarkovDecisionProcess import MDP, MDPState, MDPTransition
 
-import time
+MAX_UNSAFE_ITERS = 100_000
 
 
 class EventPredictor:
@@ -207,7 +208,7 @@ class EventPredictor:
                     p2 = p
                     # print("p2="+str(p))
                     trans = MDPTransition(v1, v3, e, evs, p)
-                    trans.eventNegative = True
+                    trans.event_negative = True
                     mdp.add_transition(trans)
                     if p1 + p2 != 1:
                         print("p1+p2=" + str(p1 + p2))
@@ -264,7 +265,8 @@ class EventPredictor:
         for q in self.dfa.states:
             optPolicy[q] = {}
 
-        print("mdp.initial_state=[" + self.mdp.initial_state.anchor[0] + "," + self.mdp.initial_state.anchor[1].name + "]")
+        print("mdp.initial_state=[" + self.mdp.initial_state.anchor[0] + "," + self.mdp.initial_state.anchor[
+            1].name + "]")
 
         for j in range(n):
             optPolicy[self.mdp.states[j].anchor[0]][self.mdp.states[j].anchor[1]] = A[0][j]
@@ -279,123 +281,84 @@ class EventPredictor:
         # return G[0][self.mdp.initial_state.index]
         return (optPolicy, G, G[0][self.mdp.initial_state.index])
 
-    def optimal_policy_infinite_horizon(self, epsilonOfConvergance=0.01, printPolicy=False,
-                                        computeAvoidableActions=False):
+    def optimal_policy_infinite_horizon(self, epsilon_of_convergence=0.01, compute_avoidable_actions=False):
         n = len(self.mdp.states)
 
-        if computeAvoidableActions == True:
-            self.mdp.computeAvoidableActions()
+        if compute_avoidable_actions:
+            self.mdp.compute_avoidable_actions()
 
-        # for state in self.mdp.states:
-        # state.computeAvailableActions()
-
-        G = [[0.0 for j in [0, 1]] for i in range(n)]
-        # save G to a file
-        # with open('G.txt', 'w') as f:
-        #     print("G IS WRITING RIGHT NOW RIGHT HERE AS", G, "X" * 50)
-        #     f.write(str(G))
-
-        A = ["" for j in range(n)]
+        G = [[0.0 for _ in [0, 1]] for _ in range(n)]
+        A = ["" for _ in range(n)]
 
         for j in range(n):
-            if (self.mdp.states[j].is_goal):
+            if self.mdp.states[j].is_goal:
                 G[j][0] = 0.0
                 G[j][1] = 0.0
                 A[j] = "STOP"
 
-        # dif = float_info.max
 
         dif = float("inf")
 
-        numIterations = 0
+        num_iterations = 0
 
         time_start = time.time()
 
-        r = 0
-
-        while dif > epsilonOfConvergance:
-            numIterations += 1
-
-            print("dif=" + str(dif))
-
-            # print("r="+str(r))
-
-            # if numIterations > 1000:
-            # break
-
-            maxDif = 0
+        while dif > epsilon_of_convergence:
+            num_iterations += 1
+            max_dif = 0
 
             for j in range(n):
-                if self.mdp.states[j].is_goal == True:
+                if self.mdp.states[j].is_goal:
                     continue
 
-                if self.mdp.states[j].reachable == False:
+                if not self.mdp.states[j].reachable:
                     continue
 
-                if computeAvoidableActions and self.mdp.states[j].aGoalIsReachable == False:
+                if compute_avoidable_actions and not self.mdp.states[j].a_goal_is_reachable:
                     continue
 
-                minVal = float_info.max
-                optAction = ""
+                min_val = float_info.max
+                opt_action = ""
                 state = self.mdp.states[j]
 
-                # print("r="+str(r))
-
-                # for action in self.actions:
-                # print("#Available actions for "+str(state)+": "+str(len(state.availableActions)))
-                for action in state.availableActions:
-                    if computeAvoidableActions:
-                        if action in state.avoidActions:
+                for action in state.available_actions:
+                    if compute_avoidable_actions:
+                        if action in state.avoid_actions:
                             continue
                     val = 0.0
-                    if state.is_goal == False:
+                    if not state.is_goal:
                         val += 1
-                    # for k in range(n):
-                    #    term = G[k][1]*self.mdp.conditionalProbability(k, j, action)
-                    #    val += term
-                    for tran in state.actionsTransitions[action]:
-                        term = G[tran.dstState.index][1] * tran.probability
-                        val += term
-                        # r += 1
-                        # print("r="+str(r))
-                    if val < minVal:
-                        minVal = val
-                        optAction = action
 
-                        # if minVal-G[j][0] > maxDif:
-                    # maxDif = minVal-G[j][0]
+                    for tran in state.actions_transitions[action]:
+                        term = G[tran.dst_state.index][1] * tran.probability
+                        val += term
+                    if val < min_val:
+                        min_val = val
+                        opt_action = action
 
                 if j == 0:
-                    dif = minVal - G[j][0]
+                    dif = min_val - G[j][0]
 
-                maxDif = max(maxDif, minVal - G[j][0])
+                max_dif = max(max_dif, min_val - G[j][0])
 
-                G[j][0] = minVal
-                A[j] = optAction
+                G[j][0] = min_val
+                A[j] = opt_action
 
             for j in range(n):
                 G[j][1] = G[j][0]
 
-            dif = maxDif
+            dif = max_dif
 
-        optPolicy = {}
+        optimal_policy = {}
         for q in self.dfa.states:
-            optPolicy[q] = {}
+            optimal_policy[q] = {}
 
         for j in range(n):
-            optPolicy[self.mdp.states[j].anchor[0]][str(self.mdp.states[j].anchor[1])] = A[j]
-            if printPolicy == True:
-                print("\pi(" + self.mdp.states[j].anchor[0] + "," + str(self.mdp.states[j].anchor[1]) + ")=" + A[j])
-                print(
-                    "M(" + self.mdp.states[j].anchor[0] + "," + str(self.mdp.states[j].anchor[1]) + ")=" + str(G[j][0]))
-
-        if self.verbose == True:
-            print("optimal policy for infinite horizon has been computed in " + str(numIterations) + " iterations")
+            optimal_policy[self.mdp.states[j].anchor[0]][str(self.mdp.states[j].anchor[1])] = A[j]
 
         time_elapsed = (time.time() - time_start)
 
-        # return G[0][self.mdp.initial_state.index]
-        return optPolicy, G, G[0][self.mdp.initial_state.index], time_elapsed
+        return optimal_policy, G, G[0][self.mdp.initial_state.index], time_elapsed
 
     def simulate(self, policy):
         if self.current_markov_state_visible:
@@ -403,238 +366,135 @@ class EventPredictor:
         else:
             return self.__simulate_markov_state_invisible(policy)
 
-    def simulate_greedy_algorithm(self, printOutput=False):
+    def simulate_greedy_algorithm(self):
         if self.current_markov_state_visible:
-            return self.__simulate_markovStateVisible_greedyalgorithm(printOutput)
+            return self.__simulate_markov_state_visible_greedyalgorithm()
         else:
             raise NotImplementedError('Invisible Markov state is not implemented yet')
 
-
-    def simulate_general_and_greedy_algorithms(self, policy, printOutput=False):
+    def simulate_general_and_greedy_algorithms(self, policy):
         if self.current_markov_state_visible:
-            return self.__simulate_markovStateVisible_generalAndGreedy(policy, printOutput)
+            return self.__simulate_markov_state_visible_general_and_greedy(policy)
         else:
             raise NotImplementedError('Invisible Markov state is not implemented yet')
 
-    def __simulate_markov_state_visible(self, policy, printOutput=False, ):
+    def __simulate_markov_state_visible(self, policy):
         story = ""
-        # s = self.markov_chain.null_state
         s = self.markov_chain.initial_state
         q = self.dfa.initial_state
-        q_previous = q
         i = 0
         while True:
             if q in self.dfa.final_states:
-                return (i, story)
-            if (s.name in policy[q].keys()) == False:
-                print("q=" + q + ", s=" + s.name)
-            predictedEvent = policy[q][s.name]
+                return i, story
+            predicted_event = policy[q][s.name]
             s2 = self.markov_chain.next_state(s)
 
             q_previous = q
-            if predictedEvent in s2.events:
-                q = self.dfa.transitions[q][predictedEvent]
+            if predicted_event in s2.events:
+                q = self.dfa.transitions[q][predicted_event]
                 if q != q_previous:
-                    story += predictedEvent
+                    story += predicted_event
             i += 1
-
-            if printOutput == True:
-                print(
-                    str(i) + ". " + "q=" + q_previous + ", s=" + s.name + ", predicted=" + predictedEvent + ", actual=" + str(
-                        s2.events) + ", sNext=" + s2.name + ", recorded story=" + story)
-
             s = s2
-        return (i, story)
 
-    def __simulate_markovStateVisible_generalAndGreedy(self, policy, printOutput=True):
+            if i > MAX_UNSAFE_ITERS:
+                raise Exception(f'Max iterations reached in {__name__}')
+
+    def __simulate_markov_state_visible_general_and_greedy(self, policy):
         story = ""  # for the general algorithm
         story2 = ""  # for the greedy algorithm
         # s = self.markov_chain.null_state
         s = self.markov_chain.initial_state
         q = self.dfa.initial_state  # q is for the general algorithm
-        q_previous = q  # q_previous is for the general algorithm
         q2 = self.dfa.initial_state  # q is for the greedy algorithm
-        q2_previous = q2  # q_previous is for the greedy algorithm
         i = 0
         steps = 0  # Number of steps of general algorithm
         steps2 = 0  # Number of steps for greedy algorithm
         while True:
             if q in self.dfa.final_states and q2 in self.dfa.final_states:
                 return (steps, story, steps2, story2)
-            if (s.name in policy[q].keys()) == False:
-                print("q=" + q + ", s=" + s.name)
 
             s2 = self.markov_chain.next_state(s)
 
             if q not in self.dfa.final_states:
                 steps += 1
-                predictedEvent = policy[q][s.name]
+                predicted_event = policy[q][s.name]
                 q_previous = q
-                if predictedEvent in s2.events:
-                    q = self.dfa.transitions[q][predictedEvent]
+                if predicted_event in s2.events:
+                    q = self.dfa.transitions[q][predicted_event]
                     if q != q_previous:
-                        story += predictedEvent
+                        story += predicted_event
 
             if q2 not in self.dfa.final_states:
                 steps2 += 1
-                eventLisToPredict = AutomataUtility.get_non_self_loop_letters(self.dfa, q2)
-                print("eventLisToPredict: " + str(eventLisToPredict))
-                print("s=" + str(s))
-                predictedEvent2 = self.markov_chain.get_next_time_most_plausible_event(eventLisToPredict, s)
+                event_list_to_predict = AutomataUtility.get_non_self_loop_letters(self.dfa, q2)
+                predicted_event2 = self.markov_chain.get_next_time_most_plausible_event(event_list_to_predict, s)
                 q2_previous = q2
-                if predictedEvent2 in s2.events:
-                    q2 = self.dfa.transitions[q2][predictedEvent2]
+                if predicted_event2 in s2.events:
+                    q2 = self.dfa.transitions[q2][predicted_event2]
                     if q2 != q2_previous:
-                        story2 += predictedEvent2
-
+                        story2 += predicted_event2
             i += 1
-
-            if predictedEvent2 == None:
-                print("predictedEvent2 is None")
-
-            if printOutput == True:
-                print(str(i) + ". " + "q=" + (q_previous if q_previous not in self.dfa.final_states else "") + "q2=" + (
-                    q2_previous if q2_previous not in self.dfa.final_states else "") + ", s=" + s.name + ", predicted=" + predictedEvent + ", predicted2=" + predictedEvent2 + ", actual=" + str(
-                    s2.events) + ", sNext=" + s2.name + ", recorded story=" + story + ", recorded story2=" + story2)
-
             s = s2
-        return (steps, story, steps2, story2)
 
-    def __simulate_markovStateVisible_greedyalgorithm(self, printOutput=True):
+            if i > MAX_UNSAFE_ITERS:
+                raise Exception(f'Max iterations reached in {__name__}')
+
+    def __simulate_markov_state_visible_greedyalgorithm(self):
         story = ""
-        # s = self.markov_chain.null_state
         s = self.markov_chain.initial_state
         q = self.dfa.initial_state
-        q_previous = q
         i = 0
         while True:
             if q in self.dfa.final_states:
-                return (i, story)
+                return i, story
 
-            eventLisToPredict = AutomataUtility.get_non_self_loop_letters(self.dfa, q)
+            event_list_to_predict = AutomataUtility.get_non_self_loop_letters(self.dfa, q)
 
-            predictedEvent = self.markov_chain.get_next_time_most_plausible_event(eventLisToPredict, s)
+            predicted_event = self.markov_chain.get_next_time_most_plausible_event(event_list_to_predict, s)
             s2 = self.markov_chain.next_state(s)
 
             q_previous = q
-            if predictedEvent in s2.events:
-                q = self.dfa.transitions[q][predictedEvent]
+            if predicted_event in s2.events:
+                q = self.dfa.transitions[q][predicted_event]
                 if q != q_previous:
-                    story += predictedEvent
+                    story += predicted_event
             i += 1
-
-            if printOutput == True:
-                print(
-                    str(i) + ". " + "q=" + q_previous + ", s=" + s.name + ", predicted=" + predictedEvent + ", actual=" + str(
-                        s2.events) + ", sNext=" + s2.name + ", recorded story=" + story)
-
-            s = s2
-        return (i, story)
-
-    def __simulate_markovStateVisible_pomdp_greedyalgorithm(self, printOutput=True):
-        useStateWithMaxProb = False
-        story = ""
-        # s = self.markov_chain.null_state
-        # print("Start simulation a greedy algorithm for POMDP")
-        mc = self.markov_chain
-        dfa = self.dfa
-        mdp = self.mdp
-        s = self.markov_chain.initial_state
-        q = self.dfa.initial_state
-        q_previous = q
-        b = self.mdp.createAnInitialBeleifState()
-        # print("__simulate_markovStateVisible_pomdp_greedyalgorithm")
-        i = 0
-        while True:
-            if q in dfa.final_states:
-                return (i, story)
-
-            eventLisToPredict = AutomataUtility.get_non_self_loop_letters(self.dfa, q)
-
-            # print("Step "+str(i))
-
-            # print("useStateWithMaxProb = "+str(useStateWithMaxProb))
-
-            if useStateWithMaxProb == True:
-                x = mdp.getMostPlausibleState(b)
-                x_s = x.anchor[1]
-                predictedEvent = self.markov_chain.get_next_time_most_plausible_event(eventLisToPredict, x_s)
-            else:
-                predictedEvent = self.mdp.get_next_time_most_plausible_event(b, eventLisToPredict, mc)
-
-            # print("beleif = "+str(b)+", predictedEvent="+predictedEvent)
-
-            s2 = self.markov_chain.next_state(s)
-
-            q_previous = q
-
-            pred_result = False
-
-            if predictedEvent in s2.events:
-                pred_result = True
-                q = self.dfa.transitions[q][predictedEvent]
-                if q != q_previous:
-                    story += predictedEvent
-
-            evidence = mc.pomdp_raiseEvidence(s2)
-
-            # print("raised evidence: "+evidence+", at state: "+str(s2))
-
-            o = mdp.getObservationOfTuple(pred_result, evidence)
-
-            # print("Start updating beleif state")
-
-            b = mdp.createBeleif(b, predictedEvent, o)
-
-            # print("End updating beleif state")
-
-            i += 1
-
-            if printOutput == True:
-                print(
-                    str(i) + ". " + "q=" + q_previous + ", s=" + s.name + ", predicted=" + predictedEvent + ", actual=" + str(
-                        s2.events) + ", sNext=" + s2.name + ", recorded story=" + story)
-
             s = s2
 
-        # print("End simulation a greedy algorithm for POMDP")
+            if i > MAX_UNSAFE_ITERS:
+                raise Exception(f'Max iterations reached in {__name__}')
 
-        return (i, story)
-
-    def __simulate_markov_state_invisible(self, policy, printOutput=True):
+    def __simulate_markov_state_invisible(self, policy):
         story = ""
         sts = set()
         for i in range(len(self.markov_chain.states)):
             if self.markov_chain.initial_distribution[i] > 0:
                 sts.add(self.markov_chain.states[i])
         q = self.dfa.initial_state
-        q_previous = q
         i = 1
         s = self.markov_chain.next_state(self.markov_chain.null_state)
         m = self.mdp.initial_state
         while True:
             if q in self.dfa.final_states:
-                return (i - 1, story)
+                return i - 1, story
 
-            predictedEvent = policy[q][str(sts)]
+            predicted_event = policy[q][str(sts)]
             s2 = self.markov_chain.next_state(s)
 
             q_previous = q
-            if predictedEvent in s2.events:
-                q = self.dfa.transitions[q][predictedEvent]
+            if predicted_event in s2.events:
+                q = self.dfa.transitions[q][predicted_event]
                 if q != q_previous:
-                    story += predictedEvent
-            if printOutput == True:
-                print(
-                    str(i) + ". " + "q=" + q_previous + ", s=" + s.name + ", predicted=" + predictedEvent + ", actual=" + str(
-                        s2.events) + ", possibleStates=" + str(
-                        sts) + ", sNext=" + s2.name + ", recorded story=" + story)
-            if predictedEvent in s2.events:
-                m = self.mdp.getNextStateForEventPositive(m, predictedEvent)
+                    story += predicted_event
+            if predicted_event in s2.events:
+                m = self.mdp.getNextStateForEventPositive(m, predicted_event)
                 sts = m.anchor[1]
             else:
-                m = self.mdp.getNextStateForEventNegative(m, predictedEvent)
+                m = self.mdp.getNextStateForEventNegative(m, predicted_event)
                 sts = m.anchor[1]
             i += 1
             s = s2
-        return (i - 1, story)
+
+            if i > MAX_UNSAFE_ITERS:
+                raise Exception(f'Max iterations reached in {__name__}')

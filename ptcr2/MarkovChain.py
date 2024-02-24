@@ -90,9 +90,9 @@ class MarkovChain:
                     succ.add(s)
         return succ
 
-    def get_set_successors_not_having_event(self, stateSet, event):
+    def get_set_successors_not_having_event(self, state_set, event):
         succ = set()
-        for state in stateSet:
+        for state in state_set:
             scc = self.get_successors_not_having_event(state, event)
             for s in scc:
                 if not (s in succ):
@@ -113,16 +113,13 @@ class MarkovChain:
 
     def get_next_time_most_plausible_event(self, event_list, current_state):
         max_prob = -1
-        most_plau_ev = None
         probs = [0] * len(event_list)
         i = 0
         for ev in event_list:
             prob = self.get_next_time_probability_of_event(ev, current_state)
             probs[i] = prob
-            # print("(event, probability)=("+ev+", "+str(prob)+")")
             if prob > max_prob:
                 max_prob = prob
-                # mostPlauEv = ev
             i += 1
 
         selected_events = []
@@ -132,161 +129,125 @@ class MarkovChain:
                 # print("selectedEvents="+str(selectedEvents))
 
         if len(selected_events) > 0:
-            most_plau_ev = random.choice(selected_events)
+            return random.choice(selected_events)
         elif len(event_list) > 0:
-            most_plau_ev = event_list[0]
+            return event_list[0]
 
-            # print("selectedEvents = "+mostPlauEv)
-
-        return most_plau_ev
-
-    def get_next_time_probability_of_event(self, event, currentState):
+    def get_next_time_probability_of_event(self, event, current_state):
         result = 0
         for state in self.states:
-            if self.get_transition_probability(currentState, state) == 0:
+            if self.get_transition_probability(current_state, state) == 0:
                 continue
             if event not in state.events:
                 continue
-            result += self.get_transition_probability(currentState, state)
+            result += self.get_transition_probability(current_state, state)
 
         return result
 
-    def product_singleInitialState(self, markovChain, pairEventsList=[]):
-        prodStates = []
+    def product_singleInitialState(self, markov_chain, pair_events_list=None):
+        if pair_events_list is None:
+            pair_events_list = []
+        prod_states = []
 
-        stateNames = []
+        state_names = []
 
-        stateEvents = []
+        state_events = []
 
-        initialDistribution = []
+        initial_distribution = []
 
-        transitionMatrix = [[]]
-
-        initialStateIndex = -1
+        initial_state_index = -1
 
         k = 0
 
         for i in range(len(self.states)):
-            for j in range(len(markovChain.states)):
-                if self.states[i] == self.initial_state and markovChain.states[j] != markovChain.initial_state:
-                    print("not to make")
+            for j in range(len(markov_chain.states)):
+                if self.states[i] == self.initial_state and markov_chain.states[j] != markov_chain.initial_state:
                     continue
-                if markovChain.states[j] == markovChain.initial_state and self.states[i] != self.initial_state:
-                    print("not to make")
+                if markov_chain.states[j] == markov_chain.initial_state and self.states[i] != self.initial_state:
                     continue
-                if self.states[i] == self.initial_state and markovChain.states[j] == markovChain.initial_state:
-                    initialStateIndex = k
+                if self.states[i] == self.initial_state and markov_chain.states[j] == markov_chain.initial_state:
+                    initial_state_index = k
                 s1 = self.states[i]
-                s2 = markovChain.states[j]
-                initialDistribution.append(self.initial_distribution[i] * markovChain.initial_distribution[j])
-                stateName = s1.name + "_" + s2.name
-                stateNames.append(stateName)
-                eventSet = s1.events.union(s2.events)
-                for t in pairEventsList:
+                s2 = markov_chain.states[j]
+                initial_distribution.append(self.initial_distribution[i] * markov_chain.initial_distribution[j])
+                state_name = s1.name + "_" + s2.name
+                state_names.append(state_name)
+                event_set = s1.events.union(s2.events)
+                for event_pair in pair_events_list:
                     appeared = True
-                    ev = ""
-                    for e in t[0]:
-                        appeared = appeared and (e in eventSet)
-                        ev = ev + e
-                    if len(t[0]) > 0 and appeared:
-                        eventSet.add(t[1])
-                stateEvents.append(eventSet)
-                prodState = MarkovState(stateName, eventSet)
-                prodState.anchor = (s1, s2)
-                prodStates.append(prodState)
+                    event_grabbed = ""
+                    for event in event_pair[0]:
+                        appeared = appeared and event in event_set
+                        event_grabbed = event_grabbed + event
+                    if len(event_pair[0]) > 0 and appeared:
+                        event_set.add(event_pair[1])
+                state_events.append(event_set)
+                prod_state = MarkovState(state_name, event_set)
+                prod_state.anchor = (s1, s2)
+                prod_states.append(prod_state)
                 k = k + 1
 
-        numStates = k
-        # numStates = len(markov_chain.states)*len(self.states)
+        num_states = k
 
-        transitionMatrix = [[0 for j in range(numStates)] for i in range(numStates)]
+        transition_matrix = [[0 for _ in range(num_states)] for _ in range(num_states)]
 
-        for k in range(0, len(prodStates)):
-            state = prodStates[k]
-            s1 = state.anchor[0]
-            s2 = state.anchor[1]
+        for k in range(0, len(prod_states)):
+            state = prod_states[k]
+            s1, s2 = state.anchor
 
-            for t in range(0, len(prodStates)):
-                statePrime = prodStates[t]
-                s1prime = statePrime.anchor[0]
-                s2prime = statePrime.anchor[1]
-                p = self.transition_matrix[s1.index][s1prime.index] * markovChain.transition_matrix[s2.index][
-                    s2prime.index]
-                transitionMatrix[k][t] = p
+            for event_pair in range(0, len(prod_states)):
+                state_prime = prod_states[event_pair]
+                s1_prime, s2_prime = state_prime.anchor
+                p = self.transition_matrix[s1.index][s1_prime.index] * markov_chain.transition_matrix[s2.index][
+                    s2_prime.index]
+                transition_matrix[k][event_pair] = p
+        return MarkovChain(state_names, state_events, transition_matrix, initial_distribution, initial_state_index)
 
-        state = prodStates[0]
-        s1 = state.anchor[0]
-        s2 = state.anchor[1]
+    def product(self, markov_chain, pair_events_list=None):
+        if pair_events_list is None:
+            pair_events_list = []
 
-        statePrime = prodStates[0]
-        s1prime = statePrime.anchor[0]
-        s2prime = statePrime.anchor[1]
+        prod_states = []
 
-        p = self.transition_matrix[s1.index][s1prime.index] * markovChain.transition_matrix[s2.index][s2prime.index]
+        state_names = []
 
-        prodMC = MarkovChain(stateNames, stateEvents, transitionMatrix, initialDistribution, initialStateIndex)
+        state_events = []
 
-        return prodMC
-
-    def product(self, markovChain, pairEventsList=[]):
-        prodStates = []
-
-        stateNames = []
-
-        stateEvents = []
-
-        initialDistribution = []
-
-        transitionMatrix = [[]]
+        initial_distribution = []
 
         for i in range(len(self.states)):
-            for j in range(len(markovChain.states)):
+            for j in range(len(markov_chain.states)):
                 s1 = self.states[i]
-                s2 = markovChain.states[j]
-                # initial_distribution.append(self.initial_distribution[i]*markov_chain.initial_distribution[j])
-                stateName = s1.name + "_" + s2.name
-                stateNames.append(stateName)
-                eventSet = s1.events.union(s2.events)
-                for t in pairEventsList:
+                s2 = markov_chain.states[j]
+                state_name = s1.name + "_" + s2.name
+                state_names.append(state_name)
+                event_set = s1.events.union(s2.events)
+                for event_pair in pair_events_list:
                     appeared = True
-                    ev = ""
-                    for e in t[0]:
-                        appeared = appeared and (e in eventSet)
-                        ev = ev + e
-                    if len(t[0]) > 0 and appeared:
-                        eventSet.add(t[1])
-                stateEvents.append(eventSet)
-                prodState = MarkovState(stateName, eventSet)
-                prodState.anchor = (s1, s2)
-                prodStates.append(prodState)
+                    grabbed_event = ""
+                    for event in event_pair[0]:
+                        appeared = appeared and (event in event_set)
+                        grabbed_event = grabbed_event + event
+                    if len(event_pair[0]) > 0 and appeared:
+                        event_set.add(event_pair[1])
+                state_events.append(event_set)
+                prod_state = MarkovState(state_name, event_set)
+                prod_state.anchor = (s1, s2)
+                prod_states.append(prod_state)
 
-        numStates = len(markovChain.states) * len(self.states)
+        num_states = len(markov_chain.states) * len(self.states)
 
-        transitionMatrix = [[0 for j in range(numStates)] for i in range(numStates)]
+        transition_matrix = [[0 for _ in range(num_states)] for _ in range(num_states)]
 
-        for k in range(0, len(prodStates)):
-            state = prodStates[k]
-            s1 = state.anchor[0]
-            s2 = state.anchor[1]
+        for k in range(0, len(prod_states)):
+            state = prod_states[k]
+            s1, s2 = state.anchor
 
-            for t in range(0, len(prodStates)):
-                statePrime = prodStates[t]
-                s1prime = statePrime.anchor[0]
-                s2prime = statePrime.anchor[1]
-                p = self.transition_matrix[s1.index][s1prime.index] * markovChain.transition_matrix[s2.index][
-                    s2prime.index]
-                transitionMatrix[k][t] = p
+            for event_pair in range(0, len(prod_states)):
+                state_prime = prod_states[event_pair]
+                s1_prime, s2_prime = state_prime.anchor
+                p = self.transition_matrix[s1.index][s1_prime.index] * markov_chain.transition_matrix[s2.index][
+                    s2_prime.index]
+                transition_matrix[k][event_pair] = p
 
-        state = prodStates[0]
-        s1 = state.anchor[0]
-        s2 = state.anchor[1]
-
-        statePrime = prodStates[0]
-        s1prime = statePrime.anchor[0]
-        s2prime = statePrime.anchor[1]
-
-        p = self.transition_matrix[s1.index][s1prime.index] * markovChain.transition_matrix[s2.index][s2prime.index]
-
-        prodMC = MarkovChain(stateNames, stateEvents, transitionMatrix, initialDistribution)
-
-        return prodMC
+        return MarkovChain(state_names, state_events, transition_matrix, initial_distribution)
