@@ -1,9 +1,15 @@
 from copy import deepcopy
 
+from rich import print
+from rich.console import Console
+from rich.table import Table
+
 import ptcr2.AutomataUtility as AutomataUtility
 from ptcr2.BaseModel import BaseModel
 from ptcr2.EventPredictor import EventPredictor
 from ptcr2.MarkovChain import MarkovChain
+
+console = Console()
 
 
 def flatten_and_get_strings(input_list):
@@ -59,7 +65,7 @@ class FOM(BaseModel):
         for row in transition_matrix:
             # make sure every element in row is a float or int
             for element in row:
-                if not isinstance(element, float) or isinstance(element, int):
+                if not isinstance(element, float) and not isinstance(element, int):
                     raise ValueError("transition matrix has non-float/int elements")
             if len(row) != len(state_names):
                 raise ValueError("transition matrix is not square")
@@ -73,7 +79,7 @@ class FOM(BaseModel):
         for row in cost_matrix:
             # make sure every element in row is a float or int
             for element in row:
-                if not isinstance(element, float) or isinstance(element, int):
+                if not isinstance(element, float) and not isinstance(element, int):
                     raise ValueError("cost matrix has non-float/int elements")
             if len(row) != len(state_names):
                 raise ValueError("cost matrix is not square")
@@ -82,7 +88,7 @@ class FOM(BaseModel):
             raise ValueError("initial distribution and state names have different lengths")
 
         for element in initial_distribution:
-            if not isinstance(element, float) or isinstance(element, int):
+            if not isinstance(element, float) and not isinstance(element, int):
                 raise ValueError("initial distribution has non-float/int elements")
 
         if sum(initial_distribution) != 1:
@@ -118,8 +124,41 @@ class FOM(BaseModel):
 
         print("Formatting checks succeeded.")
 
-        print("transition matrix:", transition_matrix)
-        print("initial distribution:", initial_distribution)
+        transition_table = Table(title="Transition Matrix")
+        transition_table.add_column("")
+        for i in range(len(state_names)):
+            transition_table.add_column(state_names[i])
+        for i in range(len(state_names)):
+            row_str = [str(element) for element in transition_matrix[i]]
+            transition_table.add_row(state_names[i], *row_str)
+
+        console.print(transition_table)
+
+        initial_dist_table = Table(title="Initial Distribution")
+        for i in range(len(state_names)):
+            initial_dist_table.add_column(state_names[i])
+        initial_dist_table.add_row(*[str(element) for element in initial_distribution])
+
+        console.print(initial_dist_table)
+
+        cost_matrix_table = Table(title="Cost Matrix")
+        cost_matrix_table.add_column("")
+        for i in range(len(state_names)):
+            cost_matrix_table.add_column(state_names[i])
+        for i in range(len(state_names)):
+            row_str = [str(element) for element in cost_matrix[i]]
+            cost_matrix_table.add_row(state_names[i], *row_str)
+
+        console.print(cost_matrix_table)
+
+        alphabet_table = Table(title="Alphabet")
+
+        alphabet_table.add_column("Items")
+
+        for element in self.alphabet_s:
+            alphabet_table.add_row(element)
+
+        console.print(alphabet_table)
 
         mc1 = MarkovChain(state_names, state_events_1, transition_matrix, initial_distribution, 0)
 
@@ -134,18 +173,17 @@ class FOM(BaseModel):
         single_initial_state_0[0][0] = tuple(single_initial_state_0[0][0])
         single_initial_state_1[0][0] = tuple(single_initial_state_1[0][0])
 
-        print("single initial state 0:", single_initial_state_0)
-        print("single initial state 1:", single_initial_state_1)
+        print("Single initial state 0:", single_initial_state_0)
+        print("Single initial state 1:", single_initial_state_1)
 
         mc12 = mc1.product_singleInitialState(mc2, single_initial_state_0)
 
         mc = mc12.product_singleInitialState(mc3, single_initial_state_1)
 
-        print("alphabet:", self.alphabet_s)
 
         dfa = self.get_dfa()
 
-        self.ep = EventPredictor(dfa, mc, self.alphabet_s, self.verbose)
+        self.ep = EventPredictor(dfa, mc, self.alphabet_s, cost_matrix, self.verbose)
 
         return self.ep
 
@@ -200,6 +238,6 @@ class FOM(BaseModel):
         # May need to remove 
         dfa = AutomataUtility.new_state_names(dfa)
 
-        AutomataUtility.print_dfa(dfa)
+        # AutomataUtility.print_dfa(dfa)
 
         return dfa

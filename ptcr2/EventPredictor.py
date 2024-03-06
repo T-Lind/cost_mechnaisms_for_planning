@@ -10,11 +10,12 @@ MAX_UNSAFE_ITERS = 100_000
 
 
 class EventPredictor:
-    def __init__(self, dfa, markov_chain, actions, verbose, markov_state_visible=True):
+    def __init__(self, dfa, markov_chain, actions, cost_matrix, verbose, markov_state_visible=True):
         self.dfa = dfa
         self.markov_chain = markov_chain
         self.actions = actions
         self.verbose = verbose
+        self.cost_matrix = cost_matrix
         self.mdp = None
         self.current_markov_state_visible = markov_state_visible
         if markov_state_visible:
@@ -396,10 +397,12 @@ class EventPredictor:
             predicted_event = policy[q][s.name]
             s2 = self.markov_chain.next_state(s)
 
+
             q_previous = q
             if predicted_event in s2.events:
                 q = self.dfa.transitions[q][predicted_event]
                 if q != q_previous:
+                    print('From q to q prev:', q, q_previous)
                     story += predicted_event
             i += 1
             s = s2
