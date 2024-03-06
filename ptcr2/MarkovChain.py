@@ -26,13 +26,14 @@ class MarkovState:
 class MarkovChain:
 
     def __init__(self, state_names, state_events, transition_matrix, initial_distribution, initial_state_index=0,
-                 has_evidence=False, evidence_list=[]):
+                 has_evidence=False, evidence_list=[], cost_matrix=None):
         self.states = []
         self.state_names = state_names
         self.state_events = state_events
         self.initial_state_index = initial_state_index
         self.__create_states(state_names, state_events)
         self.initial_distribution = initial_distribution
+        self.cost_matrix = cost_matrix
         self.transition_matrix = transition_matrix
         self.events = set()
         for s in self.states:
@@ -64,8 +65,11 @@ class MarkovChain:
 
     def next_state(self, current_state):
         if current_state == self.null_state:
-            return numpy.random.choice(self.states, p=self.initial_distribution)
-        return numpy.random.choice(self.states, p=self.transition_matrix[current_state.index])
+            next_state = numpy.random.choice(self.states, p=self.initial_distribution)
+            return next_state
+        next_state = numpy.random.choice(self.states, p=self.transition_matrix[current_state.index])
+        return next_state
+
 
     def get_successors_having_event(self, state, event):
         succ = set()
@@ -201,7 +205,21 @@ class MarkovChain:
                 p = self.transition_matrix[s1.index][s1_prime.index] * markov_chain.transition_matrix[s2.index][
                     s2_prime.index]
                 transition_matrix[k][event_pair] = p
-        return MarkovChain(state_names, state_events, transition_matrix, initial_distribution, initial_state_index)
+
+        # do something similar for cost matrix
+        cost_matrix = [[0 for _ in range(num_states)] for _ in range(num_states)]
+        for k in range(0, len(prod_states)):
+            state = prod_states[k]
+            s1, s2 = state.anchor
+            for event_pair in range(0, len(prod_states)):
+                state_prime = prod_states[event_pair]
+                s1_prime, s2_prime = state_prime.anchor
+                c = self.cost_matrix[s1.index][s1_prime.index] + markov_chain.cost_matrix[s2.index][s2_prime.index]
+                cost_matrix[k][event_pair] = c
+
+
+        return MarkovChain(state_names, state_events, transition_matrix, initial_distribution, initial_state_index,
+                           cost_matrix=cost_matrix)
 
     def product(self, markov_chain, pair_events_list=None):
         if pair_events_list is None:
@@ -250,4 +268,16 @@ class MarkovChain:
                     s2_prime.index]
                 transition_matrix[k][event_pair] = p
 
-        return MarkovChain(state_names, state_events, transition_matrix, initial_distribution)
+        # do something similar for cost matrix
+        cost_matrix = [[0 for _ in range(num_states)] for _ in range(num_states)]
+        for k in range(0, len(prod_states)):
+            state = prod_states[k]
+            s1, s2 = state.anchor
+            for event_pair in range(0, len(prod_states)):
+                state_prime = prod_states[event_pair]
+                s1_prime, s2_prime = state_prime.anchor
+                c = self.cost_matrix[s1.index][s1_prime.index] + markov_chain.cost_matrix[s2.index][s2_prime.index]
+                cost_matrix[k][event_pair] = c
+
+        return MarkovChain(state_names, state_events, transition_matrix, initial_distribution,
+                           cost_matrix=cost_matrix)
