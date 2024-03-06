@@ -14,40 +14,6 @@ class FOM(BaseCaseStudy):
         self.ep = None
 
     def make_event_predictor(self, spec: dict):
-        # state_names1 = ["I", "E", "B", "C", "D", "S"]
-        # state_events1 = [set([]), set(["e1"]), set(["b1"]), set(["c1"]), set(["d1"]), set(["s1"])]
-        # transition_matrix = [
-        #     [0, 0.1, 0.3, 0.1, 0.2, 0.3],
-        #     [0, 0.1, 0.2, 0.1, 0.3, 0.3],
-        #     [0, 0.2, 0.1, 0.1, 0.3, 0.3],
-        #     [0, 0.1, 0.2, 0.2, 0.3, 0.2],
-        #     [0, 0.2, 0.3, 0.1, 0.1, 0.3],
-        #     [0, 0.4, 0.2, 0.2, 0.2, 0.0]]
-        # initial_distribution = [0, 0.1, 0.3, 0.2, 0.2, 0.2]
-        # mc1 = MarkovChain(state_names1, state_events1, transition_matrix, initial_distribution, 0)
-        #
-        # state_names2 = ["I", "E", "B", "C", "D", "S"]
-        # state_events2 = [set([]), set(["e2"]), set(["b2"]), set(["c2"]), set(["d2"]), set(["s2"])]
-        # mc2 = MarkovChain(state_names2, state_events2, transition_matrix, initial_distribution, 0)
-        #
-        # stateNames3 = ["I", "E", "B", "C", "D", "S"]
-        # state_events3 = [set([]), set(["e3"]), set(["b3"]), set(["c3"]), set(["d3"]), set(["s3"])]
-        # mc3 = MarkovChain(stateNames3, state_events3, transition_matrix, initial_distribution, 0)
-        #
-        # mc12 = mc1.product_singleInitialState(mc2, [[("d1", "d2"), "d12"]])
-        #
-        # mc = mc12.product_singleInitialState(mc3, [[("d2, d3"), "d23"]])
-        #
-        # self.alphabet_s = {"e1", "b1", "c1", "d1", "s1", "e2", "b2", "c2", "d2", "s2", "d12", "e3", "b3", "c3", "d3",
-        #                    "s3", "d23"}
-        #
-        #
-        # dfa = self.get_dfa()
-        #
-        # self.ep = EventPredictor(dfa, mc, self.alphabet_s, self.verbose)
-        #
-        # return self.ep
-
         state_names = spec["state_names"]
         state_events_1, state_events_2, state_events_3 = spec["state_events"]
 
@@ -58,6 +24,61 @@ class FOM(BaseCaseStudy):
 
         transition_matrix = spec["transition_matrix"]
         initial_distribution = spec["initial_distribution"]
+
+        # Check if state names only has unique elements that are all strings
+        if len(state_names) != len(set(state_names)):
+            raise ValueError("state names are not unique")
+
+        for state in state_names:
+            if not isinstance(state, str):
+                raise ValueError("state names are not all strings")
+
+        # Check if the transition matrix is a square matrix of size len(state_names)
+
+        if len(transition_matrix) != len(state_names):
+            raise ValueError("transition matrix and state names have different lengths")
+
+        for row in transition_matrix:
+            # make sure every element in row is a float
+            for element in row:
+                if not isinstance(element, float):
+                    raise ValueError("transition matrix has non-float elements")
+            if len(row) != len(state_names):
+                raise ValueError("transition matrix is not square")
+            if sum(row) != 1:
+                raise ValueError(f"transition matrix row {row} does not sum to 1")
+
+        if len(initial_distribution) != len(state_names):
+            raise ValueError("initial distribution and state names have different lengths")
+
+        for element in initial_distribution:
+            if not isinstance(element, float):
+                raise ValueError("initial distribution has non-float elements")
+
+        if sum(initial_distribution) != 1:
+            raise ValueError("initial distribution does not sum to 1")
+
+
+        if len(state_events_1) == 0:
+            state_events_1 = [set() for _ in state_names]
+
+        if len(state_events_2) == 0:
+            state_events_2 = [set() for _ in state_names]
+
+        if len(state_events_3) == 0:
+            state_events_3 = [set() for _ in state_names]
+
+        # Check if state_events_1, state_events_2, and state_events_3 are of the same length as state_names
+        if len(state_events_1) != len(state_names):
+            raise ValueError("state events 1 and state names have different lengths")
+
+        if len(state_events_2) != len(state_names):
+            raise ValueError("state events 2 and state names have different lengths")
+
+        if len(state_events_3) != len(state_names):
+            raise ValueError("state events 3 and state names have different lengths")
+
+        print("Formatting checks succeeded.")
 
         print("transition matrix:", transition_matrix)
         print("initial distribution:", initial_distribution)
@@ -71,7 +92,6 @@ class FOM(BaseCaseStudy):
         state_names3 = deepcopy(state_names)
 
         mc3 = MarkovChain(state_names3, state_events_3, transition_matrix, initial_distribution, 0)
-
 
         single_initial_state_0 = spec['single_initial_states'][0]
         single_initial_state_1 = spec['single_initial_states'][1]
@@ -95,8 +115,6 @@ class FOM(BaseCaseStudy):
         self.ep = EventPredictor(dfa, mc, self.alphabet_s, self.verbose)
 
         return self.ep
-
-
 
     def get_dfa(self):
         dfa111 = AutomataUtility.dfa_accepting_a_sequence(["c3"], self.alphabet_s)
