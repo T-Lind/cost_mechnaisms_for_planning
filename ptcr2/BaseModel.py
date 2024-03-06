@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from ptcr2.EventPredictor import EventPredictor
 
 
-class BaseCaseStudy(ABC):
+class BaseModel(ABC):
     def __init__(self):
         self.verbose = True
         self.computed_policy = None

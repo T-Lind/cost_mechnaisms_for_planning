@@ -2,8 +2,8 @@ import time
 from sys import float_info
 from typing import Tuple
 
-from ptcr.MarkovDecisionProcess import MDP, MDPState, MDPTransition
 from ptcr import DeterministicFiniteAutomaton, MarkovChain
+from ptcr.MarkovDecisionProcess import MDP, MDPState, MDPTransition
 
 
 class EventPredictor:
@@ -18,17 +18,12 @@ class EventPredictor:
         if self.current_markov_state_visible:
             self.__create_automaton_single_initial_state_only_reachables()
         else:
-            raise NotImplementedError("Not Fully Visible Markov state not implemented yet")
-
+            raise NotImplementedError("Fully Visible Markov state not implemented yet")
 
     def optimal_policy_infinite_horizon(self, epsilon_of_convergence: float):
         len_mdp_states = len(self.mdp.states)
         G = [[0.0 for _ in [0, 1]] for _ in range(len_mdp_states)]
         A = ["" for _ in range(len_mdp_states)]
-
-        print("G", G, "A", A)
-
-        print("G starting", G)
 
         for i in range(len_mdp_states):
             if self.mdp.states[i].is_goal:
@@ -137,7 +132,7 @@ class EventPredictor:
         self.mdp.actions = self.event_list
 
         t0 = (self.dfa.initial_state, self.markov_chain.initial_state)
-        v0 = MDPState(self.dfa.initial_state+"_"+self.markov_chain.initial_state.name, t0)
+        v0 = MDPState(self.dfa.initial_state + "_" + self.markov_chain.initial_state.name, t0)
         v0.evidence_distribution = self.markov_chain.initial_state.evidence_distribution
         q0 = self.dfa.initial_state
         v0.is_initial = True
@@ -224,8 +219,3 @@ class EventPredictor:
         self.mdp.compute_states_available_actions()
 
         self.mdp.make_observable_function()
-
-
-
-
-

@@ -224,7 +224,8 @@ def new_state_names(dfa):
         if q in dict_previous_new.keys():
             final_states.add(dict_previous_new[q])
         else:
-            print("Key " + q + " was not found in the dictionary 'dictOldNew'")
+            pass
+            # print("Key " + q + " was not found in the dictionary 'dictOldNew'")
 
     initial_state = dict_previous_new[dfa.initial_state]
 

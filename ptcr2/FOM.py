@@ -1,12 +1,26 @@
 from copy import deepcopy
 
 import ptcr2.AutomataUtility as AutomataUtility
-from ptcr2.BaseCaseStudy import BaseCaseStudy
+from ptcr2.BaseModel import BaseModel
 from ptcr2.EventPredictor import EventPredictor
 from ptcr2.MarkovChain import MarkovChain
 
 
-class FOM(BaseCaseStudy):
+def flatten_and_get_strings(input_list):
+    result_set = set()
+
+    for item in input_list:
+        if isinstance(item, list):
+            # Recursively call the function for nested lists
+            result_set.update(flatten_and_get_strings(item))
+        elif isinstance(item, str):
+            # Add string elements to the result set
+            result_set.add(item)
+
+    return result_set
+
+
+class FOM(BaseModel):
     def __init__(self):
         super().__init__()
         self.verbose = True
@@ -23,41 +37,56 @@ class FOM(BaseCaseStudy):
             state_events_3[i] = set(state_events_3[i])
 
         transition_matrix = spec["transition_matrix"]
+        cost_matrix = spec["cost_matrix"]
         initial_distribution = spec["initial_distribution"]
+        self.alphabet_s = set(spec['alphabet'])
+
+        single_initial_state_0 = spec['single_initial_states'][0]
+        single_initial_state_1 = spec['single_initial_states'][1]
 
         # Check if state names only has unique elements that are all strings
         if len(state_names) != len(set(state_names)):
             raise ValueError("state names are not unique")
 
-        for state in state_names:
-            if not isinstance(state, str):
+        for initial_states in state_names:
+            if not isinstance(initial_states, str):
                 raise ValueError("state names are not all strings")
 
         # Check if the transition matrix is a square matrix of size len(state_names)
-
         if len(transition_matrix) != len(state_names):
             raise ValueError("transition matrix and state names have different lengths")
 
         for row in transition_matrix:
-            # make sure every element in row is a float
+            # make sure every element in row is a float or int
             for element in row:
-                if not isinstance(element, float):
-                    raise ValueError("transition matrix has non-float elements")
+                if not isinstance(element, float) or isinstance(element, int):
+                    raise ValueError("transition matrix has non-float/int elements")
             if len(row) != len(state_names):
                 raise ValueError("transition matrix is not square")
             if sum(row) != 1:
                 raise ValueError(f"transition matrix row {row} does not sum to 1")
 
+        # Check if the cost matrix is a square matrix of size len(state_names)
+        if len(cost_matrix) != len(state_names):
+            raise ValueError("cost matrix and state names have different lengths")
+
+        for row in cost_matrix:
+            # make sure every element in row is a float or int
+            for element in row:
+                if not isinstance(element, float) or isinstance(element, int):
+                    raise ValueError("cost matrix has non-float/int elements")
+            if len(row) != len(state_names):
+                raise ValueError("cost matrix is not square")
+
         if len(initial_distribution) != len(state_names):
             raise ValueError("initial distribution and state names have different lengths")
 
         for element in initial_distribution:
-            if not isinstance(element, float):
-                raise ValueError("initial distribution has non-float elements")
+            if not isinstance(element, float) or isinstance(element, int):
+                raise ValueError("initial distribution has non-float/int elements")
 
         if sum(initial_distribution) != 1:
             raise ValueError("initial distribution does not sum to 1")
-
 
         if len(state_events_1) == 0:
             state_events_1 = [set() for _ in state_names]
@@ -78,6 +107,15 @@ class FOM(BaseCaseStudy):
         if len(state_events_3) != len(state_names):
             raise ValueError("state events 3 and state names have different lengths")
 
+        for event_list in state_events_1 + state_events_2 + state_events_3:
+            for event in event_list:
+                if event not in self.alphabet_s:
+                    raise ValueError(f"event {event} not in alphabet")
+
+        for initial_states in flatten_and_get_strings(single_initial_state_0 + single_initial_state_1):
+            if initial_states not in self.alphabet_s:
+                raise ValueError(f"state {initial_states} not in alphabet")
+
         print("Formatting checks succeeded.")
 
         print("transition matrix:", transition_matrix)
@@ -93,9 +131,6 @@ class FOM(BaseCaseStudy):
 
         mc3 = MarkovChain(state_names3, state_events_3, transition_matrix, initial_distribution, 0)
 
-        single_initial_state_0 = spec['single_initial_states'][0]
-        single_initial_state_1 = spec['single_initial_states'][1]
-
         single_initial_state_0[0][0] = tuple(single_initial_state_0[0][0])
         single_initial_state_1[0][0] = tuple(single_initial_state_1[0][0])
 
@@ -105,8 +140,6 @@ class FOM(BaseCaseStudy):
         mc12 = mc1.product_singleInitialState(mc2, single_initial_state_0)
 
         mc = mc12.product_singleInitialState(mc3, single_initial_state_1)
-
-        self.alphabet_s = set(spec['alphabet'])
 
         print("alphabet:", self.alphabet_s)
 
