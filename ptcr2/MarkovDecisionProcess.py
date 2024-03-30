@@ -261,22 +261,22 @@ class MDP:
             prob_obs_action += self.observation_function[observation][x][action] * stp
 
         for x in self.states:
-            # total = self.sumTransitionProbs(x, action, belief)
+            # total = self.sumTransitionProbs(n, action, belief)
             total = sum_trans_probs[x]
             if total == 0 or self.observation_function[observation][x][action] == 0:
                 b[x.index] = 0
             else:
                 b[x.index] = (self.observation_function[observation][x][action] * total) / prob_obs_action
                 """
-            if self.observation_function[observation][x][action] ==0 and self.probabilityObservationGivenActionAndbeleif(observation, action, belief) == 0:
-                print("O["+str(observation)+"]["+str(x)+"]["+str(action)+"]")
-                b[x.index]
+            if self.observation_function[observation][n][action] ==0 and self.probabilityObservationGivenActionAndbeleif(observation, action, belief) == 0:
+                print("O["+str(observation)+"]["+str(n)+"]["+str(action)+"]")
+                b[n.index]
             else:
                 if self.probabilityObservationGivenActionAndbeleif(observation, action, belief) == 0:
                     print("b:"+ str(belief))
-                    print("O["+str(observation)+"]["+str(x)+"]["+str(action)+"]="+str(self.observation_function[observation][x][action]))
+                    print("O["+str(observation)+"]["+str(n)+"]["+str(action)+"]="+str(self.observation_function[observation][n][action]))
                    
-                b[x.index]=(self.observation_function[observation][x][action]*total)/self.probabilityObservationGivenActionAndbeleif(observation, action, belief)
+                b[n.index]=(self.observation_function[observation][n][action]*total)/self.probabilityObservationGivenActionAndbeleif(observation, action, belief)
                 """
         # print("b="+str(b))
         return b
@@ -1679,7 +1679,7 @@ class MDP:
     def convex_hull(self, points):
         """Computes the convex hull of a set of 2D points.
 
-        Input: an iterable sequence of (x, y) pairs representing the points.
+        Input: an iterable sequence of (n, y) pairs representing the points.
         Output: a list of vertices of the convex hull in counter-clockwise order,
           starting from the vertex with the lexicographically smallest coordinates.
         Implements Andrew's monotone chain algorithm. O(n log n) complexity.

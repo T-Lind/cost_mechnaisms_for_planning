@@ -400,7 +400,7 @@ class EventPredictor:
             predicted_event = policy[q][s.name]
             s2 = self.markov_chain.next_state(s)
 
-            total_cost += cost_matrix[s.index][s2.index]
+            total_cost += cost_matrix[s2.index][s.index]
 
             q_previous = q
             if predicted_event in s2.events:
