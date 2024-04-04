@@ -219,12 +219,12 @@ class EventPredictor:
                 Add from transition (v1, e, v2) where v3 is C_{e-}(v1)
                 """
 
-        if self.verbose == True:
+        if self.verbose:
             print("the product automata has been computed. It has " + str(len(mdp.states)) + " states")
             print("----------------------------------------------")
 
-    def optimalPolicyFiniteHorizon(self, F, printPolicy):
-        if self.verbose == True:
+    def optimal_policy_finite_horizon(self, F, printPolicy):
+        if self.verbose:
             print("------computing optimal policy for finite horizon--------------")
         n = len(self.mdp.states)
         G = [[0.0 for j in range(n)] for i in range(F + 1)]
@@ -240,7 +240,7 @@ class EventPredictor:
         for i in range(F - 1, -1, -1):
             # print(i)
             for j in range(n):
-                if self.mdp.states[j].is_goal == True:
+                if self.mdp.states[j].is_goal:
                     A[i][j] = "STOP"
                     G[i][j] = 0.0
                     continue
@@ -251,7 +251,7 @@ class EventPredictor:
 
                 for action in self.actions:
                     val = 0.0
-                    if state.is_goal == False:
+                    if state.is_goal:
                         val += 1
                     for k in range(n):
                         term = G[i + 1][k] * self.mdp.conditionalProbability(k, j, action)
@@ -399,8 +399,6 @@ class EventPredictor:
         q = self.dfa.initial_state
         i = 0
         total_cost = 0
-        # TODO: This is a hack to get the cost matrix to work. It should be removed
-        cost_matrix = [[0, 2, 3, 4, 5, 6, 3, 4, 5, 6, 7, 4, 5, 6, 7, 8, 5, 6, 7, 8, 9, 6, 7, 8, 9, 10], [2, 0, 1, 2, 3, 4, 1, 2, 3, 4, 5, 2, 3, 4, 5, 6, 3, 4, 5, 6, 7, 4, 5, 6, 7, 8], [3, 1, 0, 1, 2, 3, 2, 1, 2, 3, 4, 3, 2, 3, 4, 5, 4, 3, 4, 5, 6, 5, 4, 5, 6, 7], [4, 2, 1, 0, 1, 2, 3, 2, 1, 2, 3, 4, 3, 2, 3, 4, 5, 4, 3, 4, 5, 6, 5, 4, 5, 6], [5, 3, 2, 1, 0, 1, 4, 3, 2, 1, 2, 5, 4, 3, 2, 3, 6, 5, 4, 3, 4, 7, 6, 5, 4, 5], [6, 4, 3, 2, 1, 0, 5, 4, 3, 2, 1, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 8, 7, 6, 5, 4], [3, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 1, 2, 3, 4, 5, 2, 3, 4, 5, 6, 3, 4, 5, 6, 7], [4, 2, 1, 2, 3, 4, 1, 0, 1, 2, 3, 2, 1, 2, 3, 4, 3, 2, 3, 4, 5, 4, 3, 4, 5, 6], [5, 3, 2, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 2, 3, 4, 3, 2, 3, 4, 5, 4, 3, 4, 5], [6, 4, 3, 2, 1, 2, 3, 2, 1, 0, 1, 4, 3, 2, 1, 2, 5, 4, 3, 2, 3, 6, 5, 4, 3, 4], [7, 5, 4, 3, 2, 1, 4, 3, 2, 1, 0, 5, 4, 3, 2, 1, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3], [4, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 1, 2, 3, 4, 5, 2, 3, 4, 5, 6], [5, 3, 2, 3, 4, 5, 2, 1, 2, 3, 4, 1, 0, 1, 2, 3, 2, 1, 2, 3, 4, 3, 2, 3, 4, 5], [6, 4, 3, 2, 3, 4, 3, 2, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 2, 3, 4, 3, 2, 3, 4], [7, 5, 4, 3, 2, 3, 4, 3, 2, 1, 2, 3, 2, 1, 0, 1, 4, 3, 2, 1, 2, 5, 4, 3, 2, 3], [8, 6, 5, 4, 3, 2, 5, 4, 3, 2, 1, 4, 3, 2, 1, 0, 5, 4, 3, 2, 1, 6, 5, 4, 3, 2], [5, 3, 4, 5, 6, 7, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 1, 2, 3, 4, 5], [6, 4, 3, 4, 5, 6, 3, 2, 3, 4, 5, 2, 1, 2, 3, 4, 1, 0, 1, 2, 3, 2, 1, 2, 3, 4], [7, 5, 4, 3, 4, 5, 4, 3, 2, 3, 4, 3, 2, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 2, 3], [8, 6, 5, 4, 3, 4, 5, 4, 3, 2, 3, 4, 3, 2, 1, 2, 3, 2, 1, 0, 1, 4, 3, 2, 1, 2], [9, 7, 6, 5, 4, 3, 6, 5, 4, 3, 2, 5, 4, 3, 2, 1, 4, 3, 2, 1, 0, 5, 4, 3, 2, 1], [6, 4, 5, 6, 7, 8, 3, 4, 5, 6, 7, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4], [7, 5, 4, 5, 6, 7, 4, 3, 4, 5, 6, 3, 2, 3, 4, 5, 2, 1, 2, 3, 4, 1, 0, 1, 2, 3], [8, 6, 5, 4, 5, 6, 5, 4, 3, 4, 5, 4, 3, 2, 3, 4, 3, 2, 1, 2, 3, 2, 1, 0, 1, 2], [9, 7, 6, 5, 4, 5, 6, 5, 4, 3, 4, 5, 4, 3, 2, 3, 4, 3, 2, 1, 2, 3, 2, 1, 0, 1], [10, 8, 7, 6, 5, 4, 7, 6, 5, 4, 3, 6, 5, 4, 3, 2, 5, 4, 3, 2, 1, 4, 3, 2, 1, 0]]
         while True:
             if q in self.dfa.final_states:
                 print("Total cost:", total_cost)
@@ -408,12 +406,9 @@ class EventPredictor:
             predicted_event = policy[q][s.name]
             s2 = self.markov_chain.next_state(s)
 
-            # total_cost += cost_matrix[s2.index][s.index]
-
             q_previous = q
             if predicted_event in s2.events:
                 q = self.dfa.transitions[q][predicted_event]
-
 
                 if q != q_previous:
                     story += predicted_event

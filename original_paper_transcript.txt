@@ -1,0 +1,2164 @@
+Article
+The International Journal of
+Robotics Research
+2023, Vol. 42(6) 412–432
+© The Author(s) 2022
+Article reuse guidelines:
+sagepub.com/journals-permissions
+DOI: 10.1177/02783649211069154
+journals.sagepub.com/home/ijr
+Planning to chronicle: Optimal policies for
+narrative observation of unpredictable events
+Hazhar Rahmani1, Dylan A Shell2 and Jason M O’Kane1
+Abstract
+One important class of applications entails a robot scrutinizing, monitoring, or recording the evolution of an uncertain
+time-extended process. This sort of situation leads to an interesting family of active perception problems that can be cast as
+planning problems in which the robot is limited in what it sees and must, thus, choose what to pay attention to. The
+distinguishing characteristic of this setting is that the robot has influence over what it captures via its sensors, but exercises
+no causal authority over the process evolving in the world. As such, the robot’s objective is to observe the underlying
+process and to produce a “chronicle” of occurrent events, subject to a goal specification of the sorts of event sequences that
+may be of interest. This paper examines variants of such problems in which the robot aims to collect sets of observations to
+meet a rich specification of their sequential structure. We study this class of problems by modeling a stochastic process via a
+variant of a hidden Markov model and specify the event sequences of interest as a regular language, developing a
+vocabulary of “mutators” that enable sophisticated requirements to be expressed. Under different suppositions on the
+information gleaned about the event model, we formulate and solve different planning problems. The core underlying idea
+is the construction of a product between the event model and a specification automaton. Using this product, we compute a
+policy that minimizes the expected number of steps to reach a goal state. We introduce a general algorithm for this problem
+as well as several more efficient algorithms for important special cases. The paper reports and compares performance
+metrics by drawing on some small case studies analyzed in depth via simulation. Specifically, we study the effect of the
+robot’s observation model on the average time required for the robot to record a desired story. We also compare our
+algorithm with a baseline greedy algorithm, showing that our algorithm outperforms the greedy algorithm in terms of the
+average time to record a desired story. In addition, experiments show that the algorithms tailored to specialized variants of
+the problem are rather more efficient than the general algorithm.
+Keywords
+Planning, story-telling, reconnoitering, raconteuring
+1. Motivation and Introduction
+This paper is about robotic planning problems in which the
+goals are expressed as time-extended sequences of discrete
+events whose occurrence the robot cannot causally influence. As a concrete motivation for this sort of setting,
+consider the proliferation of home videos. These videos
+are, with remarkably few exceptions, crummy specimens
+of the cinematic arts. They fail, generally, to establish and
+then bracket a scene; they often founder in emphasizing the
+importance of key subjects within the developing action,
+and are usually unsuccessful in attempts to trace an
+evolving narrative arc. And the current generation of
+autonomous personal robots and video drones, in their
+roles as costly and glorified “selfie sticks,” are set to follow
+suit. The trouble is that capturing footage to tell a story is
+challenging. A camera only records what you point it
+toward and part of the difficulty stems from the fact that
+you can’t know exactly how the scene will unfold before it
+actually does. Moreover, what constitutes structure isn’t
+easily summed up with a few trite quantities. Another part
+of the challenge, of course, is that one has only limited time
+to capture video footage.
+Many applications can be cast as the problem of
+producing a finite-length sensor-based recording of the
+evolution of some process. As the video example emphasizes, one might be interested in recordings that meet
+rich specifications of the event sequences that are of
+interest. It is easy to look beyond pure vanity as a
+1
+Department of Computer Science and Engineering, University of South
+Carolina, Columbia, SC, USA
+2
+Department of Computer Science and Engineering, Texas A&M
+University, College Station, TX, USA
+Corresponding author:
+Hazhar Rahmani, Department of Computer Science and Engineering,
+University of South Carolina, Storey Innovation Center 1205, 550
+Assembly St, Columbia, SC 29208-0001, USA.
+Email: hrahmani@email.sc.edu
+motivator: consider cases where a robot is auditing or
+inspecting some occurrence, perhaps to summarize
+or provide select evidence of some specific property or
+portray the manifestation of some pattern. When the
+evolution of the event-generating process is uncertain/
+non-deterministic and sensing is local (necessitating that
+it be directed actively), then one encounters an instance
+from this class of problem. The broad class encompasses
+many monitoring and surveillance scenarios. An important characteristic of such settings is that the robot has
+influence over what it captures via its sensors, but cannot
+control the process of interest.
+Our approach to this class of problem involves two lines
+of attack. The first is a wide-embracing formulation in which
+we pose a general stochastic model, including aspects of
+hidden/latent state, simultaneity of event occurrence, and
+various assumptions on the form of observability. Secondly,
+we specify the sequences of interest via a deterministic finite
+automaton (DFA), and we define several language mutators,
+which permit composition and refinement of specification
+DFAs, allowing for rich descriptions of desirable event sequences. The two parts are brought together via our approach
+to planning to satisfy the specifications as quickly as possible:
+we show how to compute an optimal policy via a form of
+product automaton. Empirical evidence from simulation
+experiments attests to the feasibility of this approach.
+Beyond the pragmatics of planning, a theoretical
+contribution of the paper is to prove a result on representation independence of the specifications. That is, though
+multiple distinct DFAs may express the same regular language and despite the specific DFA being involved directly in
+constructing the product automaton used to solve the planning problem, it turns out that it is the language expressed, not
+how it is expressed, that affects the resulting optimal solution.
+This means that one can reduce the automaton size (say, using
+the famous Myhill-Nerode result) to reduce the planning time
+and know that this does not reduce the quality of the solution
+produced. Returning to mutators that transform DFAs, enabling easy expression of sophisticated requirements, we
+distinguish when mutators preserve representational independence too.
+A preliminary version of this paper (Rahmani et al.,
+2020) appeared in the 14th International Workshop on the
+Algorithmic Foundations of Robotics (WAFR-XIV). The
+following results are new to this version:
+· We generalize the event model, introducing an occurrence probability for each state-event pair.
+· We address the case in which no policy can guarantee
+that the robot will successfully capture a desired story.
+· We discuss several special cases, showing how they
+can be solved more efficiently than the general
+problem.
+· We added new case studies comparing our general
+approach to both a greedy baseline and to our specialized algorithms for the newly-introduced special
+cases.
+2. Related Work
+In research closely related to the present article, the work of
+Shell et al. (2019) (having some authors in common with the
+present paper) introduces the idea of using a team of autonomous robots, coordinated by a planner, to capture a
+sequence of events meeting some narrative structure. That
+work raised (but did not answer) several questions, among
+them: how the robot can formulate effective plans to capture
+events relevant to a given story specification. Here we build
+upon that prior effort showing how such plans can be
+formed in a principled way.
+Also related is work in the area of autonomous cinematography, which has recently become an active research
+topic in robotics. Mademlis et al. (2019a) focus on visionbased UAVs (Unmanned Aerial Vehicles), and specifically
+multi-UAV, cinematography. They review the research
+topic and make a taxonomy of shot types based on framing
+types (long-short, close-up, etc.) and camera motion types
+(orbit, fly-by, etc.), which they extend for multi-UAV
+cinematography. A more comprehensive version of their
+taxonomy, including several ones for target tracking, can
+be found in Mademlis et al. (2019b). Sabetghadam et al.
+(2019) propose, for autonomous UAV cinematography, an
+optimal trajectory planning algorithm in which the control
+of the drone and the control of the gimbal are decoupled.
+They also consider in Alcantara et al. (2021 ´ ), optimal
+trajectory planning for multi-UAV cinematography. All
+these works assume that the robot has already been assigned what it is to capture, while in our work it is the robot
+that needs to predict which events will occur and which it
+should try to capture.
+Treatment of narrative in terms of structured sequences
+of discrete events, as done in this article, is not unique. The
+story validation problem (Yu and LaValle, 2010, 2011) can
+be viewed as an inverse of our problem. The aim here is to
+determine whether a given story is consistent with a sequence of events captured by a network of sensors in the
+environment. In our problem, it is the robot that needs to
+capture a sequence of events that constitute a desired story.
+Video summarization is the problem of making a
+“good” summary of a given video by prioritizing sequences of frames based on some selection criterion
+(importance, representativeness, diversity, etc.). Various
+approaches include identifying important objects (Lee
+et al., 2012), finding interesting events (Gygli et al.,
+2014), selection using supervised learning (Gong et al.,
+2014), and finding inter-frame connections (Lu and
+Grauman, 2013). For a survey on video summarization,
+see Truong and Venkatesh (2007), which one might
+augment with more recent results (Ji et al., 2019;
+Mahasseni et al., 2017; Narasimhan et al., 2021; Plummer
+et al., 2017; Zhang et al., 2018).
+Specifically, with robot-based observation in mind,
+Girdhar and Dudek (2012) considered the related vacation
+snapshot problem in which the goal is to retain a diverse
+subset from data observed by a mobile robot. However, in
+Rahmani et al. 413
+such summarization techniques, the problem is essentially
+to post-process a collection of images already recorded.
+This paper, by contrast, addresses the problem of deciding
+which video segments the robot should attempt to capture in
+the first place.
+Also, for text-based and interactive narratives, a variety
+of methods are known for narrative planning and generating
+natural language stories (Riedl and Young, 2010; Robertson
+and Young, 2017).
+Our work builds on the theory of Markov decision processes (MDPs) and its extension to partially observable
+Markov decision processes (POMDPs), which are surveyed
+in LaValle (2006), Shani et al. (2013), Ross et al. (2008), and
+Bonet and Geffner (2009). In what follows, we tackle our
+problem by constructing a product of the event model and the
+story specification, which together yield a specific POMDP.
+Our own previous work (Chaudhuri et al., 2021b)
+considered a multi-robot extension of the problem we study
+here. In that work, we compared, in terms of quality of
+solution and efficiency, a planning approach in which
+planning for all of the robots is conducted jointly against a
+sequential approach. We also studied an extension in which
+the planning process comprises not only to what events to
+try to capture but also which recording styles the robot
+should use to capture events those events, ensuring that the
+final result conforms to a given specification of acceptable
+styles (Chaudhuri et al., 2021a).
+The empirical results we shall present show that as the
+robot’s power to perceive the world increases, the robot can
+record events that form a desirable narrative more quickly.
+As such, the ideas of active perception (Bajcsy, 1988;
+Bajcsy et al., 2018) could be useful for the robot to strategically increase its knowledge about the world and the
+events happening around it; of course, the present work also
+constitutes a planned form of active perception itself.
+3. The Problem
+To begin, we introduce the problem formalization, starting
+with the most basic elements of the model.
+3.1. Events and observations
+The essential objects of interest are events, that is, atomic
+occurrences situated at specific times and places. We treat
+each event as a letter drawn from a finite alphabet E, a set
+which contains all possible events. Any finite sequence of
+events, in particular a story ξ the robot wants to record from
+the events that occur in the system, is a word in E∗
+. (The set
+of finite sequences is written here using the Kleene star.)
+We model the occurrence of events using a structure
+defined as follows.
+Definition 1. [event model] An event modelM¼ðS,P,s0,E,gÞ
+is a tuple in which
+· S, a nonempty finite set, is the state space of the model;
+· P :S×S → [0, 1] is the transition probability function
+of the model, such that for each state s 2 S, Ps02S
+P(s, s0
+) = 1;
+· s0 2 S is the initial state;
+· E is the set of all possible events;
+· g:S×E → [0, 1] is an event “going-on” function
+defined so that for state s and event e, value g(s, e) is
+the probability that event e happens at state s. We
+assume that for each e 2 E, g(s0, e) = 0.
+An execution of the model starts from the initial state s0
+and then, at each time step k, the system makes a transition
+from state sk to state sk+1, the latter being chosen randomly
+based on P from those states for which P(sk, ) > 0. This
+execution specifies a path s0s1/ . For every time step k,
+when the system enters state sk, some (possibly empty) set
+of events occurs simultaneously, each event e 2 E occurring
+with probability g(sk, e), independently from other events.
+We are interested in scenarios in which a robot is tasked with
+recording certain sequences of events. We model the state of the
+event model as only partially observable to the robot. That is, the
+current state sk of the event model is hidden from the robot, but
+the system instead emits an output observable to the robot at
+each time step. The next definition formalizes the idea.
+Definition 2. [observation model] For a given event model
+M =(S, P, s0, E, g), an observation model B¼ðY,hÞ is a
+pair in which
+· Y is a nonempty set of observations or outputs;
+· h:S×Y → [0, 1] is the emission probability function of
+the model, such that for each state s2S,Py2Yh(s, y) = 1.
+At each time step, when the system enters a state sk, it emits
+an output yk, drawn according to h(sk, ). The emitted output
+Figure 1. (a) An event modelMwith its observation model B. (b)
+A DFA D, specifying event sequences that contain at least one
+event. (c) The Goal POMDP PðM,B;DÞ, constructed by Definition
+6. (Self-loop transitions of the goal states have been omitted to try
+reduce visual clutter.)
+414 The International Journal of Robotics Research 42(6)
+yk is observable to the robot. An event model and observation
+model can be depicted together as a directed graph (e.g., see
+Figure 1(a)), where we show each state’s events as an attached
+set (in braces in the figure) and display observations from Y
+along with their emission probabilities (in brackets). We
+consider, as important special cases, two particular types of
+observation models.
+Definition 3. Given an event model M¼ðS,P,s0,E,gÞ
+with observation model B¼ðY,hÞ, we say that B makes
+M fully observable if (1) Y = S, and (2) h(s, y) = 1 if and
+only if s = y.
+We write BobsðMÞ to denote the unique observation
+model that makes Mfully observable. At the other extreme,
+another special event model is one in which the emitted
+outputs do not help at all to reduce uncertainty.
+Definition 4. Given an event model M¼ðS,P,s0,E,gÞ with
+observation model B¼ðY,hÞ, then B causes the event model
+to be fully hidden if the observation space Y is a singleton set.
+Since the particular single observation comprising Y is
+unimportant, by BhidðMÞ we denote some observation
+model making M fully hidden.
+3.2. Story specifications, belief states,
+and policies
+As the system evolves along a path s0s1s2/ , the robot
+attempts to record some of the events that actually occur in
+the world to form a story ξ 2 E∗. We specify the desired
+story using a deterministic finite automaton (DFA)
+D¼ðQ,E,δ,q0,FÞ, where Q is its state space, E is its alphabet, δ :Q×E → Q is its transition function, q0 its initial
+state, and F 4 Q is the set of all final (accepting) states of the
+automaton. In other words, we want the robot to make a
+story ξ in the language of D, denoted LðDÞ, which is the set
+of all strings in E∗ that when are tracked from q0, the
+automaton reaches an accepting state.
+The semantics of event capture are as follows. At each step
+k ≥ 0, the robot chooses one event e from E to attempt to record
+in the next step, k + 1. If any of the actual events that do happen
+at step k + 1 (an event e can happen at sk+1 only if g(sk+1, e) > 0)
+match the robot’s prediction, then the robot successfully
+records this event; otherwise, it records nothing. The robot is
+aware of the success or failure of each of its attempts. The
+robot stops making guesses and observations once it has
+recorded a desired story—a story in LðDÞ.
+To estimate the current state, the robot maintains, at
+each time step k, a belief state b
+P
+k : S → [0, 1], in which
+s2Sbk(s) = 1. For each s 2 S, bk(s) represents the probability
+that the event model is in state s at time step k, according to the
+information available to the robot, including both the observations emitted directly by the event model, and the sequence
+of successes or failures in recording events. It also maintains,
+for each time k, the sequence ξk of events it has recorded until
+time step k, and the (unique) DFA state qk obtained by ξk.
+The robot’s predictions are governed by a policy π :
+Δ(S) × Q → E that depends on the belief state and the
+state of the DFA. At time step k + 1, the robot may
+append a recorded event to ξk via the following formula
+ξ kþ1 ¼
+(
+ξ kπðbk ,qk Þ πðbk ,qk Þ happened at skþ1
+ξ k πðbk ,qk Þ did not happen at skþ1:
+(1)
+The initial condition is that ξ0 = ε, in which ε is the empty
+string. The robot changes the value of variable qk only when
+the guessed event actually happened
+qkþ1 ¼
+(
+δðqk ,πðbk ,qk ÞÞ πðbk ,qk Þ happened at skþ1
+qk πðbk ,qk Þ did not happen at skþ1
+(2)
+The robot stops when qk 2 F.
+3.3. Optimal recording problems
+The robot’s goal is to record a story (or video) as quickly as
+possible. We consider this problem in three different settings:
+a general setting without any restriction on the observation
+model, a setting in which the observation model makes the
+event model fully observable, and a final one in which the
+event model becomes fully hidden.
+Definition 5. [correct policy] For a given event set E, event
+modelM¼ðS,P,s0,E,gÞ with observation model B¼ðY,hÞ,
+DFA D¼ðQ,E,δ,q0,FÞ, and policy π : Δ(S) × Q → E, we say
+π is a correct policy if it ensures, with probability 1, that a
+story within LðDÞ will eventually be captured.
+First, the general setting.
+Problem: Recording Time Minimization (RTM):
+Input: An event set E, an event model M¼ðS,P,s0,E,gÞ
+with observation model B¼ðY,hÞ, and a DFA
+D¼ðQ,E,δ,q0,FÞ.
+Output: A correct policy that minimizes the expected
+number of steps k until ξk 2 LðDÞ; or “NO SOLUTION” if
+no correct policy exists.
+Note that k is not necessarily the length of the resulting
+story ξk, but rather is the number of steps the system runs to
+capture that story. In fact, since the robot captures at most
+one event in each time step, |ξk| ≤ k.
+The second setting constrains the system to be fully
+observable.
+Problem: RTM with Fully Observable Model (RTM/FOM):
+Input: An event set E, an event model M¼ðS,P,s0,E,gÞ,
+and a DFA D¼ðQ,E,δ,q0,FÞ. Output: A correct policy
+that, under observation model BobsðMÞ, minimizes the
+expected number of steps k until ξk 2 LðDÞ; or “NO
+SOLUTION” if no correct policy exists.
+Rahmani et al. 415
+In this setting, because states are fully observable to the
+robot, we might have defined the policy as a function over S ×
+Q rather than over Δ(S) × Q. Nonetheless, our current definition does not pose any problem. Any reachable belief state
+in this setting considers only a single outcome (i.e., given any
+k, bk(s) = 1 for exactly one s 2 S) and thus, we are interested in
+the optimal policy only for those reachable beliefs.
+The third setting assumes a fully hidden event model state.
+Problem: RTM with Fully Hidden Model (RTM/FHM):
+Input: An event set E, an event model M¼ðS,P,s0,E,gÞ,
+and a DFA D¼ðQ,E,δ,q0,FÞ. Output: A correct policy
+that, under observation model BhidðMÞ, minimizes the
+expected number of steps k until ξk 2 LðDÞ; or “NO
+SOLUTION” if no correct policy exists.
+4. Algorithm Description
+Next, we give an algorithm for RTM, which also solves RTM/
+FOM and RTM/FHM, essentially special cases of RTM.
+4.1. The Goal POMDP
+The first step of the algorithm constructs a specific partially
+observable Markov decision process (POMDP), which we
+term the Goal POMDP, as follows:
+Definition 6. [Goal POMDP] For an event model M ¼
+ðS,P,s0,E,gÞ with observation model B¼ðY,hÞ, and a DFA
+D¼ðQ,E,δ,q0,FÞ, the associated Goal POMDP is a tuple
+PðM,B;DÞ =(X, A, b0, T, XG, Z, O, c), in which
+1. X = S × Q is the state space;
+2. A = E is the action space;
+3. b0 2 Δ(X) is the initial belief state, in which b0(x) = 1
+if and only if x = (s0, q0);
+4. T :X×A×X → [0, 1] is the transition probability
+function such that, assuming A to be set B’s indicator function, for each e 2 E and (s, q), (s0
+, q0
+) 2 X
+T
+
+ðs,qÞ,e,
+
+s
+0
+,q0
+
+¼
+P
+
+s,s
+0
+
+ g
+
+s
+0
+,e
+ if qÏF,q0 ¼ δðq,eÞ,
+andq0
+≠q ð4:aÞ
+P
+
+s,s
+0
+
+ g
+
+s
+0
+,e
+
+ 1
+
+q0
+
+ðδðq,eÞÞ þ if qÏF,
+P
+
+s,s
+0
+
+
+
+1  g
+
+s
+0
+,e
+ andq0 ¼ q ð4:bÞ
+1 if qÏF,q0 ¼ q,
+ands ¼ s
+0 ð4:dÞ
+0 otherwise
+8
+>>>>>>>>>>>>>>>><
+>>>>>>>>>>>>>>>>:
+5. XG = S × F is the set of goal states;
+6. Z ¼ ðfTrue,Falseg × YÞ[f’g, in which ’ is used
+for the observation that the robot has completed
+recording a desired story, is the set of observations;
+7. O :A×X×Z → [0, 1] is the observation probability
+function such that for each e 2 E, s 2 S, q 2 Q, and
+y 2 Y:
+(a) O (e, (s, q), (True, y)) = h(s, y)  g(s, e) if qÏF,
+(b) O (e, (s, q), (False, y)) = h(s, y)  (1  g(s, e)) if
+qÏF,
+(c) O (e, (s, q), ’) = 1 if q 2 F;
+8. c : X × A →R≥0 is the cost function such that for each
+x 2 X and a 2 A, c(x, a) = 1 if xÏXG, and c(x, a) = 0
+otherwise.
+Figure 1 illustrates this construction for an elementary
+example. Each state of this POMDP is a pair (s, q) indicating
+the situation where, under an execution of the system, the
+current state of the event model is s and the current state of the
+DFA is q. For each x, x0
+2 X and a 2 A, T(x, a, x0
+) gives the
+probability of transitioning from state x to state x0 under
+performance of action a. In the context of our event model,
+each transition corresponds to a situation where the robot
+chooses an event e to observe and the event model makes a
+transition from a state s to s0
+. If e happens at s0
+and δ(q, e) ≠ q,
+then the robot records e and then changes the current state of
+the DFA to δ(q, e); otherwise, it does nothing and the DFA
+remains in state q. These correspond to cases (4.a) and (4.b)
+above, respectively. Note that the term P(s, s0
+)  g(s0
+, e)  q0
+δ(q,
+e) in case (4.b) corresponds to the situation where δ(q, e) = q
+and the predicted event e happens at s0
+, while term P(s, s0
+)
+(1  g(s0
+, e)) corresponds to the situation where the predicted
+event e, regardless of whether δ(q, e) = q or not, does not
+happen at s
+0
+. Case (4.c) makes all the goal states of the
+POMDP absorbing states. The goal states of the POMDP are
+those in which the robot has recorded a story, that is, the
+current state of the specification DFA is accepting.
+For each a 2 A, x 2 X, and z 2 Z, the function O(a, x, z)
+is an observation model, its value being the probability of
+observing z given that the system has entered state x via
+action a. The POMDP has a special observation, ’, which
+is observed only when a goal state is reached. Any other
+observation is a pair (r, y) where r 2 {True, False} discloses whether the robot’s prediction was correct —the
+event did happen— or not, and y indicates the sensed
+observation the robot made (as per B). Rules 7a–7b ensure
+that the first element of the observation pair informs the
+robot whether its prediction was correct. To see this, if the
+robot has predicted e to occur, the event model has entered
+state s such that e has happened at s, and the robot has
+made an observation y, then the probability of observing
+(True, y) by entering to state (s, q) via action e is equal h(s,
+y)g(s, e) (case 7a). If event e has not happened at s, then
+the robot’s prediction has to be wrong, and thus, the
+probability of observing (False, y) in state (s, q) when it is
+reached via action e is h(s, y)(1  g(s, e)) (expressed in
+case 7b). Case 7c indicates the observation that the robot
+has completed recording of a story in LðDÞ.
+After making the product automaton in Definition 6, our
+algorithm first checks whether or not there is a policy that
+assures a desired story will be captured. Then, if there exists
+416 The International Journal of Robotics Research 42(6)
+such a policy, it computes a policy minimizing the expected
+number of steps to record such a policy. We first focus on
+computing such a policy, assuming such a policy exists, in
+Section 4.2 (and Section 4.3 as well for special inputs of the
+problem), and then we discuss how our algorithm can check
+if such a policy exists or not in Section 4.4.
+4.2. Solving the Goal POMDP
+A POMDP is commonly treated as a fully observable MDP
+called a belief MDP whose (continuous) state space consists
+of the belief space of the POMDP. For details, see Astrom
+(1965), Bonet and Geffner (2009), Ross et al. (2008), Shani
+et al. (2013), and Sondik (1978). Accordingly, in the belief
+MDP from Goal POMDP P =(X, A, b0, T, XG, Z, O, c), for
+each belief state b 2 Δ(X), action a 2 A, and observation z 2
+Z, we denote the updated belief state of b after action a and
+observation z by ba
+z. It is computed as follows
+ba
+z ðxÞ ¼ Prðxjz,a,bÞ ¼ Oða,x,zÞ
+P
+x02XT
+
+x0
+,a,x
+
+b
+
+x0
+
+Prðzja,bÞ (3)
+in which
+Prðzja,bÞ ¼ X
+x2X
+Oða,x,zÞ
+X
+x0
+2X
+T
+
+x0
+,a,x
+
+b
+
+x0
+ (4)
+For this belief MDP, the cost of each action a at belief
+state b is c0
+(b, a) = Px2Xb(x)c(x, a). In our case, c0
+(b, a)=1
+if b is a not a goal belief state, and otherwise c0
+(b, a) = 0. An
+optimal policy π0∗ : X → A for this MDP is formulated as a
+solution to the Bellman recurrences
+V0∗
+ðbÞ ¼ min
+a2A
+
+c0
+ðb,aÞ þX
+z2Z
+Prðzja,bÞV0∗
+
+ba
+z
+
+!
+(5)
+π0∗
+ðbÞ ¼ argmin a2A
+
+c0
+ðb,aÞ þX
+z2Z
+Prðzja,bÞV0∗
+
+ba
+z
+
+!
+(6)
+Any standard technique may be used to solve these
+recurrences. For surveys on methods, see Bonet and Geffner
+(2009), Ross et al. (2008), and Shani et al. (2013). Note that,
+in general, solutions to POMDPs are approximate solutions
+because it is intractable to provide exact solutions for
+POMDPs. An optimal policy computed via these recurrences prescribes, for any belief state reachable from b0, an
+optimal action to execute. Hence, the robot executes, at each
+step, the action given by the optimal policy, and then updates its belief state via (3). One can show, via induction,
+that at each step i, there is a unique qi 2 Q such that belief
+state bi has outcomes only for (but probably not all) xj =
+(sj, qi) 2 X, j = 1, 2, /|S|. As such, function β : Δ(X) →
+Δ(S) × Q maps each bi of those belief states to a tuple (d,
+qi), where for each s 2 S, d(s) = b((s, qi)). Subsequently,
+the optimal policy π0∗ computed for PðM,B;DÞ can be
+mapped to an optimal solution π∗ : Δ(S) × Q → A to RTM,
+by interpreting π∗
+(β(bi)) = π0∗
+(bi), for each reachable
+belief state bi 2 Δ(X).
+4.3. Solving RTM/FOM via a Goal MDP
+The previous construction can be used to solve RTM/FOM
+instances too. But, since the event model fed into a RTM/FOM
+is fully observable, it seems rather more sensible, especially
+in terms of solution tractability, to construct a Goal MDP. To
+do so, for the event model and the DFA in Definition 6, the
+Goal MDP M =(X, A, b0, T, XG, c) embedded in the
+POMDP P in that definition is extracted and then an optimal
+policy for M is solved. An optimal policy π00∗ for the MDP
+is a function over X = S × Q, which is computed via the
+Bellman equations
+V00∗
+ðxÞ ¼ min
+a2A
+
+cðx,aÞ þX
+x02X
+V00∗
+
+x0
+
+T
+
+x,a,x0
+
+!
+(7)
+π00∗
+ðxÞ ¼ argmin a2A
+
+cðx,aÞ þX
+x0
+2X
+V00∗
+
+x0
+
+T
+
+x,a,x0
+
+!
+(8)
+These equations may be solved by a variety of methods.
+For a survey, see LaValle (2006, Chp. 10). In the evaluation
+reported below, we use standard value iteration. After
+computing π00∗
+, for each x = (s, q) 2 X, we make a belief
+state b 2 Δ(S) such that b(s0
+) = 1 if and only if s0
+= s, and then
+set π∗(b, q) = π00∗
+((s, q)), where π∗ is an optimal solution to
+RTM/FOM. Observe that π∗ for RTM/FOM is only computed
+for finitely many pairs (b, q), those in which b is a single
+outcome.
+This section provided an algorithm to solve RTM and the
+two variants of it, RTM/FOM and RTM/FHM, assuming that
+there exists a policy that can guarantee that a desired story
+will be captured. However, for some input DFAs and event
+models to the problem, no such policy exists. Therefore,
+before using the algorithm in this section, one might want to
+check whether such a policy exists or not. The next section
+discusses how to answer that decision problem.
+4.4. Deciding if a Policy Exists
+In this section, we discuss how to check if there exists a
+policy that guarantees, for any execution of the event model,
+a story within the language of the DFA will be captured.
+We first consider the RTM/FOM problem, recalling that we
+can compute a policy for the Goal MDP underlying the Goal
+POMDP in Definition 6 rather than the Goal POMDP itself.
+To provide an answer to the decision question, we can check
+whether or not there exists a policy for the MDP that
+guarantees that the goal states are reachable with probability
+1. To find one, we check if there exists any policy that avoids
+the MDP’s dead-end states, namely those states from which
+no goal state is reachable. If no policy can avoid these deadends, then no policy will ensure that a desired story will be
+captured.
+To illustrate, consider Figure 2(a), which shows a
+simple DFA specifying all stories that start with e1.
+Figure 2(b) shows a simple event model in which e1
+Rahmani et al. 417
+happens at s1 and e2 occurs at s2. Figure 2(c) shows
+the Goal MDP obtained from the product of this DFA
+and event model. In this example, no policy guarantees
+that a desired story will be captured with probability
+1 because no policy assures that the goal states of the
+MDP are almost surely reachable. Should a policy choose
+event e1 to capture in the first time step, then the probability that a desired story will be captured by this policy
+is 0.6, which happens when the event model enters state
+s1 in the next time step. Similarly, if a policy chooses
+event e2 in the same configuration, then the probability
+that a desired story is captured is again 0.6 if the policy
+chooses event e1 when the DFA is in state q0 and the event
+model is in state s1. Observe that the Goal MDP constructed for this DFA and event model, which is shown in
+Figure 2(c), has dead-end states (q0, s2) and (q2, s2) that
+are unavoidable.
+Where there exists no policy that can guarantee a story
+will be captured, several strategies can be used to compute a
+reasonable policy that, nevertheless, may still be useful in
+practice. Generally, these maintain some balance between
+maximizing the probability of reaching a goal state and
+minimizing the expected number of steps to reach these goal
+states. See the discussion of Kolobov et al. (2012) for
+several such options.
+An alternative strategy, and one specific to our context,
+would be to alter the specification by expanding the language described by the DFA. One seeks to modify the DFA
+to obtain a language which will ensure the existence of some
+policy guaranteeing a story be captured almost surely. One
+desires, naturally, that the altered DFA be “close” to the
+original in terms of some metric for the distance between
+two DFAs. In Section 8, we examine one such metric, the
+Levenshtein distance, and discuss how, given a DFA, to
+construct another that is within a desired Levenshtein
+distance.
+Note, however, that the existence of dead-ends does not
+mean that no policy ensures that the robot is able to capture a
+desired story under any execution of the event model. If all
+the dead-ends are avoidable and some goal states are almost
+surely reachable, then there will exist such a policy. For
+illustration consider the example in Figure 3. In this example, the MDP, part (c) of the figure, has only a single
+dead-end state (q2, s1). But this dead-end is avoidable because the policy can avoid taking action b in state (q0, s0).
+Doing so, the probability of reaching this dead-end becomes
+zero, ensuring that all executions under this policy always
+end in goals. For the standard value iteration method to
+work, we first prepossess the MDP to identify dead-end
+states. The value of each dead-end is infinite as no goal state
+from that dead-end is reachable. For more discussions
+about MDPs with dead-ends, including algorithms to detect
+dead-ends and strategies to deal with them, we refer the
+reader to Bonet and Geffner (2003), Keyder and Geffner
+(2008), Kolobov and Weld (2010), Kolobov et al. (2012),
+and Little and Thiebaux (2007 ´ ). In our breadth-first-like
+implementation, we search backward from the goal states,
+finding all states that are reachable from those states,
+avoiding dead-ends found so far.
+For RTM and RTM/FOM, to determine whether there exists
+any policy guaranteeing that a desired story will be captured, we need to ascertain, for the Goal POMDP in Definition 6, whether there exists a policy whose execution
+ends in the goal states with probability 1 or not. One must
+check whether any belief state in the reachable part of the
+(infinite) belief MDP has an unavoidable dead-end belief
+state. In this case, we treat a belief state to be a dead-end if it
+arises from a dead-end state. This belief MDP has an infinite
+state space and we cannot deal with it directly, but instead
+one forms the finite support-belief MDP (Junges et al.,
+2021), whose states are the support for belief states. Note
+that, in general, the size of this support-belief MDP is
+exponential in the size of the MDP underlying the POMDP.
+5. Representation-invariance of expected time
+The event selected by the policy π∗ at each step depends, in
+part, on the current state of the specification DFA. Because a
+single regular language may be represented with a variety of
+Figure 2. (a) A DFA specifying all stories that contain at least an
+event over the event set {e1, e2}. (b) A sample event model, in
+which event e1 happens at s1 and event e2 happens at s2. (c) The
+Goal MDP obtained from the product of the DFA and the event
+model in parts (a) and (b).
+Figure 3. (a) A DFA specifying all stories that contain at least an
+event over the event set {e1, e2}. (b) A sample event model, in
+which event e1 happens at s1 and s2 while event e2 happens at s1.
+(c) The Goal MDP obtained from the product of the DFA and the
+event model in parts (a) and (b).
+418 The International Journal of Robotics Research 42(6)
+distinct DFAs with different sets of states —and thus, their
+optimal policies cannot be identical—one might wonder
+whether the expected execution time achieved by their
+computed policies depends on the specific DFA, rather than
+on the language. The question is particularly relevant in
+light of the language mutators we examine in Section 8.
+Here, we show that the expected number of steps required to
+capture a story within a given event model does indeed
+depend only on the language specified by the DFA, and not
+on the particular representation of that language.
+For a DFA D¼ðQ,E,δ,q0,FÞ, we define a function f : Q
+→ {0, 1} such that for each q 2 Q, f(q) = 1 if q 2 F, and
+otherwise, f(q) = 0. Now consider the well-known notion of
+bisimulation, defined as follows:
+Definition 7. [bisimulation] Given DFAs D¼ðQ,E,δ,q0,FÞ
+and D0 ¼ ðQ0
+,E,δ0
+,q0
+0,F0
+Þ, a relation R 4 Q×Q0 is a bisimulation relation for ðD,D0
+Þ if for any (q, q0
+) 2 R: (1)
+f(q) = f 0
+(q0
+); (2) for any e 2 E, (δ(q, e), δ0
+(q0
+, e)) 2 R.
+Bisimulation implies language equivalence and vice versa.
+Proposition 1. (Rot et al., 2016) For two DFAs
+D¼ðQ,E,δ,q0,FÞ, D0 ¼ ðQ0
+,E,δ0
+,q0
+0,F0
+Þ, we have LðDÞ ¼
+LðD0
+Þif ðq0,q0
+0Þ 2R for a bisimulation relation R for ðD,D0
+Þ.
+Bisimulation is preserved for any reachable pairs. The
+state to which a DFA with transition function δ reaches by
+tracking an event sequence r from state q is denoted δ∗
+(q, s).
+Proposition 2. If (q, q0
+) are related by a bisimulation
+relation R for ðD,D0
+Þ, then for any r 2 E∗, (δ∗(q, r), δ0
+∗(q0
+,
+r)) 2 R.
+We now define a notion of equivalence for a pair of belief
+states.
+Definition 8. [equivalence of belief states] Given an event
+model M¼ðS,P,s0,E,gÞ, an observation model B¼ðY,hÞ
+for M, DFAs D¼ðQ,E,δ,q0,FÞ and D0 ¼ ðQ0
+,E,δ0
+,q0
+0,F0
+Þ
+such that LðDÞ ¼ LðD0
+Þ, let PðM,B;DÞ ¼ ðX,A,b0,T,XG,Z,
+O,cÞ andP0
+ðM,B;D0
+Þ ¼ ðX0
+,A,b0
+0,T0
+,X0
+G,Z,O0
+,c0
+Þ. For two reachable belief states b 2 Δ(X) and b0 2 Δ(X0
+), with β(b) = (d, q)
+and β0
+(b0
+) = (d0
+, q0
+), we say that b0
+is equivalent to b, denoted b ≡
+b0
+, if (1) (q, q0
+) are related by a bisimulation relation for ðD,D0
+Þ
+and that (2) d=d0
+, that is, for each s 2 S, d(s) = d0
+(s).
+Equivalence is preserved for updated belief states.
+Lemma 1. Given the structures in Definition 8, let b 2 Δ(X)
+and b0
+2 Δ(X0
+) be two reachable belief states such that b ≡ b0
+.
+For any action a 2 A and observation z 2 Z, it holds that
+ba
+z ≡ b0a
+z and that Pr(z|a, b) = Pr(z|a, b0
+).
+Proof. Let b2 ¼ ba
+z and b0
+2 ¼ b0a
+z , and assume β(b2) = (d2, q2)
+and β0
+ðb0
+2Þ¼ðd0
+2,q0
+2Þ. The case where b and b0
+are both goal
+belief states, that is, where f(q) = f0
+(q0
+) = 1 is immediately
+implied from the fact that the goal states of the POMDPs
+from in Definition 6 are absorbing, i.g., b2 = b and b0
+2 ¼ b0
+.
+Therefore, we consider the case where f(q) = f0
+(q0
+) = 0. Let
+ba and b0
+a be respectively the belief states resulted from doing
+action a (but before any observation) at belief states b and b0
+.
+These belief states are computed by the following formulas
+baðtÞ ¼ X
+x2X
+Tðx,a,tÞbðxÞ (9)
+and
+b0
+a
+
+t
+0
+
+¼ X
+x0
+2X0
+T0
+
+x0
+,a,t
+0
+
+b0
+
+x0
+ (10)
+Given that β(b) = (d, q), belief state b can have outcomes
+only for those states that are among x1 = (s1, q), x2 = (s2, q),
+…, xn = (sn, q), and similarly, b0 can have outcomes only for
+states that are among x0
+1 ¼ ðs1,q0
+Þ,x0
+2 ¼ ðs2,q0
+Þ,…,x0
+n ¼
+ðsn,q0
+Þ, where n = |S|. Also, because it is assumed that d = d0
+,
+for each integer 1 ≤ j ≤ n, b((sj, q)) = b0((sj, q0)), or in other
+words, bðxjÞ ¼ b0
+ðx0
+j
+Þ. Now, with (9) and given the construction of the transition probability function T in Definition 6, the only states for which ba can have outcomes are
+among t1 = (s1, q), t2 = (s2, q)/, tn = (sn, q) and tn+1 = (s1,
+δ(q, a)), tn+2 = (s2, δ(q, a)), …, t2n = (sn, δ(q, a)). Similarly,
+the only states for which b0
+a can have outcomes are
+among t
+0
+1 ¼ ðs1,q0
+Þ,t
+0
+2 ¼ ðs2,q0
+Þ/,t
+0
+n ¼ ðsn,q0
+Þ and t
+0
+nþ1 ¼
+ðs1,δ0
+ðq0
+,aÞÞ, t
+0
+nþ2 ¼ ðs2,δ0
+ðq0
+,aÞÞ,…,t
+0
+2n ¼ ðsn,δ0
+ðq0
+,aÞÞ.
+Now, we claim that for each integer 1 ≤ k ≤ 2n,
+baðtk Þ ¼ b0
+aðt
+0
+k Þ. To prove this, consider that by assumption,
+q and q0 are related by a bisimulation relation for ðD,D0
+Þ,
+and this, by Definition 7, means that q 2 F iff q0
+2 F0
+. As a
+result, by the construction of the transition probability
+function in Definition 6, for each pair of integers 1 ≤ i, j ≤ n,
+T ((sj, q), a, (si, q)) = T0
+((sj, q0
+), a, (si, q0
+)) and T((sj, q), a, (si,
+δ(q, a))) = T0
+((sj, q0
+), a, (si, δ0
+(q0
+, a))), which together mean
+that for integers 1 ≤ j ≤ n and 1 ≤ k ≤ 2n,
+Tðxj,a,tk Þ ¼ T0
+ðx0
+j
+,a,t
+0
+k Þ. We use this, the assumption that
+bðxjÞ ¼ b0
+ðx0
+j
+Þ for all 1 ≤ j ≤ n, (9) and (10) to prove our
+claim as follows
+baðtk Þ ¼ X
+1≤j≤n
+T
+
+xj,a,tk
+
+b
+
+xj
+
+¼ X
+1≤j≤n
+T0
+
+x0
+j
+,a,t
+0
+k
+
+b0
+
+x0
+j
+
+¼ b0
+a
+
+t
+0
+k
+ (11)
+To prove that Pr(z|a, b) = Pr(z|a, b0
+), consider the following formulas
+Prðzja,bÞ ¼ X
+t2X
+Oða,t,zÞbaðtÞ (12)
+and
+Pr
+z
+
+a,b0
+
+¼ X
+t0
+2X0
+O0
+
+a,t
+0
+,z
+
+b0
+a
+
+t
+0
+ (13)
+By the construction of the observation function in
+Definition 6 and that q 2 F5q0
+2 F0
+, it follows that for each
+integer 1 ≤ j ≤ n, O(a, (sj, q), z) = O0
+(a, (sj, q0
+), z). Similarly,
+for each integer 1 ≤ j ≤ n, Oða,ðsj,δðq,aÞÞ,zÞ ¼
+O0
+ða,ðs0
+j
+,δ0
+ðq0
+,aÞ,zÞ. Together, these two mean that for
+each integer 1 ≤ k ≤ 2n, Oða,tk ,zÞ ¼ O0
+ða,t
+0
+k ,zÞ. This,
+Rahmani et al. 419
+combined with (11), proves a part of the lemma as
+follows
+Prðzja,bÞ ¼ X
+t2X
+Oða,t,zÞbaðtÞ
+¼ X
+1≤k≤2n
+Oða,tk ,zÞbaðtk Þ
+¼ X
+1≤k≤2n
+O0
+
+a,t
+0
+k ,z
+
+b0
+a
+
+t
+0
+k
+
+¼ X
+t0
+2X0
+O0
+
+a,t
+0
+,z
+
+b0
+a
+
+t
+0
+
+¼ Pr
+z
+
+a,b0
+
+(14)
+To prove that b2 ≡ b0
+2, consider that for each x 2 X and x
+2 X0
+, b2(x) and b0
+2ðx0
+Þ are computed as follows
+b2ðxÞ ¼ Oða,x,zÞbaðxÞ
+Prðzja,bÞ (15)
+and
+b0
+2
+
+x0
+
+¼ O0
+
+a,x0
+,z
+
+b0
+a
+
+x0
+
+Pr
+z
+
+a,b0
+ (16)
+These two formulas combined with (11) and (14), and the fact
+that Oða,tk ,zÞ ¼ O0
+ða,t
+0
+k ,zÞ for all 1 ≤ k ≤ 2n, imply that
+b2ðtk Þ ¼ b0
+2ðt
+0
+k Þ for all 1 ≤ k ≤ 2n. Therefore, d2 ¼ d0
+2. We now
+only need to prove that q2 and q0
+2 are related by a bisimulation
+relation for ðD,D0
+Þ. Observe that if the robot’s prediction of
+occurring event a was wrong, then q2 = q and q0
+2 ¼ q0
+, and
+otherwise, q2 = δ(q, a) and q0
+2 ¼ δ0
+ðq0
+,aÞ. In the former case, by
+definition, q2 and q0
+2 are related by a bisimulation relation R for
+ðD,DÞ0
+, and in the later case, by Proposition 2, q2 and q0
+2 are
+related by the same bisimulation relation q and q0
+were related by.
+Thus, we conclude ba
+z ≡ b0
+a
+z. □
+Note that for a Goal POMDP P with initial belief state
+b0, V∗(b0) is the expected cost of reaching a goal belief state
+via an optimal policy for P. We now present our result.
+Theorem 1. For the structures in Definition 8, it holds that
+V∗ðb0Þ ¼ V0∗ðb0
+0Þ.
+Proof. For a belief MDP M, let TreeðMÞ to be its treeunraveling—the tree whose paths from the root to the leaf
+nodes are all possible paths in M that start from the initial
+belief state.
+A policy π for M chooses a fixed set of paths over
+TreeðMÞ, and the expected cost of reaching a goal belief
+state under π is equal to P
+p2GoalPathsðπ,TreeðMÞÞCðpÞWðpÞ,
+where GoalPathsðπ,TreeðMÞÞ is the set of all paths that are
+chosen by π and reach a goal belief state from the root of
+TreeðMÞ, C(p) is the sum of costs of all transitions in path
+p, and W(p) is the product of the probability values of all
+transitions in p.
+The idea is that if we can overlap the tree-unravellings of
+the belief MDPs PðM,B;DÞ and P0
+ðM,B;D0
+Þ in such a way that
+each pair of overlapped belief states are equivalent in the
+sense of Definition 8 and that each pair of overlapped
+transitions have the same probability and the same cost, then
+for each pair of overlapped belief states b 2 Δ(X) and b0
+2
+Δ(X0
+), if we use π∗
+(b) as the decision at the belief state b0
+then, because those fixed paths are overlapped, we know
+V∗ðb0Þ ≥ V0∗ðb0
+0Þ. And, in a similar fashion, V∗ðb0Þ ≤ V0∗ðb0
+0Þ,
+and thus, V∗ðb0Þ ¼ V0∗ðb0
+0Þ.
+The following construction makes those trees and shows
+how they can be overlapped.
+For an integer n ≥ 1, we can make two trees Tn and T0
+n as
+follows:
+(1) Set b0 as the root of Tn and set b0
+0 as the root of T0
+n;
+make a relation R and set R←fðb0,b0
+0Þg.
+(2) While |Tn| < n, extract a pair (b, b0) from R that has
+not been checked yet and in which b and b0 are not
+goal belief states; for each action a and observation
+z, compute ba
+z and b0
+a
+z, add node ba
+z and edge ðb,ba
+zÞ
+to T, and add node b0
+a
+z and edge ðb0
+,b0
+a
+zÞ to T0; label
+both edges (a, z). Also assign to edge ðb,ba
+zÞ, Pr(z|a,
+b) as its probability value, and set the probability
+value of ðb0
+,b0
+z
+aÞ, Pr(z|a, b0); the cost of each edge is
+set 1. Finally, add ðba
+z,b0
+z
+aÞto R. Given that
+LðDÞ ¼ LðD0
+Þ, by Proposition 1, states q0 and q0
+0
+are related by a bisimulation relation for ðD,D0
+Þ,
+which (by Definition 8 and the construction in
+Definition 6) implies that b0 ≡ b0
+0. This combined
+with Lemma 1 implies that for each pair (b, b0) 2 R,
+b ≡ b0. We now match Tn and T0
+n so that each pair
+(b, b0) that are related by R overlap. By Lemma 1,
+each pair of overlapped edges have the same
+probability value and the same cost value. Since
+for any integer n ≥ 0 we can overlap trees Tn and T0
+n
+in the desired way, we can overlap the treeunravellings of the belief MDPs of PðM,B;DÞ and
+P0
+ðM,B;D0
+Þ in the desired way too; this completes the
+proof.
+The upshot of this analysis is that we need attend only to
+the story specification language (given indirectly via D), the
+specific presentation of that language does not impact the
+expected number of steps to capture an event sequence
+satisfying that specification.
+6 Faster Algorithms for Special Structures
+In this section, we consider several special cases of event
+models and DFAs for which new algorithms are feasible.
+Though less general than the approaches introduced in the
+prior sections, these new algorithms exploit the structure of
+the special cases to run significantly faster.
+6.1 The DFA is loop-omitted acyclic
+The first case is when the DFA adheres to the following
+requirement.
+420 The International Journal of Robotics Research 42(6)
+Definition 9. A DFA D¼ðQ,E,δ,q0,FÞ is called a loopomitted acyclic DFA if for every state q 2 Q and string η 2
+E∗ for which δ∗(q, η) = q, it holds for every prefix η0
+of η that
+δ∗(q, η0) = q.
+Intuitively, a DFA is a loop-omitted acyclic DFA if it
+does not have any cycle except self-loops on the states. We
+speculate that many DFAs of interest for this sort of problem
+will have this property. In fact, all the DFAs in this paper’s
+case studies are loop-omitted acyclic DFAs; likewise for the
+case studies in our other extensions to this work (Chaudhuri
+et al., 2021a,b).
+For this kind of DFA, regardless of the form of the event
+model, the graph underlying the Goal POMDP in Definition
+6 will be a layered directed acyclic graph where each layer
+is, in fact, a strongly connected component (SCC). Note that
+all states x = (q, s) within a single SCC share a single DFA
+state q and all those states represent a situation where either
+the event predicted by the robot does not happen in the next
+time step, making the DFA stay in the same state q, or the
+predicted event did happen but state q transitions back to
+itself with that predicted event.
+For an example, see the DFA in Figure 4(a) and the event
+model in Figure 4(b). The set of possible events consists of
+e1 and e2. Event e1 happens with probability 1 at state s1,
+while event e2 happens with probability 1 at state s2, and at
+each state of the event model, no more than one event
+happens. Figure 4(c) shows the state space and the transition
+function of the Goal POMDP constructed from the product
+of the DFA and the event model based on Definition 6. This
+product, which is decomposed into its set of SCCs in
+Figure 4(d), has five SCCs C0, C1, C2, C3, and C4. There is
+only a single topological ordering of these SCCs, namely
+(C0, C1, C3, C2, C4).
+Now, we consider solving the RTM/FOM problem where
+the input DFA is loop-omitted acyclic. Recall that to solve
+that problem we need to compute a policy that minimizes
+the expected number of steps to reach a goal state, and
+observe that, in this case, the Goal MDP underlying the
+Goal POMDP in Definition 6 is a layered DAG. Thus, to
+compute an optimal policy for such a Goal MDP, we can use
+the topological value iteration algorithm of Dai and
+Goldsmith (2007).
+Their algorithm considers each SCC as a metastate and
+then computes an optimal policy for those metastates based
+on a reverse ordering of a topological ordering of the
+metastates. The optimal action for states within each metastate is computed using value iteration. In Dai and
+Goldsmith’s algorithm, each metastate is solved only once
+because the graph connecting the metastates is acyclic. Note
+that when a metastate (SCC) is solved, only the values of
+states within that metastate are backed up, whereas in the
+classical value iteration, at each step, the values of all states
+are backed up until their values converge. To illustrate their
+algorithm, consider again the Goal MDP in Figure 4(c).
+Recall that there was only one topological ordering, (C0, C1,
+C3, C2, C4), between the SCCs of the MDP. Accordingly,
+their algorithm first computes an optimal action for the
+single state in C4, then for the states in C2, then for the states
+in C3, then for the states in C1, and finally for the only state
+of C0.
+For solving the RTM and the RTM/FHM problems with
+input DFAs which are loop-omitted acyclic, we need to
+solve a Goal POMDP that has a layered DAG structure, and
+for solving those Goal POMDPs, one can use the algorithm
+of Dibangoye et al. (2009), which computes a policy using a
+point-based method. Their algorithm constructs the layered
+acyclic graph for the belief points by utilizing the layered
+acyclic structure of the POMDP.
+6.2 The Goal MDP is a directed acyclic graph
+Another special case is where the graph underlying the Goal
+MDP is a DAG if all the self-loops are removed from it.
+We clarify this special case in the following definition.
+Definition 10. For a given Goal MDPM¼ðX,A,b0,T,XG,cÞ,
+let GðMÞ ¼ ðV,EÞ be the graph underlying M, in which
+V = X and E = {(x, t) 2 X2
+jT(x, t) > 0}, and let
+LoopðGðMÞÞ ¼ ðV,E0
+Þ be the graph obtained from
+GðMÞ by removing the self-loops from it, that is, E0
+= E \{(x,
+x)jx 2 X}. We say that M is a loop-omitted directed acyclic
+Figure 4. a) A loop-omitted acyclic DFA. b) A sample event
+model. c) The Goal MDP obtained from the product of the DFA
+and the event model in parts (a) and (b). d) It shows the strongly
+connected components of graph underlying the MDP in part c.
+Each blue circle is a strongly connected component. The selfloops and the edges between states of different SCCs have been
+omitted to reduce visual clutter.
+Rahmani et al. 421
+graph, or loop-omitted DAG for short, if LoopðGðMÞÞ is a
+directed acyclic graph.
+Note that this is stronger than the previous case, as it
+corresponds to the circumstance where each SCC is a
+single vertex. Nevertheless, it is possible for a Goal
+MDP to be a loop-omitted DAG, while its underlying
+graph has self-loops. Figure 5 provides one such example. This kind of MDPs arises, in particular, in applications where the DFA specifying all desired stories is
+a loop-omitted acyclic DFA and the graph underlying
+the event model is also a DAG if the self-loops are
+removed from that graph. A special case of that kind of
+event model is where the event model has only a single
+state, which might be created by collapsing all the states
+of an original event model in order to make an approximation of the original event model.
+In the rest of this section, we only consider RTM/FOM
+problems for this kind of MDP. Observe that because any
+Goal MDP that is a loop-omitted DAG is a layered DAG
+where each strongly connected component of the graph
+underlying the Goal MDP has only one state, we can use
+the algorithm of the previous section, the topological value
+iteration algorithm for MDPs, to compute an optimal
+policy for the MDP. This requires iteration to update the
+value of a state using the Bellman equation until the value
+of the state converges. Though this algorithm is faster than
+the original value iteration algorithm for MDPs, for
+solving large MDPs, it still may require a considerable
+amount of time for the state values to converge, and
+therefore, we propose a faster algorithm that does not
+require value iteration at all, and the Bellman equation for
+each state is solved by solving several simple, singlevariable equations.
+In this algorithm, we first choose a topological ordering
+of the non-goal states (state values of all the goal states are
+zero) of the MDP. Then, at each step, we take a state from
+the MDP based on the reverse of the topological ordering
+to compute an optimal action for that state and the value of
+that state. To do so, for each state x and action a 2 A, we
+introduce a variable tx,a to denote the expected number of
+steps from x to reach a goal state of the MDP if the policy
+assigns action a to state x. Also, for each state x, we introduce a variable tx to denote the expected number of
+steps to reach a goal state from x under an optimal policy.
+To compute the optimal action for each state x, if x is a goal
+state, then tx = 0, meaning that the expected number of
+steps to reach a goal state from x under an optimal policy is
+zero. If state x is not a goal state, then for each action a 2 A,
+we solve the following equation
+tx,a ¼ Tðx,a,xÞð1 þ tx,aÞ þ X
+x0
+2X
+x0 ≠ x
+T
+
+x,a,x0
+
+ð1 þ tx0Þ (17)
+Then, we compute tx simply as tx = mina2A{tx,a}. For
+each x 2 X\XG, we set π∗(x) = arg mina2A{tx,a}. By doing
+so, we compute an optimal policy π∗.
+We end this section by illustrating this algorithm via an
+example for the MDP in Figure 5. There is a single topological ordering of the non-goal states: x0 → x1 → x2. To
+compute an optimal policy, we pick this (the sole) choice of
+ordering. Next, we compute the optimal action for x2. For
+this purpose, for actions a and b, we need to solve the
+following equations
+tx2,a ¼ 0:2ð1 þ tx2,aÞ þ 0:8ð1 þ tx4Þ (18)
+and
+tx2,b ¼ 0:4ð1 þ tx2,aÞ þ 0:6ð1 þ tx4Þ (19)
+Based on these two equations, we have tx2,a ¼ 1:25 and
+tx2,b ¼ 1:67. So, tx2 ¼ 1:25, and thus, we set π∗
+(x2) = a.
+Then, we solve the following equations for x1.
+tx1,a ¼ 0:3ð1 þ tx1,aÞ þ 0:7ð1 þ tx3Þ ¼ 1 þ 0:3tx1,a (20)
+and
+tx1,b ¼ 0:1ð1 þ tx2Þ þ 0:9ð1 þ tx4Þ ¼ 1:125 (21)
+So, tx1 ¼ 1:125, and hence, we set π∗(x1) = b. To
+compute the optimal action for x0, we solve the following
+equations
+tx0,a ¼ 0:5ð1 þ tx2Þ þ 0:5ð1 þ tx1Þ (22)
+and
+tx0,b ¼ 0:4ð1 þ tx2Þ þ 0:6ð1 þ tx1Þ (23)
+As such, tx0 ¼ 2:175, and therefore, we let π∗
+(x0) = b.
+7. Greedy algorithm
+In this section, we consider a greedy algorithm for solving
+RTM and RTM/FHM, which we also specially adapt for RTM/
+FOM. This greedy algorithm will serve as a baseline for
+comparison for the case studies in Section 9.
+Figure 5. A sample of an MDP that is a directed acyclic graph
+when all the self-loops are removed.
+422 The International Journal of Robotics Research 42(6)
+The idea is, at each time step, simply to choose an event
+to capture that has the highest probability of occurring in the
+next time step. To do so, the robot first uses the event model
+M¼ðS,P,s0,E,gÞ and the DFA D¼ðQ,E,δ,q0,FÞ, to construct the Goal POMDP PðM,B;DÞ ¼ ðX,A,b0,T,XG,Z,O,cÞ
+based on the construction in Definition 6. Then, at each time
+step, it uses this POMDP to compute an event that has the
+highest probability to be chosen in the next time step. Importantly, in this greedy approach, the robot considers only a
+single step and does not compute a policy that minimizes the
+expected number of steps to reach a goal state for this
+POMDP.
+For each time step k, the robot maintains the current
+belief state bk 2 Δ(X) of the POMDP and the current state
+qk of the DFA. Then, for all events e for which δ(qk, e) ≠ qk
+and from δ(qk, e) at least one accepting state is reachable,
+we compute the probability that e happens in the next time
+step given bk as follows
+Pr
+X
+ðe happens in the next time step j bk Þ ¼
+x¼ðs,qÞ2X
+bk ½x X
+s02S
+P
+
+s,s
+0
+
+g
+
+s
+0
+,e
+
+Hence, the robot hopes to record in the next time step, an
+event that has the greatest probability computed by this
+equation. In the case that several such events exist, the robot
+chooses one of them arbitrarily.
+Given that RTM/FOM is a special form of RTM, the
+process described so far in this section applies for RTM/
+FOM too, but for RTM/FOM we can avoid constructing the
+product of the event model and the DFA. For RTM, the
+robot maintains, at each time step k, the current state sk of
+the event model and the current state qk of the DFA. Then,
+at step k, it computes for all events e for which delta(qk, e)
+≠ qk and from δ(qk, e) an accepting state is reachable, the
+following probability
+X
+Prðe happens in the next time step j sk Þ ¼
+s02S
+P
+
+sk ,s
+0
+
+g
+
+s
+0
+,e
+
+which is essentially the probability that e happens in the next
+time step. Then, from among all events that obtain the
+highest value in this equation, the robot chooses one to
+attempt to record in the next time step.
+We compare this greedy algorithm with our general
+algorithm in Section 9 to assess their relative solution
+quality.
+8. Construction of Specification Languages
+This section describes how one might construct, in a partially automated way, specifications for a variety of interesting scenarios. The idea is to use a variety of mutators to
+construct specification DFAs.
+8.1. Multiple recipients
+Suppose we would like to capture several videos, one for
+each of several recipients, within a single execution. Given
+language specifications D1,…,Dn 2 D from n potential
+recipients, where D denotes the set of all DFAs over a fixed
+event set E, how can we form a single specification that
+directs the robot to capture events that can be post-processed
+into the individual output sequences? One way is via two
+relatively simple operations on DFAs:
+(MS) A supersequence operation MS : D → D, where
+LðMSðDÞÞ ¼ 
+w0
+2E∗ j w0 is supersequence of a w2LðDÞ
+This operation is produced by first treating D as a nondeterministic finite automaton (NFA) and then, for each
+event and state, adding a transition labeled by that event
+from that state to itself, and converting result back into a
+DFA (Rabin and Scott, 1959).
+(MI) An intersection operation MI : D × D → D, under
+which
+LðMIðD1,D2ÞÞ ¼ LðD1Þ\LðD2Þ
+Based on these two operations, we can form a specification that asks the robot to capture an event sequence that
+satisfies all n recipients as follows
+D ¼ MIðMIðMSðD1Þ,MSðD2ÞÞ…,MSðDnÞÞ
+Then from any ξ 2 LðDÞ, we can produce a ξi 2 LðDiÞ by
+discarding (as a post-production step) some events from ξ.
+8.2. Mistakes were made
+What should the robot do if it simply cannot capture an event
+sequence that fits its specification D, either because some
+necessary events did not occur, or because the robot failed to
+capture them when they did occur? One possibility is to
+accept some limited deviation between the desired specification and what the robot actually captures. Let
+d : E∗ × E∗ →Zþ denote the Levenshtein distance (Levenshtein,
+1966), that is, a distance metric that measures the minimum
+number of insert, delete, and substitute operations needed to
+transform one string into another. A mutator that allows a
+bounded amount of such distance might be:
+(ML) A Levenshtein mutator ML : D × Zþ →D that
+transforms a DFA D into one that accepts strings
+within a given distance from some string in
+LðDÞ.
+LðMLðD,kÞÞ ¼ n
+ξ j ∃ξ0
+2 LðDÞ,d
+
+ξ,ξ0
+
+≤ k
+o
+This mutation can be achieved using a Levenshtein automaton construction (Konstantinidis, 2007; Schulz and
+Mihov, 2002). Then, if the robot captures a sequence in
+LðMLðD,kÞÞ, it can be converted to a sequence inLðDÞ by at
+most k edits. For example, an insertion edit would perhaps
+Rahmani et al. 423
+require the undesirable use of alternative “stock footage,”
+rendering of appropriate footage synthetically, or simply a
+leap of faith on the part of the viewer. By assigning the costs
+associated with each edit appropriately in the construction,
+we can model the relative costs of these kinds of repairs.
+8.3. At least one good shot
+In some scenarios, there are multiple distinct views available of the same basic event. We may consider, therefore,
+scenarios in which this kind of good/better correspondence
+is known between two events, and in which the robot should
+endeavor to capture, say, at least one better shot from that
+class. We define a mutator that produces such a DFA:
+(MG) An at-least-k-good-shots mutator
+MG : D × E × E × Zþ → D, in which
+MGðD,e,e0
+,kÞ produces a DFA in which e0 is
+considered to be a superior version of event e,
+and the resulting DFA accepts strings similar to
+those in LðDÞ, but with at least k occurrences of e
+replaced with e0
+.
+The construction makes a DFA in which D has been
+copied k + 1 times, each called a level, with the initial state
+at level 1 and the accepting states at level k + 1. Most edges
+remain unchanged, but each edge labeled e, at all levels less
+than k + 1, is augmented by a corresponding edge labeled e0
+that moves to the next level. This guarantees that e0 has
+replaced e at least k times, before any accepting state can be
+reached.
+9. Case studies
+In this section, we present several examples, solved via our
+Python implementation of the general algorithm proposed
+in Section 4. (We will refer to it as “the general algorithm”
+from now on.) For RTM/FOM we form the Goal MDP, while
+for RTM/FHM and RTM we form a Goal POMDP. To solve the
+POMDP, we use APPL online (Approximate POMDP
+Planning Online) toolkit, which implements the DESPOT
+algorithm (Somani et al., 2013)—one of the fastest known
+online solvers. We compare the results for different observability conditions based upon the number of steps that
+the system will run. It will run until the robot records a
+desired story under an optimal policy, so we must consider
+the expected number of steps.
+We also compare our general algorithm with a the greedy
+algorithm of Section 7, which, at each time step, attempts to
+capture an event that has the highest probability of occurrence at the next time step.
+9.1. Turisti Oulussa
+In pre- COVID 2019, William is a tourist visiting Oulu as
+shown in Figure 6(a). William’s family has privately
+contracted a robotic videography company to record him
+seeing the sights, specifically the Kauppahalli (k), the
+Hupisaaret park (h), and either Tietomaa museum (t) or the
+Oulu Cathedral (c). The robot does not know William’s
+specific plans, but it does know, through some statistics, that
+a typical tourist moves among those districts according to
+the event model in Figure 6(b).
+The desired video is specified using the DFA in
+Figure 6(c). The robot is given other tasks to do aside from
+recording William, and thus, cannot merely follow William;
+it must form a strategy that predicts which events to try to
+capture.
+We considered three settings: (1) RTM/FOM: the robot
+always knows the current district in which William is located, perhaps by the help of some static sensors; (2) RTM:
+the robot does not know at which district William is currently located but there is a single useful observation, a
+message sent from a security guard in district s1, that informs the robot that William is in district s1 whenever he is
+there; (3) RTM/FHM: the robot receives no direct knowledge
+about William’s location.
+We computed the optimal policy for RTM/FOM, case
+(1), using the Goal MDP approach in Section 4.3. According to this policy, the expected number of steps to
+record under an optimal policy with full observability, a
+story satisfying the specification, is approximately 35.39.
+The computed optimal policy for this case is shown in
+Figure 6(d). Each oval in this figure is a state of the DFA
+and inside each of those ovals, all the states of the event
+model are drawn as boxes. The event labeled inside a box
+is the event chosen by the optimal policy when the DFA is
+in the state represented by that oval and the event model is
+in the state represented by that box. Each empty box is
+assigned an arbitrary event by the policy and those events
+assigned to those empty boxes are irrelevant to recording
+a desired story.
+To verify the correctness of the algorithm, we simulated
+the execution of this policy 5000 times. In each simulation,
+William followed a random path through the city according
+to the event model in Figure 6(b), and the robot executed the
+computed policy to capture an event sequence satisfying the
+specification. The average number of steps to record a
+satisfactory sequence for those 5000 simulations using our
+general algorithm was 35.59, quite close to the expected
+number of steps. Figure 6(e) shows results of those simulations in form of a histogram and a pie chart. We also made
+5000 simulations of the same RTM/FOM problem, and in
+each simulation we let the robot use the greedy algorithm to
+record a desired story. The average number of steps for this
+experiment was 43.52, which is substantially longer than the
+expected number of steps to record a desired event sequence
+with the optimal policy for RTM/FOM, 35.59. This is justified, in particular, by the fact that when the robot is in state s0
+and it has captured neither h nor k, the greedy algorithm
+does not consider the fact that the best event to predict at that
+time to decrease the average number of steps is h because, if
+William enters s2 in the next time step, then it is possible that
+424 The International Journal of Robotics Research 42(6)
+he enters s3 from s2 and, thus, the robot could capture both
+events h and k during a single circuit of the environment.
+See Figure 6(f) for additional details regarding this
+experiment.
+For cases (2) and (3), our algorithm constructed a Goal
+POMDP, as described by Definition 6, which is then supplied to APPL Online to perform 5000 simulations. Also,
+for each of the two cases, we generated 5000 simulations in
+Figure 6. (a) Districts of Oulu that William is touring. (b) An event model that describes how a tourist visits those districts. Edges are
+labeled with transition probabilities. (c) A DFA specifying that the captured story must contain events k and h and at least one of c or t.
+(d) The optimal policy for the RTM/FOM problem for Oulu. Subfigures e–j consist of a histogram showing, for 5000 simulations, the
+distribution of the number of hours (steps) William (system) circulated (ran) until the robot recorded a story specified by the DFA, and a
+pie chart showing the distribution of recorded sequences in these simulations. Pairs (e) and (f) are for the RTM/FOM problem, (g) and (h)
+for the RTM problem, and (i) and (j) are for the RTM/FHM problem. The left column has the robot using the general algorithm, while the
+right column uses the greedy approach. Moving down the column, the average number of steps to record a story increases as the robot’s
+perception of the world’s state diminishes. While the distribution of the recorded sequences by the general algorithm differs from the
+distribution of the recorded sequences by the greedy algorithm, for each of the greedy algorithm and the general algorithm, the
+distributions of the recorded sequences under different levels observability were similar.
+Rahmani et al. 425
+our program and let the greedy algorithm decide which
+event to try to capture. In case (2), RTM with a useful observation, the average number of steps to record a desired
+story using our general algorithm and the greedy algorithm
+were 37.28 and 44.73, respectively. In case (3), RTM/FHM,
+the general algorithm and the greedy algorithm had the
+robot record a desired story in 43.77 and 56.98 steps, respectively, on average.
+The histograms and the pie charts for these four experiments are shown in Figure 6(g) to (j). In these figures,
+notice how a single observation of whether William is in s1
+helps the robot to record a story considerably faster than
+when it hasn’t got access to that state information. To such a
+robot, even a stream of quite limited information, if aptly
+chosen, can be very useful.
+A further qualitative remark: note how the histogram
+changes as the level of observability increases, from RTM/
+FOM to RTM/FHM: the robot is able to utilize the additional
+information to capture stories more rapidly. Also, across each
+of the three settings RTM/FOM, RTM, and RTM/FHM, the average number of steps needed via the greedy algorithm is
+considerably greater than via the general algorithm.
+9.2. Wedding reception
+Suppose a videographer robot is asked to produce videos
+that convey different stories, assembled from unpredictable
+events at a wedding reception.
+The wedding guests include Alice, Bob, and Chris, and
+the events of interest for any of those guests are: arriving at
+the reception, (i); dancing, (d); drinking coffee, (c); drinking
+other beverages, (b); smoking, (s); and being entertained,
+(e).
+Each guest has their own sense of the events they would
+like to see captured: Alice is mainly interested in seeing
+Chris drinking or smoking, but also has plans to share the
+last dance with Bob; Bob cares for nothing but seeing his
+own dancing through the evening, but hopes to share the last
+dance with Alice; Chris does not care to see any events at all,
+but Chris’s children are concerned about his unhealthy
+habits, and so if Chris is drinking too much coffee or
+smoking too much, they would like to know.
+The robot in that scenario is given three parallel objectives. We can formalize those as languages, shown here
+for compactness as regular expressions: for Alice,
+r1 ¼ ðs3 þ c3Þ
+þd12; for Bob, r2 ¼ ðd2 þ d12 þ d23Þ
+þd12;
+and for Chris, r3 ¼ ðs3 þ c3Þðs3 þ c3Þðs3 þ c3Þ
+þ. These
+three requests—where subscript labels 1, 2, and 3, respectively represent Alice, Bob, and Chris—are encoded
+using DFAs D1, D2, and D3, respectively.
+The behavior of each guest is modeled by the event
+model in Figure 7(a), in which P is the transition probability
+function of the model. The joint behavior of the three guests
+is modeled by an event model M obtained as the Cartesian
+product of the models for the individuals, which has 63
+states in this example. The joint event model is further
+enhanced with joint events created from single events. To
+form a DFA D from the given specification DFAs, the robot
+uses D ¼ MIðMIðMSðD1Þ,MSðD2ÞÞ,MSðD3ÞÞ.
+Our implementation for this case study considers five
+settings: (1) RTM/FOM: the current state of the event model is
+always observable to the robot, that is, the robot always
+knows what each of the guests are doing; (2) RTM with a
+smoke detector device and a microphone: the robot is not
+aware what each of the guests are doing, but there is a smoke
+detector that if at each time step tells if somebody is
+smoking or not but without telling who is exactly smoking,
+and there is a microphone whose being turned on means that
+someone is dancing or being entertained; (3) RTM with a
+smoke detector device: the robot does not know what each
+of the guests are doing, but using the smoke detector can
+detect if right now somebody is smoking or not; (4) RTM
+with a microphone: the robot is not aware about the current
+status of the guests but if the microphone is turned on, then it
+means that someone is dancing or being entertained; (5)
+RTM/FHM: the robot receives no direct information about the
+current behavior of the guests.
+For each of these five settings, we conducted two experiments, each consisting of 5000 simulations. In one
+experiment we let the robot use the general algorithm to
+record a desired story, while in the other one we let the robot
+use the greedy algorithm.
+The expected number of steps for an optimal policy for
+RTM/FOM is 35.38, and over the 5000, simulations, the
+average number of steps to record a story using the general
+algorithm was 35.58; both numbers are very close. The
+average number of steps over 5000 simulations using the
+greedy algorithm was 37.54, which shows that the greedy
+algorithm was also outperformed by the general algorithm
+in minimizing the number of steps to record for this case
+study.
+The average number for RTM with a smoke detector and
+microphone using the general algorithm and the greedy
+algorithm were 37.64 and 38.25, respectively. For RTM with
+a smoke detector, the average number was 37.95 when the
+general algorithm was used, and it was 38.06 when the
+greedy algorithm was used. The general algorithm and the
+greedy algorithm for RTM with a microphone respectively
+yielded 38.53 and 38.75. Finally, the average number of
+steps using the general algorithm for RTM/FHM was 39.20,
+while the average number using the greedy algorithm was
+38.99.
+Again, we observed that increasing the robot’s ability to
+perceive the world will help reduce the average number of
+steps to record a desirable event sequence. Also, for four out
+of the five considered settings, the general algorithm yielded
+a fewer average number of steps compared to the greedy
+algorithm, but for RTM/FHM, the greedy algorithm produced
+a slightly superior average number of steps. In this experiment, except for RTM/FOM, which we solve using an
+MDP rather than a POMDP, the expected number of steps
+for the greedy algorithm and for the general algorithm were
+close. This is perhaps because APPL Online, the tool we
+used for solving the POMDP, is an online POMDP solver
+426 The International Journal of Robotics Research 42(6)
+Figure 7. (a) The event model for the behavior of a person attending a wedding reception, which has six states: Ii, the state of arriving; Ei,
+the state of being entertaining; Ci, for consuming coffee; Bi, for drinking other beverages; Di, for dancing; and Si, for smoking. Each
+histogram shows the average number of steps to record a desired story for 5000 simulations of the wedding reception scenario. (b) The
+general algorithm for RTM/FOM. (c) The greedy algorithm for RTM/FOM. (d) The general algorithm for RTM with a smoke detector, which
+provides the observation of whether someone is smoking, and with a microphone, capable of detecting that someone is dancing or
+being entertained. (e) The greedy algorithm for RTM with a smoke detector and a microphone. (f) The general algorithm for RTM with a
+smoke detector. (g) The greedy algorithm for RTM with a smoke detector. (h) The general algorithm for RTM with a microphone. (i) The
+greedy algorithm for RTM with a microphone. (j) The general algorithm for RTM/FHM. (k) The greedy for algorithm RTM. It seems, at
+first, that the RTM problem with a smoke detector might be incomparable with RTM using a microphone, but the single useful observation
+in the former guarantees that at least one guest is in the state of smoking, while the single useful observation in the later case guarantees
+that at least one guest is either in state of dancing or in state of being entertained, which is less informative. This experiment also shows
+that increasing observability will decrease the time to capture a desired story. Furthermore, it shows that although the general algorithm
+often outperformed the greedy algorithm in terms of average number of steps to record a desirable event sequence, here the greedy
+algorithm gives a reasonable approximation to the optimal solutions.
+Rahmani et al. 427
+Figure 8. (a) An example of a race source, which we have divided into 8 sections s0 through s7 form an event model for the race. (b) The
+event model for a single runner i 2 {1, 2}, including events ri, runner i is running; hi, runner i is crossing the race flag at the middle of the
+race field; fi, runner i is crossing the finish line. The event model for the two runners John and James is made by the product of the event
+models for each of them. Two more events, p12 and p21, are introduced to the joint event model. Event p12 denotes that John is overtaking
+James, while p21 means that James is overtaking John. Each of these two events happens with probability 0.5 at each state that
+represents the runners are in the same section. (c) The DFA specifying the set of all desirable videos for the race example. (d) A diagram
+showing the number of states of the MDP created by the product of the event model and the DFA in this race example. (e) A diagram
+showing the number of edges of the graph underlying the MDP. Parts d and e together show how the size of the MDP increases as the
+size of the problem increases. They show as the problem’s size doubles, the MDP’s size approximately quadruplicates. (f) A diagram
+showing the computation time for classical value iteration, which we use in our general algorithm, the computation time of the topological
+value iteration algorithm, which use to solve our problem where the DFA is loop-omitted acyclic, and the computation time of the
+topological value iteration, which we use to solve our problem when Goal MDP is a loop-omitted DAG. For this experiment, the
+topological single iteration was on average 6.5 faster than the topological value iteration, and also the latter on average was 6 times faster
+than the general, classical value iteration algorithm. (g) A diagram showing, for topological single value iteration, the breakdown of its
+computation time into the three phases of the algorithm: decomposing the MDP into its SCCs, finding a topological ordering of the
+SCCs, and performing the value iteration. (h) A diagram showing, for the topological single value iteration algorithm, how much each of
+the two phases of the algorithm, namely, finding a topological ordering of the states of the MDP, and computing an optimal action for
+each state via solving the single variable equations, contribute to the computation time of the algorithm. The results for each of the section
+sizes 30-120 in the diagrams in parts (f), (g), and (h) are the average computation times across 10 trials.
+428 The International Journal of Robotics Research 42(6)
+and the solution provided is an approximate solution rather
+than an exact solution, which is in general intractable to
+provide for POMDPs. This suggests this particular case
+study is an example where the greedy algorithm is able to
+closely approximate the optimal solutions.
+9.3. Running a race
+John and James are two runners running a race against one
+another. A videographer robot is asked to record a video
+whose events involve John and James. The events of interest
+are: r1, John is running; h1, John is crossing the flag located
+in the middle of the race field; f1, John is crossing the finish
+line; p12, John is passing James; r2, James is running; h2,
+James is crossing the flag located in the middle of the
+racecourse; f2, James is crossing the finish line; p21, James is
+passing John.
+To make an event model for this problem, we divide the
+racetrack into several sections of the identical length.
+Figure 8(a) shows an example in which the race is divided
+into 8 sections, s0 through s7. To make an event model for a
+single runner, we represent each of those sections using a
+single state of the event model. The transition probability
+function is based on the distance a runner can travel in a
+single time step, and as the sections form a sequence, their
+neighbor-to-neighbor connections.
+Figure 8(b) shows the event model for a runner i where
+the track is in sections s0–s7. In this example, when the
+runner is in state sj then, at the next time step, based on his
+speed, he could be in any of states sj, sj+1, sj+2, and sj+3. The
+event model for the joint behavior of John and James is
+formed from the product of their individual event models.
+Each state of this event model represents a tuple of sections
+of the field in which John and James could be. Events p12
+and p21 both happen with probability 0.5 at each state
+representing a situation where both John and James are in
+one section of the track. The current state of the event model
+is observable by the robot: perhaps, at specific locations
+along the course, there are stationary cameras that tell the
+robot the sections the runners currently occupy. The robot
+does not, however, know the sections which John and James
+will be in in the next time step because it does not know how
+their speed will change in the future. Thus, to find an optimal policy for capturing events, we need to solve the RTM/
+FOM problem.
+The desired story is specified by the DFA in Figure 8(c).
+To solve this problem, we form the Goal MDP and we can
+use the (classical) value iteration to compute an optimal
+policy for the MDP. However, because the given DFA is
+loop-omitted acyclic, a better option would be to use the
+topological value iteration algorithm, introduced in Section
+6.1, to compute an optimal policy for the MDP. Closer
+observation suggests that we can even use the algorithm
+introduced in Section 6.2 for loop-omitted DAG MDPs.
+This is because not only the DFA is loop-omitted acyclic,
+but the graph underlying the event model also does not have
+any cycles other than self-loops; these facts together make
+the Goal MDP a loop-omitted DAG MDP. We designate the
+algorithm that we introduced for solving loop-omitted
+MDPs, single value iteration, owing to the fact that only
+one iteration for each state is required to solve the Bellman
+equation for this kind of MDP, and the optimal action for
+each state is computed by solving several single variable
+equations.
+In this experiment, we compare the running times of
+classic value iteration, topological value iteration, and the
+single value iteration algorithms to compute an optimal
+policy for the MDP. To do so, we consider 10 racetracks,
+varying the number of sections from 30 to 120. For each of
+these 10 problem sizes {30, 40, …, 120}, we construct a
+Goal MDP from the DFA and the event model, and then
+compute an optimal policy for that MDP using each of the
+three algorithms. Figure 8(d) and (e) give a sense of the sizes
+of those MDPs; the former shows for each of those MDPs,
+the number of states of the MDP, while the latter shows the
+number of edges of the graph underlying the MDP.
+For each of those 10 problem sizes, we conducted 10 trials
+for each of the three algorithms. Figure 8(f) shows, for each
+of those 10 problem sizes, the average computation time of
+each of the algorithms. The computation time for the topological value iteration in this diagram includes the computation for forming the SCCs of the graph and the time
+needed to find a topological ordering. Figure 8(g) shows how
+much time these steps contribute to the overall computation
+time of the topological value iteration algorithm. Likewise,
+Figure 8(h) shows the contributions for the two phases that
+make up the single value iteration, namely, finding a topological ordering of the MDP states, and solving the single
+value equations to find optimal actions for states.
+In this experiment, we observe that the topological value
+iteration outperforms the classical value iteration and the
+single value iteration outperforms both of them. For the last
+MDP, which has approximately 57,000 states and approximately 7,000,000 nonzero entries within its transition
+function, it took 174 seconds on average for the classical
+value iteration to compute an optimal policy. In contrast, the
+single value iteration on average took less than 3 seconds to
+compute an optimal policy. This experiment justifies the use
+of the algorithms we introduced in Section 6 for special
+inputs of our problem.
+10. Conclusions and future work
+We considered the problem of minimizing the expected time
+to record an event sequence satisfying a set of specifications.
+This was posed as the problem of computing an optimal
+policy in an associated Markov decision problem. Our implementation confirmed the fact that, by considering global
+implications, careful planning of observations can improve
+performance significantly. Also, having studied differing of
+levels of observability, the results support the intuition that as
+the robot’s ability to perceive the world improves, the expected number of steps to record a desired story decreases.
+Rahmani et al. 429
+Gaps remain between the results presented in this article and
+the eventual use of real sensors aboard real robots to chronicle
+sequences of events. In particular, our approach relies heavily on
+the event model, which must abstract sufficient detail about the
+physical environment to model the occurrences of events. In
+addition, our approach abstracts the details of planning of the
+robot’s physical movements in its attempt to capture events, but
+of course, those details of motions may have a major impact on
+the likelihood of successfully capturing events. The applicability
+of our results to real systems depends directly on the practicability of resolving these abstract elements into fully-realized
+implementations within a complete system stack. Such a process
+seems likely to involve a number of challenges, including for
+example, the tradeoff between granularity of state (which, at
+some level, must model locations) and computational efficiency.
+Future work could consider several extensions. For instance, considering the means needed to navigate to record an
+event, so that the objective might minimize some expected
+cost rather than the expected number of steps. Also, one
+might consider the case where a set of events (rather than a
+single event), each assigned to a single robot, may be predicted. A more dynamic case might examine problems where
+the robot is given new specification DFAs to satisfy while
+recording stories for previous requests, especially where
+those specification DFAs are prioritized and the prioritization
+is subject to changes (Rahmani and O’Kane, 2019), or
+perhaps the case where the robot needs to learn a new event
+model to describe the environment owing to failure in predicting events. Thus, since the Goal MDPs/POMDPs we
+construct in this paper have particular structures, future work
+should consider designing more efficient algorithms to solve
+the specific forms of Goal MDP/POMDP that arise in this
+context, with an eye toward computing optimal policies more
+efficiently than the general-purpose algorithms utilized in this
+paper. Using the ideas of factored-MDPs (Boutilier et al.,
+2000; Guestrin et al., 2003), factored-POMDPs (Boutilier
+and Poole, 1996), and POMDP-lite (Chen et al., 2016) might
+be good starting points for doing so.
+ORCID iD
+Hazhar Rahmani  https://orcid.org/0000-0002-6342-2273
+Acknowledgements
+This work was graciously supported, in part, by the National
+Science Foundation through awards IIS-1453 652, IIS-1849 249,
+and IIS-1849 291.
+Declaration of conflicting interests
+The author(s) declared no potential conflicts of interest with respect to the research, authorship, and/or publication of this article.
+Funding
+The author(s) disclosed receipt of the following financial support
+for the research, authorship, and/or publication of this article: This
+work was supported by the National Science Foundation.
+References
+Alcantara A, Capit ´ an J, Cunha R, et al. (2021) Optimal trajectory ´
+planning for cinematography with multiple unmanned aerial
+vehicles. Robotics and Autonomous Systems 140: 103778.
+Astr ˚ om KJ (1965) Optimal control of Markov processes with ¨
+incomplete state information. Journal of Mathematical
+Analysis and Applications 10: 174–205.
+Bajcsy R (1988) Active perception. Proceedings of the IEEE
+76(8): 966–1005.
+Bajcsy R, Aloimonos Y and Tsotsos JK (2018) Revisiting active
+perception. Autonomous Robots 42(2): 177–196.
+Bonet B and Geffner H (2003) Faster heuristic search algorithms
+for planning with uncertainty and full feedback. In: International joint conference on artificial intelligence, San
+Francisco, CA, United States, 9 August 2003, pp. 1233–1238.
+Bonet B and Geffner H (2009) Solving POMDPs: RTDP-Bel
+versus point-based algorithms. In: International joint conference on artificial intelligence, Pasadena, California, 11-17
+July, 2009, pp. 1641–1646
+Boutilier C, Dearden R and Goldszmidt M (2000) Stochastic
+dynamic programming with factored representations. Artificial Intelligence 121(1–2): 49–107.
+Boutilier, C and Poole, D (1996) Computing optimal policies for
+partially observable decision processes using compact representations. In: National conference on artificial intelligence,
+Citeseer, 04 August 1996, pp. 1168–1175.
+Chaudhuri D, Ike R, Rahmani H, et al. (2021a) Conditioning style
+on substance: plans for narrative observation. In IEEE international conference on robotics and automation
+(ICRA),Xi’an, China, 30 May-5 June 2021
+Chaudhuri D, Rahmani H, Shell AD, et al. (2021b) Tractable
+planning for coordinated story capture: sequential stochastic
+decoupling. In: International symposium on distributed
+autonomous robotic systems, Springer, Cham,01 January
+2022
+Chen M, Frazzoli E, Hsu D, et al. (2016) POMDP-lite for robust
+robot planning under uncertainty. In: IEEE international
+conference on robotics and automation (ICRA), Stockholm,
+Sweden, 16-21 May 2016, IEEE, pp. 5427–5433.
+Dai P and Goldsmith J (2007) Topological value iteration algorithm for Markov decision processes. In: International joint
+conference on artificial intelligence, Hyderabad, India, 6-12
+January, 2007, pp. 1860–1865.
+Dibangoye JS, Shani G, Chaib-Draa B, et al. (2009) Topological
+order planner for POMDPs. In: Twenty-First international
+joint conference on artificial intelligence, Pasadena, California, 11-17 July 2009
+Girdhar Y and Dudek G (2012) Efficient on-line data summarization using extremum summaries. In: IEEE international
+conference on robotics and automation (ICRA), Saint Paul,
+MN, USA, 14-18 May 2012, pp. 3490–3496.
+Gong B, Chao WL, Grauman K, et al. (2014) Diverse sequential
+subset selection for supervised video summarization. In:
+Advances in Neural Information Processing Systems. Cambridge, MA, United States, 8 December 2014,
+pp. 2069–2077.
+430 The International Journal of Robotics Research 42(6)
+Guestrin C., Koller D., Parr R., et al (2003) Efficient solution
+algorithms for factored MDPs. Journal of Artificial Intelligence Research 19: 399–468.
+Gygli M, Grabner H, Riemenschneider H, et al. (2014) Creating
+summaries from user videos. In: European conference on
+computer vision, Zürich, Switzerland, 6–12 September 2014,
+pp. 505–520.
+Ji Z, Xiong K, Pang Y, et al. (2019) Video summarization with
+attention-based encoder–decoder networks. IEEE Transactions on Circuits and Systems for Video Technology 30(6):
+1709–1717.
+Junges S, Jansen N and Seshia SA (2021) Enforcing almost-sure
+reachability in pomdps. In: International conference on
+computer aided verification, Springer, Cham, 15 July 2021,
+Springer, pp. 602–625.
+Keyder E and Geffner H (2008) The HMDPP planner for planning
+with probabilities. In: Sixth international planning competition at ICAPS, Sydney, Australia, 14-18 September, 8.
+Kolobov AM and Weld DS (2010) Sixthsense: Fast and reliable
+recognition of dead ends in MDPs.In: Proceedings of the
+twenty-fourth AAAI conference on artificial intelligence,
+Atlanta, Georgia, USA, 11-15 July 2010.
+Kolobov A, Mausam and Weld DS (2012) A theory of goaloriented MDPs with dead ends. In: Twenty-Eighth conference on uncertainty in artificial intelligence, Arlington,
+Virginia, United States, 14 August 2012, AUAI Press,
+pp. 438–447.
+Konstantinidis S (2007) Computing the edit distance of a regular
+language. Information and Computation 205(9):
+1307–1316.
+LaValle SM (2006) Planning Algorithms. Cambridge, U.K:
+Cambridge University Press. Available at: http://planning.cs.
+uiuc.edu/.
+Lee YJ, Ghosh J and Grauman K (2012) Discovering important
+people and objects for egocentric video summarization. In:
+IEEE Conference on Computer Vision and Pattern Recognition, Providence, RI, USA, 16-21 June 2012, pp. 1346–1353.
+Levenshtein VI (1966) Binary codes capable of correcting deletions, insertions, and reversals. Soviet Physics Doklady 10(8):
+707–710.
+Little I and Thiebaux S (2007) Probabilistic planning vs. re- ´
+planning. In: ICAPS workshop on international planning
+competition: past, present and future, Providence, Rhode
+Island, United States, 22-26 September 2007.
+Lu Z and Grauman K (2013) Story-driven summarization for
+egocentric video. In: IEEE Conference on Computer Vision
+and Pattern Recognition, Portland, OR, USA, 23-28 June
+2013, pp. 2714–2721
+Mademlis I, Mygdalis V, Nikolaidis N, et al. (2019a) Highlevel multiple-uav cinematography tools for covering
+outdoor events. IEEE Transactions on Broadcasting
+65(3): 627–635.
+Mademlis I, Nikolaidis N, Tefas A, et al. (2019b) Autonomous uav cinematography: a tutorial and a formalized
+shot-type taxonomy. ACM Computing Surveys (CSUR)
+52(5): 1–33.
+Mahasseni B, Lam M and Todorovic S (2017) Unsupervised
+video summarization with adversarial lstm networks. In:
+IEEE Conference on Computer Vision and Pattern Recognition, Honolulu, HI, USA, 21-26 July 2017,
+pp. 202–211.
+Narasimhan M, Rohrbach A and Darrell T (2021) Clip-it!
+Language-Guided Video Summarization. arXiv preprint arXiv:2107.00650.
+Plummer BA, Brown M and Lazebnik S (2017) Enhancing
+video summarization via vision-language embedding. In:
+IEEE conference on computer vision and pattern recognition, Honolulu, HI, USA, 21-26 July 2017,
+pp. 5781–5789.
+Rabin MO and Scott D (1959) Finite automata and their decision
+problems. IBM Journal of Research and Development 3(2):
+114–125.
+Rahmani H and O’Kane JM (2019) Optimal temporal logic
+planning with cascading soft constraints. In: IEEE/RSJ
+International Conference on Intelligent Robots and Systems (IROS), Macau, China, 3-8 Nov. 2019, IEEE,
+pp. 2524–2531.
+Rahmani H, Shell DA and O’Kane JM (2020) Planning to
+chronicle. In: Algorithmic Foundations of Robotics (WAFR
+XIV), 21-23 June 2021.
+Riedl MO and Young RM (2010) Narrative planning: balancing
+plot and character. Journal of Artificial Intelligence Research
+39: 217–268.
+Robertson J and Young RM (2017) Narrative mediation as
+probabilistic planning. In: Thirteenth Artificial Intelligence
+and Interactive Digital Entertainment Conference, Snowbird, Little Cottonwood Canyon, Utah USA, 5-9 October
+2017
+Ross S, Pineau J, Paquet S, et al (2008) Online planning algorithms
+for POMDPs. Journal of Artificial Intelligence Research 32:
+663–704.
+Rot J, Bonsangue M and Rutten J (2016) Proving language inclusion and equivalence by coinduction. Information and
+Computation 246: 62–76.
+Sabetghadam B, Alcantara A, Capit ´ an J, et al. (2019) Optimal ´
+trajectory planning for autonomous drone cinematography.
+In: European Conference on Mobile Robots (ECMR), Prague,
+Czech Republic, 4-6 Sept. 2019, IEEE, pp. 1–7.
+Schulz KU and Mihov S (2002) Fast string correction with
+Levenshtein automata. International Journal on Document
+Analysis and Recognition 5(1): 67–85.
+Shani G, Pineau J and Kaplow R (2013) A survey of point-based
+POMDP solvers. Autonomous Agents and Multi-Agent Systems 27(1): 1–51.
+Shell DA, Huang L, Becker AT, et al. (2019) Planning coordinated event observation for structured narratives. In: IEEE
+international conference on robotics and automation
+(ICRA), Montreal, QC, Canada, 20-24 May 2019,
+pp. 7632–7638.
+Somani A, Ye N, Hsu D, et al. (2013) Despot: online POMDP
+planning with regularization. Advances in Neural Information
+Processing Systems 26: 1772–1780.
+Rahmani et al. 431
+Sondik EJ (1978) The optimal control of partially observable
+Markov processes over the infinite horizon: discounted costs.
+Operations Research 26(2): 282–304.
+Truong BT and Venkatesh S (2007) Video abstraction. ACM
+Transactions on Multimedia Computing, Communications,
+and Applications 3(1): 3
+Yu J and LaValle SM (2010) Cyber detectives: determining when robots or
+people misbehave. In: Algorithmic Foundations of Robotics (WAFR
+IX), Singapore, 13-15 December 2010, Springer, pp. 391–407.
+Yu J and LaValle SM (2011) Story validation and approximate path
+inference with a sparse network of heterogeneous sensors. In:
+IEEE International Conference on Robotics and Automation
+(ICRA), Shanghai, China, 9-13 May 2011, IEEE,
+pp. 4980–4985.
+Zhang K, Grauman K and Sha F (2018) Retrospective encoders for
+video summarization. In: European Conference on Computer
+Vision (ECCV), Germany, 8-14 September 2018,
+pp. 383–399.
+432 The International Journal of Robotics Research 42(6)

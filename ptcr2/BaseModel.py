@@ -25,7 +25,7 @@ class BaseModel(ABC):
         return self.computed_policy
 
     def simulate(self, spec: dict):
-        if not self.computed_policy:
+        if not self.computed_policy or not self.ep:
             self.compute_optimal_policy(spec)
 
         run_number_of_steps, recorded_story = self.ep.simulate(self.computed_policy['optimal_policy'])
