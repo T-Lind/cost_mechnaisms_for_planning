@@ -27,14 +27,15 @@ class BaseModel(ABC):
     def simulate(self, spec: dict):
         if not self.computed_policy:
             self.compute_optimal_policy(spec)
-        policy, _, expected, policy_comp_time, diff_tracker = self.computed_policy
-        run_number_of_steps, recorded_story = self.ep.simulate(policy)
+
+        run_number_of_steps, recorded_story = self.ep.simulate(self.computed_policy['optimal_policy'])
+
         return {
-            "expected": expected,
+            "expected": self.computed_policy['expected'],
             "run_number_of_steps": run_number_of_steps,
             "recorded_story": recorded_story,
-            "policy_comp_time": policy_comp_time,
-            "diff_tracker": diff_tracker
+            "policy_comp_time": self.computed_policy['elapsed_time'],
+            "diff_tracker": self.computed_policy['diff_tracker']
         }
 
     def simulate_greedy_algorithm(self, spec: dict):
@@ -45,5 +46,5 @@ class BaseModel(ABC):
     def simulate_general_and_greedy_algorithms(self, spec: dict):
         if not self.computed_policy:
             self.compute_optimal_policy(spec)
-        policy, _, expected, policy_comp_time, d, diff_tracker = self.computed_policy
+        policy = self.computed_policy['optimal_policy']
         return self.ep.simulate_general_and_greedy_algorithms(policy)

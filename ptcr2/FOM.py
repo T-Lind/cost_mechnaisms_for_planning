@@ -179,10 +179,9 @@ class FOM(BaseModel):
         print("Single initial state 0:", single_initial_state_0)
         print("Single initial state 1:", single_initial_state_1)
 
-        mc12 = mc1.product_singleInitialState(mc2, single_initial_state_0)
+        mc12 = mc1.product_single_initial_state(mc2, single_initial_state_0)
 
-        mc = mc12.product_singleInitialState(mc3, single_initial_state_1)
-
+        mc = mc12.product_single_initial_state(mc3, single_initial_state_1)
 
         dfa = self.get_dfa()
 
