@@ -24,7 +24,12 @@ if __name__ == "__main__":
     for i in range(n_simulations):
         start = timer()
 
-        expected_number_of_steps, run_number_of_steps, recorded_story, policy_comp_time, diff_tracker = wedding_fom.simulate(spec)
+        results = wedding_fom.simulate(spec)
+        run_number_of_steps = results['run_number_of_steps']
+        expected_number_of_steps = results['expected']
+        recorded_story = results['recorded_story']
+        diff_tracker = results['diff_tracker']
+
         if recorded_story in story_counts:
             story_counts[recorded_story] += 1
         else:

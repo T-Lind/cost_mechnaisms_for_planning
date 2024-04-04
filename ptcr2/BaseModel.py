@@ -29,7 +29,13 @@ class BaseModel(ABC):
             self.compute_optimal_policy(spec)
         policy, _, expected, policy_comp_time, diff_tracker = self.computed_policy
         run_number_of_steps, recorded_story = self.ep.simulate(policy)
-        return expected, run_number_of_steps, recorded_story, policy_comp_time, diff_tracker
+        return {
+            "expected": expected,
+            "run_number_of_steps": run_number_of_steps,
+            "recorded_story": recorded_story,
+            "policy_comp_time": policy_comp_time,
+            "diff_tracker": diff_tracker
+        }
 
     def simulate_greedy_algorithm(self, spec: dict):
         if not self.ep:
