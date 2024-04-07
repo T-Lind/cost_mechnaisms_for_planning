@@ -384,6 +384,103 @@ class EventPredictor:
             "diff_tracker": diff_tracker
         }
 
+    def optimal_policy_infinite_horizon_cost_based(self, epsilon_of_convergence=0.01, compute_avoidable_actions=False,
+                                                   verbose=False):
+        n = len(self.mdp.states)
+
+        if compute_avoidable_actions:
+            self.mdp.compute_avoidable_actions()
+
+        G = [[0.0 for _ in [0, 1]] for _ in range(n)]
+        A = ["" for _ in range(n)]
+
+        for j in range(n):
+            if self.mdp.states[j].is_goal:
+                G[j][0] = 0.0
+                G[j][1] = 0.0
+                A[j] = "STOP"
+
+        difference = float("inf")
+
+        num_iterations = 0
+
+        diff_tracker = []
+
+        time_start = time.time()
+
+        while difference > epsilon_of_convergence:
+            num_iterations += 1
+            max_dif = 0
+
+            if verbose:
+                print(f"dif={difference:.4f}")
+
+            if difference != float("inf"):
+                diff_tracker.append(difference)
+
+            for j in range(n):
+                if self.mdp.states[j].is_goal:
+                    continue
+
+                if not self.mdp.states[j].reachable:
+                    continue
+
+                if compute_avoidable_actions and not self.mdp.states[j].a_goal_is_reachable:
+                    continue
+
+                min_val = float_info.max
+                opt_action = ""
+                state = self.mdp.states[j]
+
+                for action in state.available_actions:
+                    if compute_avoidable_actions:
+                        if action in state.avoid_actions:
+                            continue
+                    val = 0.0
+                    if not state.is_goal:
+                        val += 1
+
+                    for tran in state.actions_transitions[action]:
+                        # Add the cost of the transition to the value
+                        print("Transition from", tran.src_state.index, "to", tran.dst_state.index, "with cost",
+                              self.cost_matrix[tran.src_state.index][tran.dst_state.index])
+                        transition_cost = self.cost_matrix[tran.src_state.index][tran.dst_state.index]
+                        term = (G[tran.dst_state.index][1] + transition_cost) * tran.probability
+                        val += term
+                    if val < min_val:
+                        min_val = val
+                        opt_action = action
+
+                if j == 0:
+                    difference = min_val - G[j][0]
+
+                max_dif = max(max_dif, min_val - G[j][0])
+
+                G[j][0] = min_val
+                A[j] = opt_action
+
+            for j in range(n):
+                G[j][1] = G[j][0]
+
+            difference = max_dif
+
+        optimal_policy = {}
+        for q in self.dfa.states:
+            optimal_policy[q] = {}
+
+        for j in range(n):
+            optimal_policy[self.mdp.states[j].anchor[0]][str(self.mdp.states[j].anchor[1])] = A[j]
+
+        time_elapsed = (time.time() - time_start)
+
+        return {
+            "optimal_policy": optimal_policy,
+            "G": G,
+            "expected": G[0][self.mdp.initial_state.index],
+            "time_elapsed": time_elapsed,
+            "diff_tracker": diff_tracker
+        }
+
     def simulate(self, policy):
         if self.current_markov_state_visible:
             return self.__simulate_markov_state_visible(policy)
@@ -465,7 +562,8 @@ class EventPredictor:
                     if q != q_previous:
                         story += predicted_event
 
-                        s_index = self.state_lookup[s.name.split('_')[1]]
+                        s_index = self.state_lookup[
+                            s.name.split('_')[1]]  # Find the index of the states in the cost matrix
                         s2_index = self.state_lookup[s2.name.split('_')[1]]
                         # Calculates the cost that we're trying to minimize
                         total_cost += self.cost_matrix[s_index][s2_index]
@@ -480,73 +578,136 @@ class EventPredictor:
                     if q2 != q2_previous:
                         story2 += predicted_event2
 
-                        s_index = self.state_lookup[s.name.split('_')[1]]
+                        s_index = self.state_lookup[
+                            s.name.split('_')[1]]  # Find the index of the states in the cost matrix
                         s2_index = self.state_lookup[s2.name.split('_')[1]]
                         # Calculates the cost that we're trying to minimize
                         total_cost2 += self.cost_matrix[s_index][s2_index]
             i += 1
             s = s2
 
-        if i > MAX_UNSAFE_ITERS:
-            raise Exception(f'Max iterations reached in {__name__}')
+            if i > MAX_UNSAFE_ITERS:
+                raise Exception(f'Max iterations reached in {__name__}')
 
+    def __simulate_markov_state_visible_general_and_cost_based(self, policy_general, policy_cost_based):
+        story = ""
+        story2 = ""
+        s = self.markov_chain.initial_state
+        q = self.dfa.initial_state
+        q2 = self.dfa.initial_state
+        i = 0
+        steps = 0
+        steps2 = 0
+        total_cost = 0
+        total_cost2 = 0
+        while True:
+            if q in self.dfa.final_states and q2 in self.dfa.final_states:
+                return {
+                    "general_algorithm": {
+                        "steps": steps,
+                        "story": story,
+                        "total_cost": total_cost
+                    },
+                    "cost_based_algorithm": {
+                        "steps": steps2,
+                        "story": story2,
+                        "total_cost": total_cost2
+                    }
+                }
 
-def __simulate_markov_state_visible_greedyalgorithm(self):
-    story = ""
-    s = self.markov_chain.initial_state
-    q = self.dfa.initial_state
-    i = 0
-    while True:
-        if q in self.dfa.final_states:
-            return i, story
+            s2 = self.markov_chain.next_state(s)
 
-        event_list_to_predict = AutomataUtility.get_non_self_loop_letters(self.dfa, q)
+            if q not in self.dfa.final_states:
+                steps += 1
+                predicted_event = policy_general[q][s.name]
+                q_previous = q
+                if predicted_event in s2.events:
+                    q = self.dfa.transitions[q][predicted_event]
+                    if q != q_previous:
+                        story += predicted_event
 
-        predicted_event = self.markov_chain.get_next_time_most_plausible_event(event_list_to_predict, s)
-        s2 = self.markov_chain.next_state(s)
+                        s_index = self.state_lookup[
+                            s.name.split('_')[1]]
 
-        q_previous = q
-        if predicted_event in s2.events:
-            q = self.dfa.transitions[q][predicted_event]
-            if q != q_previous:
-                story += predicted_event
-        i += 1
-        s = s2
+                        s2_index = self.state_lookup[s2.name.split('_')[1]]
+                        total_cost += self.cost_matrix[s_index][s2_index]
 
-        if i > MAX_UNSAFE_ITERS:
-            raise Exception(f'Max iterations reached in {__name__}')
+            if q2 not in self.dfa.final_states:
+                steps2 += 1
+                predicted_event2 = policy_cost_based[q2][s.name]
+                q2_previous = q2
+                if predicted_event2 in s2.events:
+                    q2 = self.dfa.transitions[q2][predicted_event2]
+                    if q2 != q2_previous:
+                        story2 += predicted_event2
 
+                        s_index = self.state_lookup[
+                            s.name.split('_')[1]]
 
-def __simulate_markov_state_invisible(self, policy):
-    story = ""
-    sts = set()
-    for i in range(len(self.markov_chain.states)):
-        if self.markov_chain.initial_distribution[i] > 0:
-            sts.add(self.markov_chain.states[i])
-    q = self.dfa.initial_state
-    i = 1
-    s = self.markov_chain.next_state(self.markov_chain.null_state)
-    m = self.mdp.initial_state
-    while True:
-        if q in self.dfa.final_states:
-            return i - 1, story
+                        s2_index = self.state_lookup[s2.name.split('_')[1]]
+                        total_cost2 += self.cost_matrix[s_index][s2_index]
 
-        predicted_event = policy[q][str(sts)]
-        s2 = self.markov_chain.next_state(s)
+            i += 1
+            s = s2
 
-        q_previous = q
-        if predicted_event in s2.events:
-            q = self.dfa.transitions[q][predicted_event]
-            if q != q_previous:
-                story += predicted_event
-        if predicted_event in s2.events:
-            m = self.mdp.get_next_state_for_event_positive(m, predicted_event)
-            sts = m.anchor[1]
-        else:
-            m = self.mdp.get_next_state_for_event_negative(m, predicted_event)
-            sts = m.anchor[1]
-        i += 1
-        s = s2
+            if i > MAX_UNSAFE_ITERS:
+                raise Exception(f'Max iterations reached in {__name__}')
 
-        if i > MAX_UNSAFE_ITERS:
-            raise Exception(f'Max iterations reached in {__name__}')
+    def __simulate_markov_state_visible_greedyalgorithm(self):
+        story = ""
+        s = self.markov_chain.initial_state
+        q = self.dfa.initial_state
+        i = 0
+        while True:
+            if q in self.dfa.final_states:
+                return i, story
+
+            event_list_to_predict = AutomataUtility.get_non_self_loop_letters(self.dfa, q)
+
+            predicted_event = self.markov_chain.get_next_time_most_plausible_event(event_list_to_predict, s)
+            s2 = self.markov_chain.next_state(s)
+
+            q_previous = q
+            if predicted_event in s2.events:
+                q = self.dfa.transitions[q][predicted_event]
+                if q != q_previous:
+                    story += predicted_event
+            i += 1
+            s = s2
+
+            if i > MAX_UNSAFE_ITERS:
+                raise Exception(f'Max iterations reached in {__name__}')
+
+    def __simulate_markov_state_invisible(self, policy):
+        story = ""
+        sts = set()
+        for i in range(len(self.markov_chain.states)):
+            if self.markov_chain.initial_distribution[i] > 0:
+                sts.add(self.markov_chain.states[i])
+        q = self.dfa.initial_state
+        i = 1
+        s = self.markov_chain.next_state(self.markov_chain.null_state)
+        m = self.mdp.initial_state
+        while True:
+            if q in self.dfa.final_states:
+                return i - 1, story
+
+            predicted_event = policy[q][str(sts)]
+            s2 = self.markov_chain.next_state(s)
+
+            q_previous = q
+            if predicted_event in s2.events:
+                q = self.dfa.transitions[q][predicted_event]
+                if q != q_previous:
+                    story += predicted_event
+            if predicted_event in s2.events:
+                m = self.mdp.get_next_state_for_event_positive(m, predicted_event)
+                sts = m.anchor[1]
+            else:
+                m = self.mdp.get_next_state_for_event_negative(m, predicted_event)
+                sts = m.anchor[1]
+            i += 1
+            s = s2
+
+            if i > MAX_UNSAFE_ITERS:
+                raise Exception(f'Max iterations reached in {__name__}')

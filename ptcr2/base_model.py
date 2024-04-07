@@ -26,9 +26,14 @@ class BaseModel(ABC):
     def get_dfa(self):
         pass
 
-    def compute_optimal_policy(self, spec: dict):
+    def compute_optimal_policy(self, spec: dict, cost_based=False):
         self.make_event_predictor(spec)
-        self.computed_policy = self.ep.optimal_policy_infinite_horizon(epsilon_of_convergence=self.epsilon)
+        if not cost_based and not spec.get('cost_based', False):
+            self.computed_policy = self.ep.optimal_policy_infinite_horizon(epsilon_of_convergence=self.epsilon)
+        else:
+            print("COMPUTING COST BASED POLICY!!!")
+            self.computed_policy = self.ep.optimal_policy_infinite_horizon_cost_based(
+                epsilon_of_convergence=self.epsilon)
         return self.computed_policy
 
     def simulate(self, spec: dict):
