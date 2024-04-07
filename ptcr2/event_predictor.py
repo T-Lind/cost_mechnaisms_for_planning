@@ -3,8 +3,8 @@ import time
 from builtins import str
 from sys import float_info
 
-import ptcr2.AutomataUtility as AutomataUtility
-from ptcr2.MarkovDecisionProcess import MDP, MDPState, MDPTransition
+import ptcr2.automata_utility as AutomataUtility
+from ptcr2.markov_decision_process import MDP, MDPState, MDPTransition
 
 MAX_UNSAFE_ITERS = 100_000
 
@@ -448,8 +448,6 @@ class EventPredictor:
                 }
 
             s2 = self.markov_chain.next_state(s)
-
-            print("All states:", self.mdp.states, "\n--\n")
 
             if q not in self.dfa.final_states:
                 steps += 1

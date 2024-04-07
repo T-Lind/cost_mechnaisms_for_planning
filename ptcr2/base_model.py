@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from ptcr2.EventPredictor import EventPredictor
+from ptcr2.event_predictor import EventPredictor
 
 
 class BaseModel(ABC):

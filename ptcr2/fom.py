@@ -4,10 +4,10 @@ from rich import print
 from rich.console import Console
 from rich.table import Table
 
-import ptcr2.AutomataUtility as AutomataUtility
-from ptcr2.BaseModel import BaseModel
-from ptcr2.EventPredictor import EventPredictor
-from ptcr2.MarkovChain import MarkovChain
+import ptcr2.automata_utility as AutomataUtility
+from ptcr2.base_model import BaseModel
+from ptcr2.event_predictor import EventPredictor
+from ptcr2.markov_chain import MarkovChain
 
 console = Console()
 

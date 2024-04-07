@@ -5,7 +5,7 @@ import time
 from copy import deepcopy
 from sys import float_info
 
-from ptcr2.BeliefTree import BeliefTree, BeliefTreeNode, BeliefTreeEdge
+from ptcr2.belief_tree import BeliefTree, BeliefTreeNode, BeliefTreeEdge
 
 # from gettext import lngettext
 

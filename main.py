@@ -2,7 +2,7 @@ import json
 import time
 from timeit import default_timer as timer
 
-from ptcr2.FOM import FOM
+from ptcr2.fom import FOM
 
 config_file = 'samples/wedding_fom.json'
 # parse file name
