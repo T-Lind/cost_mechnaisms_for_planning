@@ -47,6 +47,8 @@ class BaseModel(ABC):
 
     def simulate_general_and_greedy_algorithms(self, spec: dict = None):
         if not self.computed_policy:
+            if not spec:
+                raise ValueError("Specification is required to compute optimal policy")
             self.compute_optimal_policy(spec)
 
         policy = self.computed_policy['optimal_policy']

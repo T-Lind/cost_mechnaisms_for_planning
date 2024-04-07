@@ -20,6 +20,7 @@ class EventPredictor:
         self.current_markov_state_visible = markov_state_visible
         if markov_state_visible:
             self.__create_product_automaton_single_initial_state_onlyreachables()
+            pass
         else:
             self.__create_product_automaton_where_current_markov_state_invisible()
 
