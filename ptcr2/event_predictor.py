@@ -45,7 +45,6 @@ class EventPredictor:
         v0 = MDPState(dfa.initial_state + "_" + mc.initial_state.name, t0)
         v0.evidence_distribution = mc.initial_state.evidence_distribution
         v0.is_initial = True
-        print("Adding v0 = ", v0.name)
         mdp.add_state(v0)
         mdp.initial_state = v0
 
@@ -508,8 +507,11 @@ class EventPredictor:
         total_cost = 0
         while True:
             if q in self.dfa.final_states:
-                print("Total cost:", total_cost)
-                return i, story
+                return {
+                    "steps": i,
+                    "story": story,
+                    "total_cost": total_cost
+                }
             predicted_event = policy[q][s.name]
             s2 = self.markov_chain.next_state(s)
 
@@ -519,6 +521,10 @@ class EventPredictor:
 
                 if q != q_previous:
                     story += predicted_event
+
+                    s_index = self.state_lookup[s.name.split('_')[1]]
+                    s2_index = self.state_lookup[s2.name.split('_')[1]]
+                    total_cost += self.cost_matrix[s_index][s2_index]
             i += 1
             s = s2
 

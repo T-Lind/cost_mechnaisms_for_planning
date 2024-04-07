@@ -40,12 +40,13 @@ class BaseModel(ABC):
         if not self.computed_policy or not self.ep:
             self.compute_optimal_policy(spec)
 
-        run_number_of_steps, recorded_story = self.ep.simulate(self.computed_policy['optimal_policy'])
+        result_dict = self.ep.simulate(self.computed_policy['optimal_policy'])
 
         return {
             "expected": self.computed_policy['expected'],
-            "run_number_of_steps": run_number_of_steps,
-            "recorded_story": recorded_story,
+            "steps": result_dict['steps'],
+            "total_cost": result_dict['total_cost'],
+            "recorded_story": result_dict['recorded_story'],
             "policy_comp_time": self.computed_policy['elapsed_time'],
             "diff_tracker": self.computed_policy['diff_tracker']
         }
@@ -63,6 +64,7 @@ class BaseModel(ABC):
 
         policy = self.computed_policy['optimal_policy']
         return self.ep.simulate_general_and_greedy_algorithms(policy)
+
 
     def save(self, filename=None):
         """

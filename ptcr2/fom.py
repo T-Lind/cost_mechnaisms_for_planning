@@ -123,8 +123,6 @@ class FOM(BaseModel):
             if initial_states not in self.alphabet_s:
                 raise ValueError(f"state {initial_states} not in alphabet")
 
-        print("Formatting checks succeeded.")
-
         transition_table = Table(title="Transition Matrix")
         transition_table.add_column("")
         for i in range(len(state_names)):
@@ -133,14 +131,12 @@ class FOM(BaseModel):
             row_str = [str(element) for element in transition_matrix[i]]
             transition_table.add_row(state_names[i], *row_str)
 
-        console.print(transition_table)
 
         initial_dist_table = Table(title="Initial Distribution")
         for i in range(len(state_names)):
             initial_dist_table.add_column(state_names[i])
         initial_dist_table.add_row(*[str(element) for element in initial_distribution])
 
-        console.print(initial_dist_table)
 
         cost_matrix_table = Table(title="Cost Matrix")
         cost_matrix_table.add_column("")
@@ -150,7 +146,6 @@ class FOM(BaseModel):
             row_str = [str(element) for element in self.cost_matrix[i]]
             cost_matrix_table.add_row(state_names[i], *row_str)
 
-        console.print(cost_matrix_table)
 
         alphabet_table = Table(title="Alphabet")
 
@@ -159,7 +154,7 @@ class FOM(BaseModel):
         for element in self.alphabet_s:
             alphabet_table.add_row(element)
 
-        console.print(alphabet_table)
+
 
         mc1 = MarkovChain(state_names, state_events_1, transition_matrix, initial_distribution, 0)
 
@@ -174,8 +169,13 @@ class FOM(BaseModel):
         single_initial_state_0[0][0] = tuple(single_initial_state_0[0][0])
         single_initial_state_1[0][0] = tuple(single_initial_state_1[0][0])
 
-        print("Single initial state 0:", single_initial_state_0)
-        print("Single initial state 1:", single_initial_state_1)
+        if spec.get('verbose', False):
+            console.print(transition_table)
+            console.print(initial_dist_table)
+            console.print(cost_matrix_table)
+            console.print(alphabet_table)
+            print("Single initial state 0:", single_initial_state_0)
+            print("Single initial state 1:", single_initial_state_1)
 
         mc12 = mc1.product_single_initial_state(mc2, single_initial_state_0)
 

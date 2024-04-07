@@ -25,7 +25,7 @@ if __name__ == "__main__":
         start = timer()
 
         results = wedding_fom.simulate(spec)
-        run_number_of_steps = results['run_number_of_steps']
+        run_number_of_steps = results['steps']
         expected_number_of_steps = results['expected']
         recorded_story = results['recorded_story']
         diff_tracker = results['diff_tracker']

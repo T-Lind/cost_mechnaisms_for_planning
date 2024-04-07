@@ -187,7 +187,7 @@ class MDP:
         'o' is an action, 's' is a state, and 'a' is an action.
         """
         self.observation_function = {}
-        self.verbose = True
+        self.verbose = False
         self.beliefTree = None
 
         """
