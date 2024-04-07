@@ -4,8 +4,6 @@ import sys
 import time
 from abc import ABC, abstractmethod
 
-from ptcr2.event_predictor import EventPredictor
-
 # Increase the recursion limit to avoid RecursionError while loading models
 sys.setrecursionlimit(10_000)
 
@@ -14,7 +12,7 @@ class BaseModel(ABC):
     def __init__(self):
         self.verbose = True
         self.computed_policy = None
-        self.ep: EventPredictor = None
+        self.ep = None
         self.mc = None
         self.alphabet_s = None
         self.cost_matrix = None

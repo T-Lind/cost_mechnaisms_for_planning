@@ -9,3 +9,4 @@ typing_extensions==4.9.0
 matplotlib==3.8.3
 rich~=13.7.1
 jupyter==1.0.0
+tqdm==4.66.2

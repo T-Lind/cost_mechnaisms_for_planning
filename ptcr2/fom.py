@@ -183,7 +183,7 @@ class FOM(BaseModel):
 
         dfa = self.get_dfa()
 
-        self.ep = EventPredictor(dfa, mc, self.alphabet_s, self.cost_matrix, self.verbose)
+        self.ep = EventPredictor(dfa, mc, self.alphabet_s, self.cost_matrix, state_names, verbose=self.verbose)
 
         return self.ep
 

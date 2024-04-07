@@ -10,7 +10,7 @@ MAX_UNSAFE_ITERS = 100_000
 
 
 class EventPredictor:
-    def __init__(self, dfa, markov_chain, actions, cost_matrix, verbose, markov_state_visible=True):
+    def __init__(self, dfa, markov_chain, actions, cost_matrix, state_names, verbose=False, markov_state_visible=True):
         self.dfa = dfa
         self.markov_chain = markov_chain
         self.actions = actions
@@ -18,6 +18,11 @@ class EventPredictor:
         self.cost_matrix = cost_matrix
         self.mdp = None
         self.current_markov_state_visible = markov_state_visible
+
+        self.state_lookup = {}
+        for i in range(len(state_names)):
+            self.state_lookup[state_names[i]] = i
+
         if markov_state_visible:
             self.__create_product_automaton_single_initial_state_onlyreachables()
         else:
@@ -286,7 +291,8 @@ class EventPredictor:
             "expected": G[0][self.mdp.initial_state.index]
         }
 
-    def optimal_policy_infinite_horizon(self, epsilon_of_convergence=0.01, compute_avoidable_actions=False, verbose=False):
+    def optimal_policy_infinite_horizon(self, epsilon_of_convergence=0.01, compute_avoidable_actions=False,
+                                        verbose=False):
         n = len(self.mdp.states)
 
         if compute_avoidable_actions:
@@ -458,10 +464,11 @@ class EventPredictor:
                     q = self.dfa.transitions[q][predicted_event]
                     if q != q_previous:
                         story += predicted_event
-                        state_to_index = {state.name: index for index, state in enumerate(self.mdp.states)}
-                        index_q_previous = state_to_index[q_previous + "_" + s.name]
-                        index_q = state_to_index[q + "_" + s2.name]
-                        # total_cost += self.cost_matrix[index_q_previous][index_q]  # Add the cost of the transition
+
+                        s_index = self.state_lookup[s.name.split('_')[1]]
+                        s2_index = self.state_lookup[s2.name.split('_')[1]]
+                        # Calculates the cost that we're trying to minimize
+                        total_cost += self.cost_matrix[s_index][s2_index]
 
             if q2 not in self.dfa.final_states:
                 steps2 += 1
@@ -472,6 +479,11 @@ class EventPredictor:
                     q2 = self.dfa.transitions[q2][predicted_event2]
                     if q2 != q2_previous:
                         story2 += predicted_event2
+
+                        s_index = self.state_lookup[s.name.split('_')[1]]
+                        s2_index = self.state_lookup[s2.name.split('_')[1]]
+                        # Calculates the cost that we're trying to minimize
+                        total_cost2 += self.cost_matrix[s_index][s2_index]
             i += 1
             s = s2
 
