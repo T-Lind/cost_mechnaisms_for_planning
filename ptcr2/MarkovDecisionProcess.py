@@ -174,7 +174,7 @@ class MDP:
         self.states = []
         self.actions = []
         self.initial_state = MDPState()
-        self.goalStates = []
+        self.goal_states = []
         self.transitions = []
         self.transitions_dict = {}
         self.made_transition_dict = False
@@ -241,7 +241,7 @@ class MDP:
     def sum_transition_probs(self, dstState, action, beleifState):
         total = 0
         for srcState in self.states:
-            total += beleifState[srcState.index] * self.conditionalProbability(dstState.index, srcState.index, action)
+            total += beleifState[srcState.index] * self.conditional_probability(dstState.index, srcState.index, action)
         return total
 
     def probability_observation_given_action_andbeleif(self, observation, action, belief_state):
@@ -283,7 +283,7 @@ class MDP:
 
     def get_goal_avg_value(self, belief):
         total = 0
-        for x in self.goalStates:
+        for x in self.goal_states:
             total += belief[x.index]
         return total
 
@@ -294,8 +294,8 @@ class MDP:
 
     def set_as_goal(self, mdp_state):
         mdp_state.is_goal = True
-        if mdp_state not in self.goalStates:
-            self.goalStates.append(mdp_state)
+        if mdp_state not in self.goal_states:
+            self.goal_states.append(mdp_state)
 
     def add_transition(self, mdp_transition):
         self.transitions.append(mdp_transition)
@@ -342,43 +342,31 @@ class MDP:
                 if allDstReachable == False:
                     state.avoid_actions.append(action)
 
-        if printResults:
-            for state in self.states:
-                print("State: " + str(state.name) + ", a_goal_is_reachable: " + str(state.a_goal_is_reachable))
-
-        if printResults:
-            for state in self.states:
-                if state.a_goal_is_reachable == False:
-                    continue
-                # print("State: "+str(state.name)+", a_goal_is_reachable: "+str(state.a_goal_is_reachable))
-                for action in state.avoid_actions:
-                    print("Avoid " + str(action) + " in state " + state.name)
-
         print("End computing avoidable actions ")
 
-    def topologicalOrderHelper(self, state):
+    def topological_order_helper(self, state):
         state.visited = True
         for tran in state.transitions:
             if tran.dst_state.visited == False:
-                self.topologicalOrderHelper(tran.dst_state)
+                self.topological_order_helper(tran.dst_state)
         self.topological_order.append(state)
 
-    def topologicalOrderStack(self, state):
+    def topological_order_stack(self, state):
         state.visited = True
         for tran in state.transitions:
-            if tran.dst_state.visited == False:
-                self.topologicalOrderHelper(tran.dst_state)
+            if not tran.dst_state.visited:
+                self.topological_order_helper(tran.dst_state)
         self.topological_order.append(state)
 
-    def computeTopologicalOrder(self):
+    def compute_topological_order(self):
         self.topological_order = []
         for state in self.states:
             state.visited = False
         for state in self.states:
-            if state.visited == False:
-                self.topologicalOrderHelper(state)
+            if not state.visited:
+                self.topological_order_helper(state)
 
-    def computeTopologicalOrderRecursive(self):
+    def compute_topological_order_recursive(self):
         self.topological_order = []
         for state in self.states:
             state.visited = False
@@ -387,22 +375,22 @@ class MDP:
         state = self.initial_state
         state.visited = True
 
-    def sccTopologicalOrderHelper(self, scc):
+    def scc_topological_order_helper(self, scc):
         scc.visited = True
         for sccTrans in scc.scc_transitions:
-            if sccTrans.dst_scc.visited == False:
-                self.sccTopologicalOrderHelper(sccTrans.dst_scc)
+            if not sccTrans.dst_scc.visited:
+                self.scc_topological_order_helper(sccTrans.dst_scc)
         self.scc_topological_order.append(scc)
 
-    def computeSCCTopologicalOrder(self):
+    def compute_scc_topological_order(self):
         self.scc_topological_order = []
         for scc in self.strg_conn_compoments:
             scc.visited = False
         for scc in self.strg_conn_compoments:
             if scc.visited == False:
-                self.sccTopologicalOrderHelper(scc)
+                self.scc_topological_order_helper(scc)
 
-    def makeSCCTransitions(self):
+    def make_scc_transitions(self):
         for scc in self.strg_conn_compoments:
             for state in scc.states:
                 for trans in state.transitions:
@@ -413,7 +401,7 @@ class MDP:
                         self.scc_transitions.append(sccTransition)
                         state.scc.scc_transitions.append(sccTransition)
 
-    def decomposeToStrngConnComponents(self):
+    def decompose_to_strng_conn_components(self):
         self.sccIndex = 0
         self.stack4scc = []
         for state in self.states:
@@ -422,7 +410,7 @@ class MDP:
 
         for i in range(len(self.strg_conn_compoments)):
             self.strg_conn_compoments[i].name = "C" + str(len(self.strg_conn_compoments) - i - 1)
-        self.makeSCCTransitions()
+        self.make_scc_transitions()
 
     def strongconnect(self, state):
         state.scc_index = self.sccIndex
@@ -454,14 +442,14 @@ class MDP:
                 if state2 == state:
                     hasPopedState = True
 
-    def printStrgConnComponents(self):
+    def print_strg_conn_components(self):
         print("------------------------- Start Printing Strongly Connected Components ----------------------")
         print("The MDP has " + str(len(self.strg_conn_compoments)) + " strongly connected components")
         for scc in self.strg_conn_compoments:
             print(scc.get_full_name())
         print("------------------------- End Printing Strongly Connected Components ----------------------")
 
-    def printGraphOfStrgConnComponents(self):
+    def print_graph_of_strg_conn_components(self):
         print(
             "------------------------- Start Printing The Graph of Strongly Connected Components ----------------------")
         print("The MDP has " + str(len(self.strg_conn_compoments)) + " strongly connected components")
@@ -476,61 +464,61 @@ class MDP:
             state.compute_available_actions()
         self.available_actions_computed = True
 
-    def reindexStates(self):
+    def reindex_states(self):
         i = 0
         for state in self.states:
             state.index = i
             i += 1
 
     def remove_un_reachable_states(self):
-        self.recognizeReachableStates()
+        self.recognize_reachable_states()
         if self.verbose:
             print("Unreachable state have been recognized")
-        statesToRemove = []
+        states_to_remove = []
         for state in self.states:
-            if state.reachable == False:
-                statesToRemove.append(state)
-        transitionsToRemove = []
+            if not state.reachable:
+                states_to_remove.append(state)
+        transitions_to_remove = []
         if self.verbose:
             print("Start checking transitions to remove")
             print("Number of transitions: " + str(len(self.transitions)))
         for trans in self.transitions:
-            if trans.src_state.reachable == False or trans.dst_state.reachable == False:
-                transitionsToRemove.append(trans)
+            if not trans.src_state.reachable or not trans.dst_state.reachable:
+                transitions_to_remove.append(trans)
         if self.verbose:
             print("End checking transitions to remove")
 
         if self.verbose:
             print("Start removing unreachable transitions")
-        cntRemovedTransitions = 0
-        for trans in transitionsToRemove:
+        cnt_removed_transitions = 0
+        for trans in transitions_to_remove:
             self.transitions.remove(trans)
-            cntRemovedTransitions += 1
+            cnt_removed_transitions += 1
         if self.verbose:
             print("End removing unreachable transitions")
 
         if self.verbose:
             print("Start removing unreachable states")
-        ctnRemovedStates = 0
-        for state in statesToRemove:
+        ctn_removed_states = 0
+        for state in states_to_remove:
             self.states.remove(state)
-            if state in self.goalStates:
-                self.goalStates.remove(state)
-            ctnRemovedStates += 1
+            if state in self.goal_states:
+                self.goal_states.remove(state)
+            ctn_removed_states += 1
         if self.verbose:
             print("End removing unreachable states")
 
         if self.verbose:
             print("Start reindexing states")
-        self.reindexStates()
+        self.reindex_states()
         if self.verbose:
             print("End reindexing states")
 
         if self.verbose:
-            print("Number of unreachable states removed = " + str(ctnRemovedStates))
-            print("Number of unreachable transitions removed = " + str(cntRemovedTransitions))
+            print("Number of unreachable states removed = " + str(ctn_removed_states))
+            print("Number of unreachable transitions removed = " + str(cnt_removed_transitions))
 
-    def recognizeReachableStates(self):
+    def recognize_reachable_states(self):
         self.visited = [False] * len(self.states)
         for state in self.states:
             state.reachable = False
@@ -545,7 +533,7 @@ class MDP:
                 continue
             self.dfs(t.dst_state)
 
-    def getStateByAnchor(self, anchor):
+    def get_state_by_anchor(self, anchor):
         for s in self.states:
             if s.anchor == anchor:
                 return s
@@ -566,20 +554,19 @@ class MDP:
 
         return None
 
-    def getNextStateForEventPositive(self, state, event):
+    def get_next_state_for_event_positive(self, state, event):
         for t in self.transitions:
-            if t.src_state == state and t.action == event and t.eventPositive == True:
+            if t.src_state == state and t.action == event and t.eventPositive:
                 return t.dst_state
         return None
 
-    def getNextStateForEventNegative(self, state, event):
+    def get_next_state_for_event_negative(self, state, event):
         for t in self.transitions:
-            if t.src_state == state and t.action == event and t.event_negative == True:
+            if t.src_state == state and t.action == event and t.event_negative:
                 return t.dst_state
         return None
 
-    def makeTransitionsDict(self):
-
+    def make_transitions_dict(self):
         n = len(self.states)
         self.transitions_dict = {}
         for a in self.actions:
@@ -593,15 +580,15 @@ class MDP:
         self.made_transition_dict = True
         print("TransitionsDict has been made")
 
-    def finiteHorizonOptimalPolicy(self, F, verbose):
-        if verbose == True:
+    def finite_horizon_optimal_policy(self, F, verbose):
+        if verbose:
             print("------computing optimal policy for finite horizon--------------")
         n = len(self.states)
-        G = [[0.0 for j in range(n)] for i in range(F + 1)]
-        A = [["" for j in range(n)] for i in range(F + 1)]
+        G = [[0.0 for _ in range(n)] for _ in range(F + 1)]
+        A = [["" for _ in range(n)] for _ in range(F + 1)]
 
         for j in range(n):
-            if (self.states[j].is_goal):
+            if self.states[j].is_goal:
                 G[F][j] = 0.0
             else:
                 G[F][j] = 10000.0
@@ -609,46 +596,46 @@ class MDP:
         for i in range(F - 1, -1, -1):
             # print(i)
             for j in range(n):
-                if self.states[j].is_goal == True:
+                if self.states[j].is_goal:
                     A[i][j] = "STOP"
                     G[i][j] = 0.0
                     continue
 
-                minVal = float_info.max;
-                optAction = ""
+                min_val = float_info.max
+                opt_action = ""
                 state = self.states[j]
 
                 for action in self.actions:
                     val = 0.0
-                    if state.is_goal == False:
+                    if not state.is_goal:
                         val += 1
                     for k in range(n):
-                        term = G[i + 1][k] * self.conditionalProbability(k, j, action)
+                        term = G[i + 1][k] * self.conditional_probability(k, j, action)
                         val += term
-                    if val < minVal:
-                        minVal = val
-                        optAction = action
-                G[i][j] = minVal
-                A[i][j] = optAction
+                    if val < min_val:
+                        min_val = val
+                        opt_action = action
+                G[i][j] = min_val
+                A[i][j] = opt_action
 
-        optPolicy = {}
+        opt_policy = {}
 
         for j in range(n):
-            optPolicy[self.states[j]] = A[0][j]
-            if verbose == True:
+            opt_policy[self.states[j]] = A[0][j]
+            if verbose:
                 print("\pi(" + self.states[j].name + ")=" + A[0][j])
 
-        if verbose == True:
+        if verbose:
             print("optimal policy for finite horizon has been computed")
 
-        return optPolicy
+        return opt_policy
 
-    def conditionalProbability(self, nextStateIndex, currentStateIndex, action):
-        if self.made_transition_dict == False:
-            self.makeTransitionsDict()
-        return self.transitions_dict[action][currentStateIndex][nextStateIndex]
+    def conditional_probability(self, next_state_index, current_state_index, action):
+        if not self.made_transition_dict:
+            self.make_transitions_dict()
+        return self.transitions_dict[action][current_state_index][next_state_index]
 
-    def printAll(self):
+    def print_all(self):
         print("-------------------------------------------MDP--------------------------------------------")
         print("States:")
         for s in self.states:
@@ -659,12 +646,12 @@ class MDP:
             print(t)
 
         print("Goal States")
-        for g in self.goalStates:
+        for g in self.goal_states:
             print(g)
 
         print("-------------------------------------------------------------------------------------------")
 
-    def printToFile(self, fileName):
+    def print_to_file(self, file_name):
         strP = "-------------------------------------------MDP--------------------------------------------" + "\n"
         strP += "Number of states=" + str(len(self.states)) + "\n"
         strP += "States:" + "\n"
@@ -676,20 +663,20 @@ class MDP:
             strP += str(t) + "\n"
 
         strP += "Goal States" + "\n"
-        for g in self.goalStates:
+        for g in self.goal_states:
             strP += str(g) + "\n"
 
         strP += "-------------------------------------------------------------------------------------------" + "\n"
 
-        f = open(fileName, "w")
+        f = open(file_name, "w")
         f.write(strP)
         f.close()
 
-    def makeGoalStatesAbsorbing(self):
+    def make_goal_states_absorbing(self):
         cnt = 0
 
         for t in self.transitions:
-            if t.src_state.is_goal == False:
+            if not t.src_state.is_goal:
                 continue
 
             if t.src_state != t.dst_state:
@@ -697,14 +684,14 @@ class MDP:
                 cnt = cnt + 1
 
         for s in self.states:
-            if s.is_goal == False:
+            if not s.is_goal:
                 continue
 
             for t in s.transitions:
                 if t.src_state != t.dst_state:
                     t.dst_state = t.src_state
 
-        self.makeTransitionsDict()
+        self.make_transitions_dict()
 
         print("Number of transitions become self-loops:" + str(cnt))
 
@@ -716,44 +703,44 @@ class MDP:
 
         print("Number of remained transitions from goal states:" + str(cnt))
 
-    def checkTransitionFunction(self):
+    def check_transition_function(self):
         ok = True
-        notFixed = ""
+        not_fixed = ""
         for s in self.states:
             for a in self.actions:
                 if self.available_actions_computed:
                     if a not in s.available_actions:
                         continue
                 sum = 0
-                numOfTrans = 0
-                recentT = None
+                num_of_trans = 0
+                recent_t = None
                 trans = []
                 for t in s.transitions:
                     if t.action == a:
                         sum += t.probability
-                        numOfTrans += 1
+                        num_of_trans += 1
                         trans.append(t)
                         if t.probability != 0:
-                            recentT = t
+                            recent_t = t
                 if sum != 1:
                     ok = False
                     # print("Probability transition function does not summed_step_numbers to one: state="+s.name+", action="+ a+", prob="+str(summed_step_numbers)+", numOfTrans="+str(numOfTrans)+". "+str(trans))
                     # raise Exception("state="+s.name+", action="+ a+", prob="+str(summed_step_numbers)+", numOfTrans="+str(numOfTrans)+". "+str(trans))
                     if sum == 0.9999999999999999:
                         # print("Fix the error of mathematical operations")
-                        recentT.probability = 1 - (sum - recentT.probability)
+                        recent_t.probability = 1 - (sum - recent_t.probability)
                     elif abs(sum - 1) < 0.000000001:
                         # print("Fix the error of mathematical operations")
-                        recentT.probability = 1 - (sum - recentT.probability)
+                        recent_t.probability = 1 - (sum - recent_t.probability)
                     else:
                         print("Could not fix the error")
-                        notFixed += "Could not fix error for: state=" + s.name + ", is_goal=" + str(
+                        not_fixed += "Could not fix error for: state=" + s.name + ", is_goal=" + str(
                             s.is_goal) + ", action=" + str(a) + ", prob=" + str(sum) + ", numOfTrans=" + str(
-                            numOfTrans) + ". " + str(trans) + "\n"
+                            num_of_trans) + ". " + str(trans) + "\n"
 
-        if notFixed != "":
-            print(notFixed)
-            raise Exception(notFixed)
+        if not_fixed != "":
+            print(not_fixed)
+            raise Exception(not_fixed)
         return ok
 
     """
@@ -765,17 +752,17 @@ class MDP:
         ok = True
         for a in self.actions:
             for s in self.states:
-                sumProb = 0
+                sum_prob = 0
                 for o in self.observations:
-                    sumProb += self.observation_function[o][s][a]
-                if sumProb != 1:
+                    sum_prob += self.observation_function[o][s][a]
+                if sum_prob != 1:
                     ok = False
                     print("The summed_step_numbers of observations for s=" + str(
-                        s) + " and a=" + a + " does not summed_step_numbers to 1; it sums to " + str(sumProb))
+                        s) + " and a=" + a + " does not summed_step_numbers to 1; it sums to " + str(sum_prob))
 
         return ok
 
-    def makeBeliefTree(self, H):
+    def make_belief_tree(self, H):
 
         if self.verbose:
             print("Start making the belief Tree with height " + str(H))
@@ -792,8 +779,8 @@ class MDP:
 
         node = BeliefTreeNode(beleif)
         node.height = 0
-        if self.initial_state in self.goalStates:
-            node.goalAvgValue = 1
+        if self.initial_state in self.goal_states:
+            node.goal_avg_value = 1
 
         bt = BeliefTree(node)
 
@@ -805,19 +792,19 @@ class MDP:
 
         while len(queue) > 0:
             node = queue.pop(0)
-            b = node.beliefState
+            b = node.belief_state
             if node.height == H:
                 continue
             for a in self.actions:
                 for o in self.observations:
                     b2 = self.create_belief(b, a, o)
                     node2 = BeliefTreeNode(b2)
-                    node2.goalAvgValue = self.get_goal_avg_value(b2)
+                    node2.goal_avg_value = self.get_goal_avg_value(b2)
                     node2.height = node.height + 1
                     prob = self.probability_observation_given_action_andbeleif(o, a, b)
                     edge = BeliefTreeEdge(node, node2, a, o, prob)
-                    node.addEdge(edge)
-                    node2.probabilityTo = node.probabilityTo * prob
+                    node.add_edge(edge)
+                    node2.probability_to = node.probability_to * prob
                     queue.append(node2)
             if self.verbose and i % 1000 == 0:
                 print("Number of nodes added to the belief tree is " + str(i))
@@ -831,14 +818,14 @@ class MDP:
 
         return bt
 
-    def getObservation(self, exMarkovChainState, eventOccured):
+    def get_observation(self, exMarkovChainState, eventOccured):
         for o in self.observations:
             if exMarkovChainState == o[1]:
                 if eventOccured == o[0]:
                     return o
         return None
 
-    def getPOMDPX_XML(self):
+    def get_pomdpx_xml(self):
 
         #         transFunOk = self.checkTransitionFunction()
         #         print("Checking transition function")
@@ -1050,7 +1037,7 @@ class MDP:
     In this version, the observation function of the pomdpx comes directly from the field observation_function of this object
     """
 
-    def getPOMDPX_XML2(self):
+    def get_pomdpx_xml2(self):
 
         st = "<?xml version='1.0' encoding='ISO-8859-1'?>" + "\n"
         st += "<pomdpx version='0.1' id='autogenerated' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:noNamespaceSchemaLocation='pomdpx.xsd'>" + "\n"
@@ -1181,7 +1168,7 @@ class MDP:
         st += "</pomdpx>"
         return st
 
-    def getPOMDPX_4_EXMDP_XML(self):
+    def get_pomdpx_4_exmdp_xml(self):
         st = "<?xml version='1.0' encoding='ISO-8859-1'?>" + "\n"
         st += "<pomdpx version='0.1' id='autogenerated' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:noNamespaceSchemaLocation='pomdpx.xsd'>" + "\n"
         st += "<Description>This is an auto-generated POMDPX file</Description>" + "\n"
@@ -1299,9 +1286,9 @@ class MDP:
         st += "</pomdpx>"
         return st
 
-    def addShadowStatesForGoalStates(self):
+    def add_shadow_states_for_goal_states(self):
         for s in self.states:
-            if s.is_goal == False:
+            if not s.is_goal:
                 continue
             s2 = MDPState(s.name + "_shadow", s)
             self.add_state(s2)
@@ -1311,29 +1298,29 @@ class MDP:
                     self.observation_function[o][s2][a] = self.observation_function[o][s][a]
 
         for t in self.transitions:
-            if t.src_state.is_goal == False:
+            if not t.src_state.is_goal:
                 continue
-            if t.dst_state.isGoal == False:
+            if not t.dst_state.isGoal:
                 continue
-            srcStateShadow = self.getStateByAnchor(t.src_state)
-            dstStateShadow = self.getStateByAnchor(t.dst_state)
-            t2 = MDPTransition(srcStateShadow, dstStateShadow, t.action, t.nature_action, t.probability)
+            src_state_shadow = self.get_state_by_anchor(t.src_state)
+            dst_state_shadow = self.get_state_by_anchor(t.dst_state)
+            t2 = MDPTransition(src_state_shadow, dst_state_shadow, t.action, t.nature_action, t.probability)
             self.add_transition(t2)
 
         for t in self.transitions:
-            if t.src_state.is_goal == False:
+            if not t.src_state.is_goal:
                 continue
-            dstStateShadow = self.getStateByAnchor(t.dst_state)
-            t.dst_state = dstStateShadow
+            dst_state_shadow = self.get_state_by_anchor(t.dst_state)
+            t.dst_state = dst_state_shadow
 
-    def getPreferenceValueBooleanVector(self, booleanVector):
+    def get_preference_value_boolean_vector(self, booleanVector):
         m = len(booleanVector)
         val = 0.0
         for j in range(m):
             val += math.pow(2, m - j) if booleanVector[j] == True else 0.0
         return val
 
-    def getPreferenceValueVector(self, vect):
+    def get_preference_value_vector(self, vect):
         m = len(vect)
         val = 0.0
         # print("vect="+str(vect))
@@ -1345,7 +1332,7 @@ class MDP:
     Check if vect1 is dominated by vect2
     """
 
-    def isDominated(self, vect1, vect2):
+    def is_dominated(self, vect1, vect2):
         m = len(vect1)
         result = False
         # print("vect="+str(vect))
@@ -1358,7 +1345,7 @@ class MDP:
                 break
         return result
 
-    def isVectsEqual(self, vect1, vect2):
+    def is_vects_equal(self, vect1, vect2):
         m = len(vect1)
         result = True
         for j in range(m):
@@ -1367,13 +1354,13 @@ class MDP:
                 break
         return result
 
-    def containtsValTuple(self, valTupleList, valTuple):
+    def containts_val_tuple(self, valTupleList, valTuple):
         for v in valTupleList:
-            if self.areValTuplesEqual(v, valTuple):
+            if self.are_val_tuples_equal(v, valTuple):
                 return True
         return False
 
-    def areValTuplesEqual(self, valueTuple1, valueTuple2):
+    def are_val_tuples_equal(self, valueTuple1, valueTuple2):
         if valueTuple1[0] != valueTuple2[0]:
             return False
         for i in range(len(valueTuple1[1])):
@@ -1381,12 +1368,12 @@ class MDP:
                 return False
         return True
 
-    def getNonDominantVectors(self, v_vectors):
+    def get_non_dominant_vectors(self, v_vectors):
         nonDominants = []
         for vect in v_vectors:
             dominated = False
             for vect2 in v_vectors:
-                if vect2[0] < vect[0] and self.getPreferenceValueVector(vect2[1]) > self.getPreferenceValueVector(
+                if vect2[0] < vect[0] and self.get_preference_value_vector(vect2[1]) > self.get_preference_value_vector(
                         vect[1]):
                     dominated = True
                     break
@@ -1396,21 +1383,21 @@ class MDP:
 
         return nonDominants
 
-    def getNonDominantActionsAndVectors(self, v_action_vectors):
+    def get_non_dominant_actions_and_vectors(self, v_action_vectors):
         nonDominants = []
         # print("v_action_vectors: "+str(v_action_vectors))
         for a_vect in v_action_vectors:
             dominated = False
             for a_vect2 in v_action_vectors:
-                if a_vect2[1][0] <= a_vect[1][0] and self.isDominated(a_vect[1][1], a_vect2[1][1]):
+                if a_vect2[1][0] <= a_vect[1][0] and self.is_dominated(a_vect[1][1], a_vect2[1][1]):
                     dominated = True
                     break
                 elif a_vect2[1][0] < a_vect[1][0] and (
-                        self.isDominated(a_vect[1][1], a_vect2[1][1]) or self.isVectsEqual(a_vect[1][1],
-                                                                                           a_vect2[1][1])):
+                        self.is_dominated(a_vect[1][1], a_vect2[1][1]) or self.is_vects_equal(a_vect[1][1],
+                                                                                              a_vect2[1][1])):
                     dominated = True
                     break
-                elif a_vect2[1][0] == a_vect[1][0] and self.isVectsEqual(a_vect[1][1], a_vect2[1][1]) and a_vect2[0] < \
+                elif a_vect2[1][0] == a_vect[1][0] and self.is_vects_equal(a_vect[1][1], a_vect2[1][1]) and a_vect2[0] < \
                         a_vect[0]:
                     dominated = True
                     break
@@ -1420,17 +1407,17 @@ class MDP:
 
         return nonDominants
 
-    def getNonDominantTimeViolationCostVectors(self, v_vectors):
+    def get_non_dominant_time_violation_cost_vectors(self, v_vectors):
         nonDominants = []
         # print("v_action_vectors: "+str(v_action_vectors))
         for a_vect in v_vectors:
             dominated = False
             for a_vect2 in v_vectors:
-                if a_vect2[0] <= a_vect[0] and self.isDominated(a_vect[1], a_vect2[1]):
+                if a_vect2[0] <= a_vect[0] and self.is_dominated(a_vect[1], a_vect2[1]):
                     dominated = True
                     break
                 elif a_vect2[0] < a_vect[0] and (
-                        self.isDominated(a_vect[1], a_vect2[1]) or self.isVectsEqual(a_vect[1], a_vect2[1])):
+                        self.is_dominated(a_vect[1], a_vect2[1]) or self.is_vects_equal(a_vect[1], a_vect2[1])):
                     dominated = True
                     break
                     # elif a_vect2[0] == a_vect[0] and self.isVectsEqual(a_vect[1], a_vect2[1]) and a_vect2[0] < a_vect[0]:
@@ -1442,7 +1429,7 @@ class MDP:
 
         return nonDominants
 
-    def roundValueVect(self, valueVect, digits):
+    def round_value_vect(self, valueVect, digits):
         # print("valueVect: "+str(valueVect))
         # print("valueVect[0]: " +str(valueVect[0]))
         result = []
@@ -1454,7 +1441,7 @@ class MDP:
         # print("tp: "+str(tp))
         return tp
 
-    def roundValueVects(self, valueVect, digits):
+    def round_value_vects(self, valueVect, digits):
         result = []
         for t in valueVect:
             print("t: " + str(t))
@@ -1468,9 +1455,9 @@ class MDP:
             result.append(tp)
         return result
 
-    def getOrder4ComputingPolicy(self):
+    def get_order4_computing_policy(self):
         queue = []
-        for s in self.goalStates:
+        for s in self.goal_states:
             for t in s.transitions_to:
                 if t.src_state not in queue and (not t.src_state.is_goal):
                     queue.append(t.src_state)
@@ -1483,7 +1470,7 @@ class MDP:
             i += 1
         return queue
 
-    def computeNumstepsAndSatisProbOfAPolicy(self, states, policy, V, byStateNameOrIndex=False):
+    def compute_numsteps_and_satis_prob_of_a_policy(self, states, policy, V, byStateNameOrIndex=False):
         """
         First compute the values of goal states
         """
@@ -1491,24 +1478,24 @@ class MDP:
             V = {}
         else:
             V = [() for i in range(len(self.states))]
-        m = len(self.goalStates[0].weight_b_vector)
+        m = len(self.goal_states[0].weight_b_vector)
         for s in self.states:
-            softConstProbVect = [0] * m
+            soft_const_prob_vect = [0] * m
             # vect = None
             if s.is_goal:
                 for k in range(m):
-                    softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
-                vect = (0, softConstProbVect)
+                    soft_const_prob_vect[k] = 1.0 if s.weight_b_vector[k] else 0.0
+                vect = (0, soft_const_prob_vect)
             else:
-                vect = (0, softConstProbVect)
+                vect = (0, soft_const_prob_vect)
             if byStateNameOrIndex:
                 V[s.name] = vect
             else:
                 V[s.index] = vect
 
         cnt = 1
-        maxCnt = 500
-        while cnt < maxCnt:
+        max_cnt = 500
+        while cnt < max_cnt:
             for s in states:
                 if s.is_goal:
                     continue
@@ -1527,7 +1514,7 @@ class MDP:
                 if a not in s.actions_transitions.keys():
                     print(f"Error2: Action {a} is not in availableActions of state {s}")
                     print("Action: " + str(a))
-                    self.printActions()
+                    self.print_actions()
                     continue
                 for tran in s.actions_transitions[a]:
                     s2 = tran.dst_state
@@ -1547,24 +1534,24 @@ class MDP:
         print("Recalculated V: " + str(V))
         return V
 
-    def printActions(self):
+    def print_actions(self):
         i = 1
         for a in self.actions:
             print(f"{i}. {a}")
 
-    def arePolicisEqual(self, policy1, policy2):
+    def are_policies_equal(self, policy1, policy2):
         for i in range(len(self.states)):
             if str(policy1[i]) != str(policy2[i]):
                 return False
         return True
 
-    def isDominatedByVectorNumStepsAndViolCost(self, valuePolicy1, valuePolicy2):
+    def is_dominated_by_vector_num_steps_and_viol_cost(self, valuePolicy1, valuePolicy2):
 
-        if valuePolicy2[0] <= valuePolicy1[0] and self.isDominated(valuePolicy1[1], valuePolicy2[1]):
+        if valuePolicy2[0] <= valuePolicy1[0] and self.is_dominated(valuePolicy1[1], valuePolicy2[1]):
             return True
         elif valuePolicy2[0] < valuePolicy1[0] and (
-                self.isDominated(valuePolicy1[1], valuePolicy2[1]) or self.isVectsEqual(valuePolicy1[1],
-                                                                                        valuePolicy2[1])):
+                self.is_dominated(valuePolicy1[1], valuePolicy2[1]) or self.is_vects_equal(valuePolicy1[1],
+                                                                                           valuePolicy2[1])):
             return True
         #                 elif a_vect2[1][0] == a_vect[1][0] and self.isVectsEqual(a_vect[1][1], a_vect2[1][1]) and a_vect2[0] < a_vect[0]:
         #                     dominated = True
@@ -1572,23 +1559,23 @@ class MDP:
 
         return False
 
-    def isPolicyDominated(self, policy1, policy2):
+    def is_policy_dominated(self, policy1, policy2):
         for i in range(len(self.states)):
-            if self.isDominatedByVectorNumStepsAndViolCost(policy1[i], policy2[i]):
+            if self.is_dominated_by_vector_num_steps_and_viol_cost(policy1[i], policy2[i]):
                 return True
         return False
 
-    def selectARandomPolicy(self, V_O, V_O_Actions):
+    def select_a_random_policy(self, V_O, V_O_Actions):
         policy = [None] * len(self.states)
         for s in self.states:
             if s.is_goal:
                 policy[s.index] = V_O_Actions[s.name]
             else:
                 policy[s.index] = random.choice(V_O_Actions[s.name])
-        policy_values = self.computeNumstepsAndSatisProbOfAPolicy(self.states, list(policy), V_O)
-        return (policy, policy_values)
+        policy_values = self.compute_numsteps_and_satis_prob_of_a_policy(self.states, list(policy), V_O)
+        return policy, policy_values
 
-    def recomputeParetoPoliciesValueFunctions(self, V_O, V_O_Actions):
+    def recompute_pareto_policies_value_functions(self, V_O, V_O_Actions):
         paretoPolicy = [[] for _ in range(len(self.states))]
         for s in self.states:
             print("s.index: " + str(s.index))
@@ -1603,78 +1590,61 @@ class MDP:
             print(f"{num}. policy: {list(policy)}")
             # print("policy: "+str(list(policy)))
             policies.append(list(policy))
-            policyValue = self.computeNumstepsAndSatisProbOfAPolicy(self.states, list(policy), V_O)
-            policyValues.append(policyValue)
+            policy_value = self.compute_numsteps_and_satis_prob_of_a_policy(self.states, list(policy), V_O)
+            policyValues.append(policy_value)
             num += 1
 
-        numEqPolicies = 0
-        numOfDominated = 0
+        num_eq_policies = 0
+        num_of_dominated = 0
         for i in range(len(policies)):
             for j in range(len(policies)):
                 if i == j:
                     continue
-            if self.arePolicisEqual(policies[i], policies[j]):
-                numEqPolicies += 1
-            if self.isPolicyDominated(policies[i], policies[j]):
-                numOfDominated += 1
+            if self.are_policies_equal(policies[i], policies[j]):
+                num_eq_policies += 1
+            if self.is_policy_dominated(policies[i], policies[j]):
+                num_of_dominated += 1
 
         print("number of polices for which values are recomputed: " + str(num))
-        print("Number of policies that are equal: " + str(numEqPolicies))
-        print("Number of dominated policies is: " + str(numOfDominated))
+        print("Number of policies that are equal: " + str(num_eq_policies))
+        print("Number of dominated policies is: " + str(num_of_dominated))
 
-    def arePoliciesConsistent(self, policies):
-        return False
-
-    def getValueOfPreferences(self, satisProbs, numOfDigits):
-        n = len(satisProbs)
-
-    def getConvexHull_old(self, valueVectors):
-        valueVectors = self.sortBasedOnViolationCost(valueVectors)
-        # hull = self.convexHull(valueVectors, len(valueVectors))
-        hull = self.convex_hull(valueVectors)
+    def get_convex_hull(self, value_vectors, base_num4_cost_liniarization=10):
+        value_vectors = self.comp_violation_costs_and_conct(value_vectors, base_num4_cost_liniarization)
+        # hull = self.convexHull(value_vectors, len(value_vectors))
+        hull = self.convex_hull(value_vectors)
         # print("hull="+str(hull))
-        newValVectors = []
+        new_val_vectors = []
         for tple in hull:
-            newTple = (tple[0], tple[1])
-            newValVectors.append(newTple)
-        return newValVectors
+            new_tple = (tple[0], tple[1])
+            new_val_vectors.append(new_tple)
+        return new_val_vectors
 
-    def getConvexHull(self, valueVectors, baseNum4CostLiniarization=10):
-        valueVectors = self.compViolationCostsAndConct(valueVectors, baseNum4CostLiniarization)
-        # hull = self.convexHull(valueVectors, len(valueVectors))
-        hull = self.convex_hull(valueVectors)
-        # print("hull="+str(hull))
-        newValVectors = []
-        for tple in hull:
-            newTple = (tple[0], tple[1])
-            newValVectors.append(newTple)
-        return newValVectors
-
-    def compViolationCostsAndConct(self, valueVectors, baseNum4CostLiniarization):
-        for i in range(len(valueVectors)):
-            violationCost = 0.0
-            m = len(self.goalStates[0].weight_b_vector)
+    def comp_violation_costs_and_conct(self, value_vectors, base_num4_cost_liniarization):
+        for i in range(len(value_vectors)):
+            violation_cost = 0.0
+            m = len(self.goal_states[0].weight_b_vector)
             for j in range(m):
-                violationCost += (1 - valueVectors[i][1][j]) * math.pow(baseNum4CostLiniarization, m - j - 1)
-            valueVectors[i] = valueVectors[i] + (violationCost,)
-        return valueVectors
+                violation_cost += (1 - value_vectors[i][1][j]) * math.pow(base_num4_cost_liniarization, m - j - 1)
+            value_vectors[i] = value_vectors[i] + (violation_cost,)
+        return value_vectors
 
-    def sortBasedOnViolationCost(self, valueVectors):
-        n = len(valueVectors)
+    def sort_based_on_violation_cost(self, value_vectors):
+        n = len(value_vectors)
         for i in range(n - 1):
             for j in range(0, n - i - 1):
-                # if self.isDominated(valueVectors[j + 1], valueVectors[j]):
-                # print("valueVectors[j]: " + str(valueVectors[j]))
-                if self.isDominated(valueVectors[j + 1][1], valueVectors[j][1]):
-                    # if valueVectors[j] > valueVectors[j + 1] :
-                    valueVectors[j], valueVectors[j + 1] = valueVectors[j + 1], valueVectors[j]
+                # if self.isDominated(value_vectors[j + 1], value_vectors[j]):
+                # print("value_vectors[j]: " + str(value_vectors[j]))
+                if self.is_dominated(value_vectors[j + 1][1], value_vectors[j][1]):
+                    # if value_vectors[j] > value_vectors[j + 1] :
+                    value_vectors[j], value_vectors[j + 1] = value_vectors[j + 1], value_vectors[j]
 
-        for i in range(len(valueVectors)):
-            valueVectors[i] = valueVectors[i] + (i,)
+        for i in range(len(value_vectors)):
+            value_vectors[i] = value_vectors[i] + (i,)
 
-        # print("sorted items="+str(valueVectors))
+        # print("sorted items="+str(value_vectors))
 
-        return valueVectors
+        return value_vectors
 
     def convex_hull(self, points):
         """Computes the convex hull of a set of 2D points.
@@ -1689,9 +1659,6 @@ class MDP:
         # Remove duplicates to detect the case we have just one unique point.
         # points = sorted(set(points))
 
-        """
-        Written by Hazhar
-        """
         points = sorted(points, key=lambda k: [k[0], k[2]])
 
         # Boring case: no points or a single point, possibly repeated multiple times.
@@ -1722,8 +1689,8 @@ class MDP:
         # Last point of each list is omitted because it is repeated at the beginning of the other list. 
         return lower[:-1] + upper[:-1]
 
-    def mergeTwoConvexHulls_TwoNextStates(self, tran1, tran2, hull1, hull2, applyLimitedPrecision, precision):
-        m = len(self.goalStates[0].weight_b_vector)
+    def merge_two_convex_hulls_two_next_states(self, tran1, tran2, hull1, hull2, apply_limited_precision, precision):
+        m = len(self.goal_states[0].weight_b_vector)
         Q_L = []
         for q1 in hull1:
             for q2 in hull2:
@@ -1740,18 +1707,18 @@ class MDP:
 
                 tple = (steps, soft_probs)
 
-                if applyLimitedPrecision:
-                    tple = self.roundValueVect(tple, precision)
-                    if not self.containtsValTuple(Q_L, tple):
+                if apply_limited_precision:
+                    tple = self.round_value_vect(tple, precision)
+                    if not self.containts_val_tuple(Q_L, tple):
                         Q_L.append(tple)
                 else:
                     Q_L.append(tple)
 
-        Q_L = self.getConvexHull(Q_L)
+        Q_L = self.get_convex_hull(Q_L)
         return Q_L
 
-    def mergeSumConvexHullandNextStateConvexHull(self, tran2, hull1, hull2, applyLimitedPrecision, precision):
-        m = len(self.goalStates[0].weight_b_vector)
+    def merge_sum_convex_hulland_next_state_convex_hull(self, tran2, hull1, hull2, apply_limited_precision, precision):
+        m = len(self.goal_states[0].weight_b_vector)
         Q_L = []
         # print(f"-------mergeSumConvexHullandNextStateConvexHull--------------")
         # print(f"tran2: {tran2}")
@@ -1772,7 +1739,7 @@ class MDP:
                     # print(f"soft_probs[{k}]: {soft_probs[k]}")
                     # print(f"q2[1][{k}]: {q2[1][k]}")
                     # print(f"tran2: {tran2}")
-                    if (soft_probs[k] >= 1):
+                    if soft_probs[k] >= 1:
                         if soft_probs[k] < 1.001:
                             soft_probs[k] = 1
                             print(f" Fixed soft_probs[{k}] from {soft_probs[k]} to 1")
@@ -1781,19 +1748,19 @@ class MDP:
 
                 tple = (steps, soft_probs)
 
-                if applyLimitedPrecision:
-                    tple = self.roundValueVect(tple, precision)
-                    if not self.containtsValTuple(Q_L, tple):
+                if apply_limited_precision:
+                    tple = self.round_value_vect(tple, precision)
+                    if not self.containts_val_tuple(Q_L, tple):
                         Q_L.append(tple)
                 else:
                     Q_L.append(tple)
 
-        Q_L = self.getConvexHull(Q_L)
+        Q_L = self.get_convex_hull(Q_L)
         # print("Q_L: {Q_L}")
         return Q_L
 
-    def QDValuesDifferLess(self, Q_D1, Q_D2, epsilonExpcNumSteps, epsilonSoftConstSatis):
-        m = len(self.goalStates[0].weight_b_vector)
+    def qd_values_differ_less(self, Q_D1, Q_D2, epsilonExpcNumSteps, epsilonSoftConstSatis):
+        m = len(self.goal_states[0].weight_b_vector)
 
         Q_1 = []
         for vec in Q_D1:
@@ -1823,319 +1790,14 @@ class MDP:
                     return False
         return True
 
-    def paretoOptimalPolicies_InfiniteHorizon_ConvexHullValueIteration2(self, epsilonExpcNumSteps=0.01,
-                                                                        epsilonSoftConstSatis=0.001, printPolicy=True,
-                                                                        printPolicy2File=True,
-                                                                        fileName2Output="ParetoOptimalPolcies.txt",
-                                                                        compAvoidActions=False,
-                                                                        applyLimitedPrecision=False, precision=3,
-                                                                        maxValsPerState=-1, chooseRandomPolicy=False,
-                                                                        choosePoliciesbaseOnWeights=True, weights=[]):
-        if self.verbose == True:
-            print(
-                "------computing pareto optimal policy for infinite horizon using convex hull value iteration--------------")
-        n = len(self.states)
-
-        time_start = time.time()
-
-        if compAvoidActions == True:
-            # if self.available_actions_computed == False:
-            self.compute_avoidable_actions(True)
-
-        m = len(self.goalStates[0].weight_b_vector)
-
-        V_O = {}
-        for s in self.states:
-            softConstProbVect = [0] * m
-            # vect = None
-            if s.is_goal:
-                for k in range(m):
-                    softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
-                vect = (0, softConstProbVect)
-            else:
-                vect = (0, softConstProbVect)
-            V_O[s.name] = [vect]
-
-        V_O_Actions = {}
-        for s in self.states:
-            if s.is_goal:
-                V_O_Actions[s.name] = ["STOP"]
-            else:
-                V_O_Actions[s.name] = []
-
-        # Set of Q-vectors which might contain the ones that are dominated. 
-        Q_D = {}
-        Q_D_Before = {}
-        for s in self.states:
-            Q_D[s.name] = {}
-            Q_D_Before[s.name] = {}
-            for a in self.actions:
-                Q_D[s.name][a] = []
-                Q_D_Before[s.name][a] = []
-                softConstProbVect = [0] * m
-                if s.is_goal:
-                    for k in range(m):
-                        softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
-                vect = (0, softConstProbVect)
-                Q_D[s.name][a].append(vect)
-                Q_D_Before[s.name][a].append(vect)
-
-        maxCnt = 120
-        cnt = 1
-        stateQueue = self.getOrder4ComputingPolicy()
-        if self.initial_scc == None:
-            self.decomposeToStrngConnComponents()
-            self.computeSCCTopologicalOrder()
-
-        useConvergance = True
-
-        for scc in self.scc_topological_order:
-            cnt = 1
-            # while cnt <= maxCnt:
-            converged = False
-            # while not converged:
-            # while cnt <= maxCnt:
-            while (not converged or not useConvergance) and cnt <= maxCnt:
-
-                print(
-                    f"Computing Q_D values of states within SCC {scc.name}, which has {len(scc.states)} states, in the {cnt}'th iteration")
-
-                # for a in s.available_actions:
-                #    Q_D[s.name][a] = []
-                for s in scc.states:
-                    for a in s.available_actions:
-                        Q_D_Before[s.name][a] = Q_D[s.name][a]
-
-                for s in scc.states:
-                    if s.is_goal:
-                        continue
-                    if s.reachable == False:
-                        continue
-
-                    if compAvoidActions and not s.a_goal_is_reachable:
-                        # print(f"State {s.name} is a dead-end state")
-                        continue
-
-                    # if compute_avoidable_actions == True and s.a_goal_is_reachable == False:
-                    #    continue
-
-                    for a in s.available_actions:
-
-                        # print(f"Computing Q_D[{s.name}][{a}]")
-
-                        if compAvoidActions and a in s.avoid_actions:
-                            # print(f"Action {a} should be avoided at state {s.name}")
-                            continue
-
-                            # if compute_avoidable_actions == True:
-                        #    if a in s.avoid_actions:
-                        #        continue
-
-                        # Q_D_Before[s.name][a] = Q_D[s.name][a]
-                        # print("s: "+s.name+", a: "+a)
-                        """
-                        First obtain the successor states of s by a, then obtain a list containing a list
-                        of Pareto optimal values for each of those successor states
-                        """
-                        # print(f"----------------s: {s.name}, a:{a}----------------------")
-                        Q_D_s2_s = {}
-                        maxNumOfVals = 1
-                        for tran in s.actions_transitions[a]:
-                            s2 = tran.dst_state
-                            Q_D_s2_s[s2.name] = []
-                            for a2 in s2.available_actions:
-                                # if compute_avoidable_actions and a2 in s2.avoid_actions:
-                                #    continue
-                                # print(f"Q_D_Before[{s2.name}][{a2}]: {Q_D_Before[s2.name][a2]}")
-                                for vc in Q_D_Before[s2.name][a2]:
-                                    if vc not in Q_D_s2_s[s2.name]:
-                                        Q_D_s2_s[s2.name].append(vc)
-                            Q_D_s2_s[s2.name] = self.getConvexHull(Q_D_s2_s[s2.name])
-                            maxNumOfVals = maxNumOfVals * len(Q_D_s2_s[s2.name])
-                            # print("Q_D_s2_s["+s2.name+"]: "+str(Q_D_s2_s[s2.name]))
-                            # if s2.name.find("q5") > -1:
-                            #    return
-
-                        n2 = len(s.actions_transitions[a])
-
-                        '''
-                        Determine if there is any need for sampling or not 
-                        '''
-
-                        '''
-                        if maxValsPerState > 0 and maxNumOfVals > maxValsPerState:
-                            print(f"Maximum value per states has reached for Q[{s.name}][{a}] and it is {maxNumOfVals}")
-                            sizes = [0]*n2
-                            for j in range(0, n2):
-                                tran = s.actions_transitions[a][j]
-                                s2 = tran.dst_state
-                                sizes[j] = len(Q_D_s2_s[s2.name])
-                            print(f"Sizes before sampling: {sizes}")
-                            stopDivision = False
-                            while not stopDivision:
-                                numOfValues = 1
-                                for j in range(0, n2):
-                                    sizes[j] = math.ceil(sizes[j]/2)
-                                    numOfValues = numOfValues *sizes[j]
-                                if  numOfValues <= maxValsPerState:
-                                    stopDivision = True
-                            print(f"Sizes after sampling: {sizes}")
-                            for j in range(0, n2):
-                                tran = s.actions_transitions[a][j]
-                                s2 = tran.dst_state
-                                Q_D_s2_s[s2.name] = sample(Q_D_s2_s[s2.name], sizes[j])
-                                
-                        '''
-
-                        Q_Hull = []
-                        if n2 > 0:
-                            tran = s.actions_transitions[a][0]
-                            s2 = tran.dst_state
-                            for q in Q_D_s2_s[s2.name]:
-                                q2 = deepcopy(q)
-                                q_ls = list(q2)
-                                q_ls[0] = q_ls[0] * tran.probability
-                                for k in range(m):
-                                    q_ls[1][k] = q_ls[1][k] * tran.probability
-                                Q_Hull.append(tuple(q_ls))
-                            # print(f"Q_Hull[{s2.name}]: {Q_Hull}")
-
-                        #                         for tran in s.actions_transitions[a]:
-                        #                             s2 = tran.dst_state
-                        #                             for a2 in s2.available_actions:
-                        #                                 print(f"Q_D_Before[{s2.name}][{a2}]: {Q_D_Before[s2.name][a2]}")
-
-                        # print("s.name: "+s.name)
-                        # print("a:"+str(a))
-                        # print("tran:"+str(tran))
-                        # print("Q_Hull["+s2.name+"]: "+str(Q_Hull))
-
-                        for j in range(1, n2):
-                            tran = s.actions_transitions[a][j]
-                            s2 = tran.dst_state
-                            Q_Hull2 = Q_D_s2_s[s2.name]
-                            # print("tran:"+str(tran))
-                            # print("Q_Hull2["+s2.name+"]: "+str(Q_Hull2))
-                            Q_Hull = self.mergeSumConvexHullandNextStateConvexHull(tran, Q_Hull, Q_Hull2,
-                                                                                   applyLimitedPrecision, precision)
-
-                        Q_Hull_Temp = Q_Hull.copy()
-                        Q_Hull.clear()
-
-                        for q in Q_Hull_Temp:
-                            q_ls = list(q)
-                            q_ls[0] = q_ls[0] + 1
-                            q2 = tuple(q_ls)
-                            Q_Hull.append(q2)
-
-                        '''
-                        
-                        '''
-                        Q_Hull = self.getNonDominantTimeViolationCostVectors(Q_Hull)
-
-                        '''
-                        Determine if there is any need for sampling
-                        '''
-                        if maxValsPerState > -1 and len(Q_Hull) > maxValsPerState:
-                            print(f"Reduced the number of vals from {len(Q_Hull)} to {maxValsPerState}")
-                            New_Q_Hull = []
-                            New_Q_Hull = random.sample(Q_Hull, maxValsPerState)
-                            Q_Hull = New_Q_Hull
-
-                        Q_D[s.name][a] = Q_Hull
-                        # if cnt == maxCnt:
-                        #    print("Q_D["+str(s.name)+"]["+str(a)+"]:"+str(Q_D[s.name][a]))
-                        # print(f"Q_D_Before[{s2.name}][{a2}]: {Q_D_Before[s2.name][a2]}")
-
-                if useConvergance:
-                    converged = True
-                    for s in scc.states:
-                        if converged == False:
-                            break
-                        for a in s.available_actions:
-                            if len(Q_D_Before[s.name][a]) != len(Q_D[s.name][a]):
-                                converged = False
-                                print(f"len(Q_D_Before[{s.name}][{a}]): {len(Q_D_Before[s.name][a])}")
-                                print(f"len(Q_D[{s.name}][{a}]): {len(Q_D[s.name][a])}")
-                                break
-
-                    for s in scc.states:
-                        if converged == False:
-                            break
-                        for a in s.available_actions:
-                            if not self.QDValuesDifferLess(Q_D_Before[s.name][a], Q_D[s.name][a], epsilonExpcNumSteps,
-                                                           epsilonSoftConstSatis):
-                                converged = False
-                                print(f"Q_D_Before[{s.name}][{a}]: {Q_D_Before[s.name][a]}")
-                                print(f"Q_D[{s.name}][{a}]: {Q_D[s.name][a]}")
-                                break
-
-                cnt += 1
-
-            for s in scc.states:
-                if s.is_goal:
-                    continue
-                Q_Ds = []
-                for a in self.actions:
-                    if a not in s.available_actions:
-                        continue
-                    for vect in Q_D[s.name][a]:
-                        tple = (a, vect)
-                        Q_Ds.append(tple)
-                    # print("Q_DS for "+s.name+": "+str(Q_Ds))
-                nonDominants = self.getNonDominantActionsAndVectors(Q_Ds)
-                V_O[s.name] = []
-                V_O_Actions[s.name] = []
-                # print("nonDominants: "+str(nonDominants))
-                for action_vect in nonDominants:
-                    V_O[s.name].append(action_vect[1])
-                    V_O_Actions[s.name].append(action_vect[0])
-                # if cnt == maxCnt or (converged == True):
-                if (converged == True and useConvergance == True) or cnt >= maxCnt:
-                    # print("Update V_O["+s.name+"]="+str(V_O[s.name]))
-                    # print("Update V_O_Actions["+s.name+"]="+str(V_O_Actions[s.name]))
-
-                    print("Q_D[" + str(s.name) + "][" + str(a) + "]:" + str(Q_D[s.name][a]))
-
-                    f = open(fileName2Output, "a")
-                    f.seek(0)
-                    f.write("V_O[" + s.name + "]=" + str(V_O[s.name]) + "\n")
-                    # f.write("Update V_O["+s.name+"]="+str(self.roundValueVect(V_O[s.name], 3)))
-                    f.write("V_O_Actions[" + s.name + "]=" + str(V_O_Actions[s.name]) + "\n")
-                    f.close()
-
-            print(f"Number of iterations for SCC {scc.name}: {cnt}")
-
-            # self.recomputeParetoPoliciesValueFunctions(V_O, V_O_Actions)
-
-        time_elapsed = (time.time() - time_start)
-
-        if chooseRandomPolicy == True:
-            policy, policyvalues = self.selectARandomPolicy(V_O, V_O_Actions)
-            print(f"Selected random policy: {policy}")
-            print(f"Values of the selected policy: {policyvalues}")
-            return (policy, policyvalues)
-        if choosePoliciesbaseOnWeights == True:
-            policies = self.chooseBestPolicesBaseOnWeights(Q_D, weights, precision)
-            policyValues = []
-            for policy in policies:
-                print(f"computed policy for weights = {weights}")
-                print(policy)
-                policyValues.append(self.computeNumstepsAndSatisProbOfAPolicy(self.states, policy, [], True))
-            expectedVectCosts = []
-            for policyVal in policyValues:
-                expectedVectCosts.append(policyVal[self.initial_state.name])
-            policycomptime = time_elapsed
-            return policies, policyValues, expectedVectCosts, policycomptime
-
-    def chooseBestPolicesBaseOnWeights(self, Q_D, weights, numOfDigits):
+    def choose_best_polices_base_on_weights(self, Q_D, weights, num_of_digits):
         Q = {}
-        m = len(self.goalStates[0].weight_b_vector)
+        m = len(self.goal_states[0].weight_b_vector)
         policies = []
-        for weightVect in weights:
-            # if len(weightVect) == 2 and weightVect[0] == 0 and weightVect[1] == 1:
-            #    weightVect[0] == 0.00000001
-            #    weightVect[1] == 0.99999999
+        for weight_vect in weights:
+            # if len(weight_vect) == 2 and weight_vect[0] == 0 and weight_vect[1] == 1:
+            #    weight_vect[0] == 0.00000001
+            #    weight_vect[1] == 0.99999999
             # print("success")
             # raise Exception("")
             for s in self.states:
@@ -2145,17 +1807,17 @@ class MDP:
                 for a in s.available_actions:
                     if self.available_actions_computed and (a in s.avoid_actions):
                         continue
-                    minCost = float_info.max
+                    min_cost = float_info.max
                     for i in range(len(Q_D[s.name][a])):
-                        valVect = Q_D[s.name][a][i]
-                        violationCost = 0
+                        val_vect = Q_D[s.name][a][i]
+                        violation_cost = 0
                         for j in range(m):
-                            violationCost += (1 - valVect[1][j]) * math.pow(10, m - j - 1)
-                        cost = weightVect[0] * valVect[0] + weightVect[1] * violationCost * 3
-                        # violationCost = violationCost*10
-                        if cost < minCost:
-                            minCost = cost
-                    Q[s.name][a] = minCost
+                            violation_cost += (1 - val_vect[1][j]) * math.pow(10, m - j - 1)
+                        cost = weight_vect[0] * val_vect[0] + weight_vect[1] * violation_cost * 3
+                        # violation_cost = violation_cost*10
+                        if cost < min_cost:
+                            min_cost = cost
+                    Q[s.name][a] = min_cost
 
             P = {}
             C = {}
@@ -2164,464 +1826,22 @@ class MDP:
                     P[s.name] = "STOP"
                     C[s.name] = 0
                     continue
-                minCost = float_info.max
+                min_cost = float_info.max
                 for a in s.available_actions:
                     if self.available_actions_computed and (a in s.avoid_actions):
                         continue
-                    if Q[s.name][a] < minCost:
-                        minCost = Q[s.name][a]
+                    if Q[s.name][a] < min_cost:
+                        min_cost = Q[s.name][a]
                         P[s.name] = a
-                        C[s.name] = minCost
-                    elif Q[s.name][a] == minCost and a[1] != self.special_noEvent and P[s.name][
+                        C[s.name] = min_cost
+                    elif Q[s.name][a] == min_cost and a[1] != self.special_noEvent and P[s.name][
                         1] == self.special_noEvent:
                         P[s.name] = a
-                        C[s.name] = minCost
+                        C[s.name] = min_cost
 
             policies.append(P)
             print(f"C: {C}")
         return policies
-
-    def paretoOptimalPolicies_InfiniteHorizon_ConvexHullValueIteration(self, epsilonOfConvergance=0.01,
-                                                                       printPolicy=True, printPolicy2File=True,
-                                                                       fileName2Output="ParetoOptimalPolcies.txt",
-                                                                       computeAvoidableActions=False,
-                                                                       applyLimitedPrecision=False, precision=3):
-        if self.verbose == True:
-            print("------computing optimal policy for finite horizon--------------")
-        n = len(self.states)
-
-        if computeAvoidableActions == True:
-            self.compute_avoidable_actions()
-
-        m = len(self.goalStates[0].weight_b_vector)
-
-        V_O = {}
-        for s in self.states:
-            softConstProbVect = [0] * m
-            # vect = None
-            if s.is_goal:
-                for k in range(m):
-                    softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
-                vect = (0, softConstProbVect)
-            else:
-                vect = (0, softConstProbVect)
-            V_O[s.name] = [vect]
-
-        V_O_Actions = {}
-        for s in self.states:
-            if s.is_goal:
-                V_O_Actions[s] = ["STOP"]
-            else:
-                V_O_Actions[s] = []
-
-        # Set of Q-vectors which might contain the ones that are dominated. 
-        Q_D = {}
-        for s in self.states:
-            Q_D[s.name] = {}
-            for a in self.actions:
-                Q_D[s.name][a] = []
-                softConstProbVect = [0] * m
-                if s.is_goal:
-                    for k in range(m):
-                        softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
-                vect = (0, softConstProbVect)
-                Q_D[s.name][a].append(vect)
-
-        maxCnt = 120
-        cnt = 1
-        stateQueue = self.getOrder4ComputingPolicy()
-        if self.initial_scc == None:
-            self.decomposeToStrngConnComponents()
-            self.computeSCCTopologicalOrder()
-
-        for scc in self.scc_topological_order:
-            cnt = 1
-            while cnt <= maxCnt:
-
-                for s in scc.states:
-                    if s.is_goal:
-                        continue
-                    # for a in s.available_actions:
-                    #    Q_D[s.name][a] = []
-
-                for s in scc.states:
-                    if s.is_goal:
-                        continue
-                    for a in s.available_actions:
-                        # print("s: "+s.name+", a: "+a)
-                        """
-                        First obtain the successor states of s by a, then obtain a list containing a list
-                        of Pareto optimal values for each of those successor states
-                        """
-                        Q_D_s2_s = {}
-                        for tran in s.actions_transitions[a]:
-                            s2 = tran.dst_state
-                            Q_D_s2_s[s2.name] = []
-                            for a2 in s2.available_actions:
-                                for vc in Q_D[s2.name][a2]:
-                                    Q_D_s2_s[s2.name].append(vc)
-                            Q_D_s2_s[s2.name] = self.getConvexHull(Q_D_s2_s[s2.name])
-                            # print("Q_D_s2_s["+s2.name+"]: "+str(Q_D_s2_s[s2.name]))
-                            # if s2.name.find("q5") > -1:
-                            #    return
-
-                        n2 = len(s.actions_transitions[a])
-                        V_S2s = []
-                        indices = []
-
-                        for j in range(n2):
-                            tran = s.actions_transitions[a][j]
-                            s2 = tran.dst_state
-                            V_S2s.append(Q_D_s2_s[s2.name])
-                            indices.append([k for k in range(len(Q_D_s2_s[s2.name]))])
-
-                        Q_D[s.name][a] = []
-
-                        for indexList in itertools.product(*indices):
-
-                            Vlist = []
-                            for k in range(n2):
-                                Vlist.append(V_S2s[k][indexList[k]])
-                                # print("Vlist: "+str(Vlist))
-                            steps = 1
-                            soft_probs = [0] * m
-                            # print("n2: "+str(n2))
-                            for j in range(n2):
-                                tran = s.actions_transitions[a][j]
-                                s2 = tran.dst_state
-                                v_vect = Vlist[j]
-                                # print("v_vect: "+str(v_vect))
-                                steps += v_vect[0] * tran.probability
-                                for k in range(m):
-                                    soft_probs[k] += v_vect[1][k] * tran.probability
-                                # print("soft_probs: "+str(soft_probs))
-                            tple = (steps, soft_probs)
-
-                            if applyLimitedPrecision:
-                                tple = self.roundValueVect(tple, precision)
-                                if not self.containtsValTuple(Q_D[s.name][a], tple):
-                                    Q_D[s.name][a].append(tple)
-                            # if tple not in Q_D[s.name][a]: 
-                            else:
-                                Q_D[s.name][a].append(tple)
-
-                        Q_D[s.name][a] = self.getConvexHull(Q_D[s.name][a])
-                        print("Q_D[" + str(s.name) + "][" + str(a) + "]:" + str(Q_D[s.name][a]))
-
-                for s in scc.states:
-                    if s.is_goal:
-                        continue
-                    Q_Ds = []
-                    for a in self.actions:
-                        for vect in Q_D[s.name][a]:
-                            tple = (a, vect)
-                            Q_Ds.append(tple)
-                    # print("Q_DS for "+s.name+": "+str(Q_Ds))
-                    nonDominants = self.getNonDominantActionsAndVectors(Q_Ds)
-                    V_O[s.name] = []
-                    V_O_Actions[s.name] = []
-                    # print("nonDominants: "+str(nonDominants))
-                    for action_vect in nonDominants:
-                        V_O[s.name].append(action_vect[1])
-                        V_O_Actions[s.name].append(action_vect[0])
-                    if cnt == maxCnt:
-                        # print("Update V_O["+s.name+"]="+str(V_O[s.name]))
-                        # print("Update V_O_Actions["+s.name+"]="+str(V_O_Actions[s.name]))
-                        f = open(fileName2Output, "a")
-                        f.seek(0)
-                        f.write("V_O[" + s.name + "]=" + str(V_O[s.name]) + "\n")
-                        # f.write("Update V_O["+s.name+"]="+str(self.roundValueVect(V_O[s.name], 3)))
-                        f.write("V_O_Actions[" + s.name + "]=" + str(V_O_Actions[s.name]) + "\n")
-                        f.close()
-
-                cnt += 1
-
-    def paretoOptimalPolicies__PreferencePlanning_InfiniteHorizon(self, epsilonOfConvergance=0.01, printPolicy=True,
-                                                                  printPolicy2File=True,
-                                                                  fileName2Output="ParetoOptimalPolcies.txt",
-                                                                  computeAvoidableActions=False,
-                                                                  applyLimitedPrecision=False, precision=3):
-        if self.verbose == True:
-            print("------computing optimal policy for finite horizon--------------")
-        n = len(self.states)
-
-        if computeAvoidableActions == True:
-            self.compute_avoidable_actions()
-
-        m = len(self.goalStates[0].weight_b_vector)
-
-        V_O = {}
-        for s in self.states:
-            softConstProbVect = [0] * m
-            # vect = None
-            if s.is_goal:
-                for k in range(m):
-                    softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
-                vect = (0, softConstProbVect)
-            else:
-                vect = (0, softConstProbVect)
-            V_O[s.name] = [vect]
-
-        V_O_Actions = {}
-        for s in self.states:
-            if s.is_goal:
-                V_O_Actions[s] = ["STOP"]
-            else:
-                V_O_Actions[s] = []
-
-        # Set of Q-vectors which might contain the ones that are dominated. 
-        Q_D = {}
-        for s in self.states:
-            Q_D[s.name] = {}
-            for a in self.actions:
-                Q_D[s.name][a] = []
-
-        maxCnt = 20
-        cnt = 1
-        stateQueue = self.getOrder4ComputingPolicy()
-        if self.initial_scc == None:
-            self.decomposeToStrngConnComponents()
-            self.computeSCCTopologicalOrder()
-
-        for scc in self.scc_topological_order:
-            cnt = 1
-            while cnt <= maxCnt:
-
-                for s in scc.states:
-                    if s.is_goal:
-                        continue
-                    for a in s.available_actions:
-                        Q_D[s.name][a] = []
-
-                for s in scc.states:
-                    if s.is_goal:
-                        continue
-                    for a in s.available_actions:
-                        # print("s: "+s.name+", a: "+a)
-                        """
-                        First obtain the successor states of s by a, then obtain a list containing a list
-                        of Pareto optimal values for each of those successor states
-                        """
-                        n2 = len(s.actions_transitions[a])
-                        V_S2s = []
-                        indices = []
-                        # print("n2: "+str(n2))
-                        # print("len(V_S2s): "+str(len(V_S2s)))
-                        for j in range(n2):
-                            tran = s.actions_transitions[a][j]
-                            # print("tran: "+str(tran))
-                            s2 = tran.dst_state
-                            V_S2s.append(V_O[s2.name])
-                            indices.append([k for k in range(len(V_O[s2.name]))])
-                            # print("s2: "+s2.name)
-                            # print("V_S2s[j] : "+str(V_S2s[j]))
-
-                        for indexList in itertools.product(*indices):
-                            # print("indexList: "+str(indexList));
-                            Vlist = []
-                            for k in range(n2):
-                                Vlist.append(V_S2s[k][indexList[k]])
-                                # print("Vlist: "+str(Vlist))
-                            steps = 1
-                            soft_probs = [0] * m
-                            # print("n2: "+str(n2))
-                            for j in range(n2):
-                                tran = s.actions_transitions[a][j]
-                                s2 = tran.dst_state
-                                v_vect = Vlist[j]
-                                # print("v_vect: "+str(v_vect))
-                                steps += v_vect[0] * tran.probability
-                                for k in range(m):
-                                    soft_probs[k] += v_vect[1][k] * tran.probability
-                                # print("soft_probs: "+str(soft_probs))
-                            tple = (steps, soft_probs)
-                            if applyLimitedPrecision:
-                                tple = self.roundValueVect(tple, precision)
-                                if not self.containtsValTuple(Q_D[s.name][a], tple):
-                                    Q_D[s.name][a].append(tple)
-                            # if tple not in Q_D[s.name][a]: 
-                            else:
-                                Q_D[s.name][a].append(tple)
-
-                for s in scc.states:
-                    if s.is_goal:
-                        continue
-                    Q_Ds = []
-                    for a in self.actions:
-                        for vect in Q_D[s.name][a]:
-                            tple = (a, vect)
-                            Q_Ds.append(tple)
-                    # print("Q_DS for "+s.name+": "+str(Q_Ds))
-                    nonDominants = self.getNonDominantActionsAndVectors(Q_Ds)
-                    V_O[s.name] = []
-                    V_O_Actions[s.name] = []
-                    # print("nonDominants: "+str(nonDominants))
-                    for action_vect in nonDominants:
-                        V_O[s.name].append(action_vect[1])
-                        V_O_Actions[s.name].append(action_vect[0])
-                    if cnt == maxCnt:
-                        # print("Update V_O["+s.name+"]="+str(V_O[s.name]))
-                        # print("Update V_O_Actions["+s.name+"]="+str(V_O_Actions[s.name]))
-                        f = open(fileName2Output, "a")
-                        f.seek(0)
-                        f.write("V_O[" + s.name + "]=" + str(V_O[s.name]) + "\n")
-                        # f.write("Update V_O["+s.name+"]="+str(self.roundValueVect(V_O[s.name], 3)))
-                        f.write("V_O_Actions[" + s.name + "]=" + str(V_O_Actions[s.name]) + "\n")
-                        f.close()
-
-                cnt += 1
-
-    def paretoOptimalPolicies__PreferencePlanning_InfiniteHorizon2(self, epsilonOfConvergance=0.01, printPolicy=True,
-                                                                   printPolicy2File=True,
-                                                                   fileName2Output="ParetoOptimalPolcies.txt",
-                                                                   computeAvoidableActions=False,
-                                                                   applyLimitedPrecision=False, precision=3):
-        if self.verbose == True:
-            print("------computing optimal policy for finite horizon--------------")
-        n = len(self.states)
-
-        if computeAvoidableActions == True:
-            self.compute_avoidable_actions()
-
-        m = len(self.goalStates[0].weight_b_vector)
-
-        V_O = {}
-        for s in self.states:
-            softConstProbVect = [0] * m
-            # vect = None
-            if s.is_goal:
-                for k in range(m):
-                    softConstProbVect[k] = 1.0 if s.weight_b_vector[k] else 0.0
-                vect = (0, softConstProbVect)
-            else:
-                vect = (0, softConstProbVect)
-            V_O[s.name] = [vect]
-
-        V_O_Actions = {}
-        for s in self.states:
-            if s.is_goal:
-                V_O_Actions[s.name] = ["STOP"]
-            else:
-                V_O_Actions[s.name] = []
-
-        # Set of Q-vectors which might contain the ones that are dominated. 
-        Q_D = {}
-        for s in self.states:
-            Q_D[s.name] = {}
-            for a in self.actions:
-                Q_D[s.name][a] = []
-
-        maxCnt = 6
-        cnt = 1
-        stateQueue = self.getOrder4ComputingPolicy()
-        while cnt <= maxCnt:
-
-            for s in self.states:
-                if s.is_goal:
-                    continue
-                for a in s.available_actions:
-                    Q_D[s.name][a] = []
-
-            for s in stateQueue:
-                if s.is_goal:
-                    continue
-                for a in s.available_actions:
-                    # print("s: "+s.name+", a: "+a)
-                    """
-                    First obtain the successor states of s by a, then obtain a list containing a list
-                    of Pareto optimal values for each of those successor states
-                    """
-                    n2 = len(s.actions_transitions[a])
-                    V_S2s = []
-                    indices = []
-                    # print("n2: "+str(n2))
-                    # print("len(V_S2s): "+str(len(V_S2s)))
-                    for j in range(n2):
-                        tran = s.actions_transitions[a][j]
-                        # print("tran: "+str(tran))
-                        s2 = tran.dst_state
-                        V_S2s.append(V_O[s2.name])
-                        indices.append([k for k in range(len(V_O[s2.name]))])
-                        # print("s2: "+s2.name)
-                        # print("V_S2s[j] : "+str(V_S2s[j]))
-
-                    for indexList in itertools.product(*indices):
-                        # print("indexList: "+str(indexList));
-                        Vlist = []
-                        for k in range(n2):
-                            Vlist.append(V_S2s[k][indexList[k]])
-                        # print("Vlist: "+str(Vlist))
-                        steps = 1
-                        soft_probs = [0] * m
-                        # print("n2: "+str(n2))
-                        for j in range(n2):
-                            tran = s.actions_transitions[a][j]
-                            s2 = tran.dst_state
-                            v_vect = Vlist[j]
-                            # print("v_vect: "+str(v_vect))
-                            steps += v_vect[0] * tran.probability
-                            for k in range(m):
-                                soft_probs[k] += v_vect[1][k] * tran.probability
-                            # print("soft_probs: "+str(soft_probs))
-                        tple = (steps, soft_probs)
-                        if applyLimitedPrecision:
-                            tple = self.roundValueVect(tple, precision)
-                            if not self.containtsValTuple(Q_D[s.name][a], tple):
-                                Q_D[s.name][a].append(tple)
-                        # if tple not in Q_D[s.name][a]:
-                        else:
-                            Q_D[s.name][a].append(tple)
-
-                    # if cnt == maxCnt:
-                    # print("Q_D["+s.name+"]["+str(a)+"]="+str(Q_D[s.name][a]))
-                    # f = open(fileName2Output, "a")
-                    # f.write("Q_D["+s.name+"]["+str(a)+"]="+str(round(Q_D[s.name][a], 3)))
-                    # f.write("Q_D["+s.name+"]["+str(a)+"]="+str(self.roundValueVect(Q_D[s.name][a], 3)))
-
-                    # f.write("Q_D["+s.name+"]["+str(a)+"]="+str([round(num, 3) for num in Q_D[s.name][a]]))
-                    # f.close()
-
-            for s in self.states:
-                if s.is_goal:
-                    continue
-                Q_Ds = []
-                for a in self.actions:
-                    for vect in Q_D[s.name][a]:
-                        tple = (a, vect)
-                        Q_Ds.append(tple)
-                # print("Q_DS for "+s.name+": "+str(Q_Ds))
-                nonDominants = self.getNonDominantActionsAndVectors(Q_Ds)
-                V_O[s.name] = []
-                V_O_Actions[s.name] = []
-                # print("nonDominants: "+str(nonDominants))
-                for action_vect in nonDominants:
-                    V_O[s.name].append(action_vect[1])
-                    V_O_Actions[s.name].append(action_vect[0])
-                if cnt == maxCnt:
-                    # print("Update V_O["+s.name+"]="+str(V_O[s.name]))
-                    # print("Update V_O_Actions["+s.name+"]="+str(V_O_Actions[s.name]))
-                    f = open(fileName2Output, "a")
-                    f.write("Update V_O[" + s.name + "]=" + str(V_O[s.name]) + "\n")
-                    # f.write("Update V_O["+s.name+"]="+str(self.roundValueVect(V_O[s.name], 3)))
-                    f.write("Update V_O_Actions[" + s.name + "]=" + str(V_O_Actions[s.name]) + "\n")
-                    f.close()
-
-            if cnt < maxCnt:
-                max_actions_cnt = 0
-                print("V_O_Actions: " + str(V_O_Actions))
-                print("V_O_Actions[q5_s_l_w_l__q1_q1]: " + str(V_O_Actions['q5_s_l_w_l__q1_q1']))
-                print("q5_s_l_w_l__q1_q1")
-                for s in self.states:
-                    action_cnt_list = [(x, V_O_Actions[s.name].count(x)) for x in V_O_Actions[s.name]]
-                    print("action_cnt_list[" + s.name + "]: " + str(action_cnt_list))
-                    for tpl in action_cnt_list:
-                        if tpl[1] > max_actions_cnt:
-                            max_actions_cnt = tpl[1]
-                print("max_actions_cnt: " + str(max_actions_cnt))
-                if max_actions_cnt >= 8:
-                    self.recomputeParetoPoliciesValueFunctions(V_O, V_O_Actions)
-
-            cnt += 1
 
 
     def get_observation_of_tuple(self, prediction_result, evidence):

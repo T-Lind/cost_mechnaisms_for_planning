@@ -96,7 +96,3 @@ DFA States:
 - S_9: The security system has malfunctioned
 - S_10: Security check completed
 
-
-## Credits
-
-Hazhar Rahmani for the initial "Planning to Chronicle" paper and codebase.

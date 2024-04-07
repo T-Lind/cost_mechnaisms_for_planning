@@ -153,8 +153,8 @@ class EventPredictor:
                 if len(sts2) != 0:
                     q2 = dfa.transitions[q1][e]
                     t2 = (q2, sts2)
-                    v2 = mdp.getStateByAnchor(t2)
-                    if v2 == None:
+                    v2 = mdp.get_state_by_anchor(t2)
+                    if not v2:
                         v2 = MDPState(q2 + ", " + str(sts2), t2)
                         mdp.add_state(v2)
                         que.put(v2)
@@ -190,8 +190,8 @@ class EventPredictor:
                 sts3 = mc.get_set_successors_not_having_event(sts1, e)
                 if len(sts3) != 0:
                     t3 = (q1, sts3)
-                    v3 = mdp.getStateByAnchor(t3)
-                    if v3 == None:
+                    v3 = mdp.get_state_by_anchor(t3)
+                    if not v3:
                         v3 = MDPState(q1 + ", " + str(sts3), t3)
                         mdp.add_state(v3)
                         que.put(v3)
@@ -254,7 +254,7 @@ class EventPredictor:
                     if state.is_goal:
                         val += 1
                     for k in range(n):
-                        term = G[i + 1][k] * self.mdp.conditionalProbability(k, j, action)
+                        term = G[i + 1][k] * self.mdp.conditional_probability(k, j, action)
                         val += term
                     if val < minVal:
                         minVal = val
@@ -262,15 +262,15 @@ class EventPredictor:
                 G[i][j] = minVal
                 A[i][j] = optAction
 
-        optPolicy = {}
+        opt_policy = {}
         for q in self.dfa.states:
-            optPolicy[q] = {}
+            opt_policy[q] = {}
 
         print("mdp.initial_state=[" + self.mdp.initial_state.anchor[0] + "," + self.mdp.initial_state.anchor[
             1].name + "]")
 
         for j in range(n):
-            optPolicy[self.mdp.states[j].anchor[0]][self.mdp.states[j].anchor[1]] = A[0][j]
+            opt_policy[self.mdp.states[j].anchor[0]][self.mdp.states[j].anchor[1]] = A[0][j]
             if printPolicy:
                 print("\pi(" + self.mdp.states[j].anchor[0] + "," + self.mdp.states[j].anchor[1].name + ")=" + A[0][j])
                 print(
@@ -279,8 +279,11 @@ class EventPredictor:
         if self.verbose:
             print("optimal policy for finite horizon has been computed")
 
-        # return G[0][self.mdp.initial_state.index]
-        return (optPolicy, G, G[0][self.mdp.initial_state.index])
+        return {
+            "optimal_policy": opt_policy,
+            "G": G,
+            "expected": G[0][self.mdp.initial_state.index]
+        }
 
     def optimal_policy_infinite_horizon(self, epsilon_of_convergence=0.01, compute_avoidable_actions=False):
         n = len(self.mdp.states)
@@ -365,7 +368,6 @@ class EventPredictor:
 
         time_elapsed = (time.time() - time_start)
 
-        # return optimal_policy, G, G[0][self.mdp.initial_state.index], time_elapsed, diff_tracker
         return {
             "optimal_policy": optimal_policy,
             "G": G,
@@ -378,11 +380,12 @@ class EventPredictor:
         if self.current_markov_state_visible:
             return self.__simulate_markov_state_visible(policy)
         else:
-            return self.__simulate_markov_state_invisible(policy)
+            raise NotImplementedError('Invisible Markov state is not implemented yet')
 
     def simulate_greedy_algorithm(self):
         if self.current_markov_state_visible:
-            return self.__simulate_markov_state_visible_greedyalgorithm()
+            # return self.__simulate_markov_state_visible_greedyalgorithm()
+            raise NotImplementedError('Standalone greedy algorithm is not implemented yet')
         else:
             raise NotImplementedError('Invisible Markov state is not implemented yet')
 
@@ -445,6 +448,8 @@ class EventPredictor:
 
             s2 = self.markov_chain.next_state(s)
 
+            print("All states:", self.mdp.states, "\n--\n")
+
             if q not in self.dfa.final_states:
                 steps += 1
                 predicted_event = policy[q][s.name]
@@ -456,8 +461,11 @@ class EventPredictor:
                         state_to_index = {state.name: index for index, state in enumerate(self.mdp.states)}
                         index_q_previous = state_to_index[q_previous + "_" + s.name]
                         index_q = state_to_index[q + "_" + s2.name]
-                        print("Transition:", q_previous, " -> ", q, " with event ", predicted_event)
-                        total_cost += self.cost_matrix[index_q_previous][index_q]  # Add the cost of the transition
+                        print(f"Transition from {q_previous} to {q} with event {predicted_event}")
+                        print(f"Transition index from {q_previous} to {q} with event {predicted_event}: {index_q_previous} -> {index_q}")
+                        self.mdp.print_all()
+                        exit(0)
+                        # total_cost += self.cost_matrix[index_q_previous][index_q]  # Add the cost of the transition
 
             if q2 not in self.dfa.final_states:
                 steps2 += 1
@@ -524,10 +532,10 @@ def __simulate_markov_state_invisible(self, policy):
             if q != q_previous:
                 story += predicted_event
         if predicted_event in s2.events:
-            m = self.mdp.getNextStateForEventPositive(m, predicted_event)
+            m = self.mdp.get_next_state_for_event_positive(m, predicted_event)
             sts = m.anchor[1]
         else:
-            m = self.mdp.getNextStateForEventNegative(m, predicted_event)
+            m = self.mdp.get_next_state_for_event_negative(m, predicted_event)
             sts = m.anchor[1]
         i += 1
         s = s2

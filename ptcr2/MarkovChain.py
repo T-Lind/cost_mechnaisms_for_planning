@@ -255,16 +255,4 @@ class MarkovChain:
                     s2_prime.index]
                 transition_matrix[k][event_pair] = p
 
-        # do something similar for cost matrix
-        cost_matrix = [[0 for _ in range(num_states)] for _ in range(num_states)]
-        for k in range(0, len(prod_states)):
-            state = prod_states[k]
-            s1, s2 = state.anchor
-            for event_pair in range(0, len(prod_states)):
-                state_prime = prod_states[event_pair]
-                s1_prime, s2_prime = state_prime.anchor
-                c = self.cost_matrix[s1.index][s1_prime.index] + markov_chain.cost_matrix[s2.index][s2_prime.index]
-                cost_matrix[k][event_pair] = c
-
-        return MarkovChain(state_names, state_events, transition_matrix, initial_distribution,
-                           cost_matrix=cost_matrix)
+        return MarkovChain(state_names, state_events, transition_matrix, initial_distribution)
