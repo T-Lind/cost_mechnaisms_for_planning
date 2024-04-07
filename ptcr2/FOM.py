@@ -46,6 +46,7 @@ class FOM(BaseModel):
         self.cost_matrix = spec["cost_matrix"]
         initial_distribution = spec["initial_distribution"]
         self.alphabet_s = set(spec['alphabet'])
+        self.epsilon = spec.get('epsilon', 0.01)
 
         single_initial_state_0 = spec['single_initial_states'][0]
         single_initial_state_1 = spec['single_initial_states'][1]

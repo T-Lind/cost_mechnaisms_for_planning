@@ -11,6 +11,7 @@ class BaseModel(ABC):
         self.mc = None
         self.alphabet_s = None
         self.cost_matrix = None
+        self.epsilon = 0.01
 
     @abstractmethod
     def make_event_predictor(self, spec: dict):
@@ -22,7 +23,7 @@ class BaseModel(ABC):
 
     def compute_optimal_policy(self, spec: dict):
         self.make_event_predictor(spec)
-        self.computed_policy = self.ep.optimal_policy_infinite_horizon(0.01)
+        self.computed_policy = self.ep.optimal_policy_infinite_horizon(epsilon_of_convergence=self.epsilon)
         return self.computed_policy
 
     def simulate(self, spec: dict):
@@ -44,7 +45,7 @@ class BaseModel(ABC):
             self.make_event_predictor(spec)
         return self.ep.simulate_greedy_algorithm()
 
-    def simulate_general_and_greedy_algorithms(self, spec: dict):
+    def simulate_general_and_greedy_algorithms(self, spec: dict = None):
         if not self.computed_policy:
             self.compute_optimal_policy(spec)
 

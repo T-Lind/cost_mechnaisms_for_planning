@@ -285,7 +285,7 @@ class EventPredictor:
             "expected": G[0][self.mdp.initial_state.index]
         }
 
-    def optimal_policy_infinite_horizon(self, epsilon_of_convergence=0.01, compute_avoidable_actions=False):
+    def optimal_policy_infinite_horizon(self, epsilon_of_convergence=0.01, compute_avoidable_actions=False, verbose=False):
         n = len(self.mdp.states)
 
         if compute_avoidable_actions:
@@ -312,7 +312,8 @@ class EventPredictor:
             num_iterations += 1
             max_dif = 0
 
-            print(f"dif={difference:.4f}")
+            if verbose:
+                print(f"dif={difference:.4f}")
 
             if difference != float("inf"):
                 diff_tracker.append(difference)
@@ -461,10 +462,6 @@ class EventPredictor:
                         state_to_index = {state.name: index for index, state in enumerate(self.mdp.states)}
                         index_q_previous = state_to_index[q_previous + "_" + s.name]
                         index_q = state_to_index[q + "_" + s2.name]
-                        print(f"Transition from {q_previous} to {q} with event {predicted_event}")
-                        print(f"Transition index from {q_previous} to {q} with event {predicted_event}: {index_q_previous} -> {index_q}")
-                        self.mdp.print_all()
-                        exit(0)
                         # total_cost += self.cost_matrix[index_q_previous][index_q]  # Add the cost of the transition
 
             if q2 not in self.dfa.final_states:

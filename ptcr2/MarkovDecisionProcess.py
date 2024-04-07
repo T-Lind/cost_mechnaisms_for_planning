@@ -453,7 +453,7 @@ class MDP:
         print(
             "------------------------- Start Printing The Graph of Strongly Connected Components ----------------------")
         print("The MDP has " + str(len(self.strg_conn_compoments)) + " strongly connected components")
-        print("Initial SCC:" + self.initial_scc.name)
+        print("Initial SCC:" + str(self.initial_scc))
         for sccTrans in self.scc_transitions:
             print(str(sccTrans))
         print(
@@ -652,25 +652,24 @@ class MDP:
         print("-------------------------------------------------------------------------------------------")
 
     def print_to_file(self, file_name):
-        strP = "-------------------------------------------MDP--------------------------------------------" + "\n"
-        strP += "Number of states=" + str(len(self.states)) + "\n"
-        strP += "States:" + "\n"
+        str_p = "-------------------------------------------MDP--------------------------------------------" + "\n"
+        str_p += "Number of states=" + str(len(self.states)) + "\n"
+        str_p += "States:" + "\n"
         for s in self.states:
-            strP += str(s) + "\n"
-        strP += "Transitions:" + "\n"
+            str_p += str(s) + "\n"
+        str_p += "Transitions:" + "\n"
 
         for t in self.transitions:
-            strP += str(t) + "\n"
+            str_p += str(t) + "\n"
 
-        strP += "Goal States" + "\n"
+        str_p += "Goal States" + "\n"
         for g in self.goal_states:
-            strP += str(g) + "\n"
+            str_p += str(g) + "\n"
 
-        strP += "-------------------------------------------------------------------------------------------" + "\n"
+        str_p += "-------------------------------------------------------------------------------------------" + "\n"
 
-        f = open(file_name, "w")
-        f.write(strP)
-        f.close()
+        with open(file_name, "w") as f:
+            f.write(str_p)
 
     def make_goal_states_absorbing(self):
         cnt = 0
