@@ -20,7 +20,6 @@ class EventPredictor:
         self.current_markov_state_visible = markov_state_visible
         if markov_state_visible:
             self.__create_product_automaton_single_initial_state_onlyreachables()
-            pass
         else:
             self.__create_product_automaton_where_current_markov_state_invisible()
 
@@ -41,6 +40,7 @@ class EventPredictor:
         v0 = MDPState(dfa.initial_state + "_" + mc.initial_state.name, t0)
         v0.evidence_distribution = mc.initial_state.evidence_distribution
         v0.is_initial = True
+        print("Adding v0 = ", v0.name)
         mdp.add_state(v0)
         mdp.initial_state = v0
 

@@ -1,13 +1,11 @@
 import itertools
 import math
 import random
-import time
 from copy import deepcopy
 from sys import float_info
 
 from ptcr2.belief_tree import BeliefTree, BeliefTreeNode, BeliefTreeEdge
 
-# from gettext import lngettext
 
 
 class MDPState:
@@ -106,10 +104,12 @@ class MDPTransition:
         self.event_negative = False
 
     def __str__(self):
-        return str(self.src_state) + "--" + str(self.action) + "--" + str(self.probability) + "-->" + str(self.dst_state)
+        return str(self.src_state) + "--" + str(self.action) + "--" + str(self.probability) + "-->" + str(
+            self.dst_state)
 
     def __repr__(self):
-        return str(self.src_state) + "--" + str(self.action) + "--" + str(self.probability) + "-->" + str(self.dst_state)
+        return str(self.src_state) + "--" + str(self.action) + "--" + str(self.probability) + "-->" + str(
+            self.dst_state)
 
 
 class MDPStrgConnComponent:
@@ -229,6 +229,7 @@ class MDP:
     """
     prediction_result: True, False (whether the predicted event happened). evidence: raised from the event model
     """
+
     def create_observation_function_dict(self):
         self.observation_function = {}
         for o in self.observations:
@@ -244,10 +245,11 @@ class MDP:
             total += beleifState[srcState.index] * self.conditional_probability(dstState.index, srcState.index, action)
         return total
 
-    def probability_observation_given_action_andbeleif(self, observation, action, belief_state):
+    def probability_observation_given_action_and_belief(self, observation, action, belief_state):
         total = 0
         for x in self.states:
-            total += self.observation_function[observation][x][action] * self.sum_transition_probs(x, action, belief_state)
+            total += self.observation_function[observation][x][action] * self.sum_transition_probs(x, action,
+                                                                                                   belief_state)
         return total
 
     def create_belief(self, belief, action, observation):
@@ -317,18 +319,18 @@ class MDP:
             for t in state.transitions_to:
                 # if t.dst_state != state:
                 #    continue
-                allReachToGoals = True
+                all_reach_to_goals = True
                 for t2 in t.src_state.actions_transitions[t.action]:
                     # if t2.action != t.action:
                     #    continue 
-                    if t2.dst_state.a_goal_is_reachable == False:
-                        allReachToGoals = True
-                if allReachToGoals == True and t.src_state.a_goal_is_reachable == False:
+                    if not t2.dst_state.a_goal_is_reachable:
+                        all_reach_to_goals = True
+                if all_reach_to_goals and not t.src_state.a_goal_is_reachable:
                     t.src_state.a_goal_is_reachable = True
                     queue.append(t.src_state)
         for state in self.states:
             for action in self.actions:
-                allDstReachable = True
+                all_dst_reachable = True
                 # if action not in state.actions_transitions.keys():
                 #    continue
                 if action not in state.actions_transitions.keys():
@@ -336,10 +338,10 @@ class MDP:
                         action) + " has no key in dictionary state.actions_transitions for state " + state.name)
                 else:
                     for trans in state.actions_transitions[action]:
-                        if trans.dst_state.a_goal_is_reachable == False:
-                            allDstReachable = False
+                        if not trans.dst_state.a_goal_is_reachable:
+                            all_dst_reachable = False
                             break
-                if allDstReachable == False:
+                if not all_dst_reachable:
                     state.avoid_actions.append(action)
 
         print("End computing avoidable actions ")
@@ -347,7 +349,7 @@ class MDP:
     def topological_order_helper(self, state):
         state.visited = True
         for tran in state.transitions:
-            if tran.dst_state.visited == False:
+            if not tran.dst_state.visited:
                 self.topological_order_helper(tran.dst_state)
         self.topological_order.append(state)
 
@@ -800,7 +802,7 @@ class MDP:
                     node2 = BeliefTreeNode(b2)
                     node2.goal_avg_value = self.get_goal_avg_value(b2)
                     node2.height = node.height + 1
-                    prob = self.probability_observation_given_action_andbeleif(o, a, b)
+                    prob = self.probability_observation_given_action_and_belief(o, a, b)
                     edge = BeliefTreeEdge(node, node2, a, o, prob)
                     node.add_edge(edge)
                     node2.probability_to = node.probability_to * prob
@@ -1842,7 +1844,6 @@ class MDP:
             print(f"C: {C}")
         return policies
 
-
     def get_observation_of_tuple(self, prediction_result, evidence):
         for o in self.observations:
             if o[0] != prediction_result:
@@ -1857,6 +1858,7 @@ class MDP:
             if o == boolean_value:
                 return o
         return None
+
     def make_observation_function(self):
         self.observations = []
         if len(self.evidence_list) > 0:
@@ -1912,4 +1914,3 @@ class MDP:
                         else:
                             self.observation_function[o2][x][a] = 1
                             self.observation_function[o1][x][a] = 0
-

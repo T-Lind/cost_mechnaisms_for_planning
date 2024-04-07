@@ -1,6 +1,13 @@
+import os
+import pickle
+import sys
+import time
 from abc import ABC, abstractmethod
 
 from ptcr2.event_predictor import EventPredictor
+
+# Increase the recursion limit to avoid RecursionError while loading models
+sys.setrecursionlimit(10_000)
 
 
 class BaseModel(ABC):
@@ -53,3 +60,32 @@ class BaseModel(ABC):
 
         policy = self.computed_policy['optimal_policy']
         return self.ep.simulate_general_and_greedy_algorithms(policy)
+
+    def save(self, filename=None):
+        """
+        Save the model to a file, based on the current file name and timestamp
+        :param filename: The file name to use instead of the auto-generated one. Optional.
+        :return: The file name that was used to save the model, either the one provided or the auto-generated one.
+        """
+        if filename is None:
+            current_time_str = time.strftime("%Y%m%d-%H%M%S")
+
+            if not os.path.exists("saves"):
+                os.makedirs("saves")
+
+            filename = f"saves/ptcr_model_{current_time_str}.pkl"
+
+        with open(filename, "wb") as file:
+            pickle.dump(self, file)
+
+        return filename
+
+    @staticmethod
+    def load(filename):
+        """
+        Static method used to load a BaseModel (i.e. FOM/POM) from a file
+        :param filename: File name to load the model from
+        :return: The loaded model object
+        """
+        with open(filename, "rb") as file:
+            return pickle.load(file)
