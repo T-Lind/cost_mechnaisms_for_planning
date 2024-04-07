@@ -10,6 +10,7 @@ class BaseModel(ABC):
         self.ep: EventPredictor = None
         self.mc = None
         self.alphabet_s = None
+        self.cost_matrix = None
 
     @abstractmethod
     def make_event_predictor(self, spec: dict):
@@ -46,5 +47,6 @@ class BaseModel(ABC):
     def simulate_general_and_greedy_algorithms(self, spec: dict):
         if not self.computed_policy:
             self.compute_optimal_policy(spec)
+
         policy = self.computed_policy['optimal_policy']
         return self.ep.simulate_general_and_greedy_algorithms(policy)

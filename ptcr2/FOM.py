@@ -43,7 +43,7 @@ class FOM(BaseModel):
             state_events_3[i] = set(state_events_3[i])
 
         transition_matrix = spec["transition_matrix"]
-        cost_matrix = spec["cost_matrix"]
+        self.cost_matrix = spec["cost_matrix"]
         initial_distribution = spec["initial_distribution"]
         self.alphabet_s = set(spec['alphabet'])
 
@@ -73,10 +73,10 @@ class FOM(BaseModel):
                 raise ValueError(f"transition matrix row {row} does not sum to 1")
 
         # Check if the cost matrix is a square matrix of size len(state_names)
-        if len(cost_matrix) != len(state_names):
+        if len(self.cost_matrix) != len(state_names):
             raise ValueError("cost matrix and state names have different lengths")
 
-        for row in cost_matrix:
+        for row in self.cost_matrix:
             # make sure every element in row is a float or int
             for element in row:
                 if not isinstance(element, float) and not isinstance(element, int):
@@ -146,7 +146,7 @@ class FOM(BaseModel):
         for i in range(len(state_names)):
             cost_matrix_table.add_column(state_names[i])
         for i in range(len(state_names)):
-            row_str = [str(element) for element in cost_matrix[i]]
+            row_str = [str(element) for element in self.cost_matrix[i]]
             cost_matrix_table.add_row(state_names[i], *row_str)
 
         console.print(cost_matrix_table)
@@ -160,18 +160,15 @@ class FOM(BaseModel):
 
         console.print(alphabet_table)
 
-        mc1 = MarkovChain(state_names, state_events_1, transition_matrix, initial_distribution, 0,
-                          cost_matrix=cost_matrix)
+        mc1 = MarkovChain(state_names, state_events_1, transition_matrix, initial_distribution, 0)
 
         state_names2 = deepcopy(state_names)
 
-        mc2 = MarkovChain(state_names2, state_events_2, transition_matrix, initial_distribution, 0,
-                          cost_matrix=cost_matrix)
+        mc2 = MarkovChain(state_names2, state_events_2, transition_matrix, initial_distribution, 0)
 
         state_names3 = deepcopy(state_names)
 
-        mc3 = MarkovChain(state_names3, state_events_3, transition_matrix, initial_distribution, 0,
-                          cost_matrix=cost_matrix)
+        mc3 = MarkovChain(state_names3, state_events_3, transition_matrix, initial_distribution, 0)
 
         single_initial_state_0[0][0] = tuple(single_initial_state_0[0][0])
         single_initial_state_1[0][0] = tuple(single_initial_state_1[0][0])
@@ -185,7 +182,7 @@ class FOM(BaseModel):
 
         dfa = self.get_dfa()
 
-        self.ep = EventPredictor(dfa, mc, self.alphabet_s, cost_matrix, self.verbose)
+        self.ep = EventPredictor(dfa, mc, self.alphabet_s, self.cost_matrix, self.verbose)
 
         return self.ep
 
