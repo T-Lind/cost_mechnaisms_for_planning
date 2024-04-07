@@ -36,8 +36,10 @@ class BaseModel(ABC):
                 epsilon_of_convergence=self.epsilon)
         return self.computed_policy
 
-    def simulate(self, spec: dict):
+    def simulate(self, spec: dict = None):
         if not self.computed_policy or not self.ep:
+            if not spec:
+                raise ValueError("Specification is required to compute optimal policy")
             self.compute_optimal_policy(spec)
 
         result_dict = self.ep.simulate(self.computed_policy['optimal_policy'])
@@ -46,8 +48,7 @@ class BaseModel(ABC):
             "expected": self.computed_policy['expected'],
             "steps": result_dict['steps'],
             "total_cost": result_dict['total_cost'],
-            "recorded_story": result_dict['recorded_story'],
-            "policy_comp_time": self.computed_policy['elapsed_time'],
+            "recorded_story": result_dict['story'],
             "diff_tracker": self.computed_policy['diff_tracker']
         }
 

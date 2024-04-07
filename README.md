@@ -18,81 +18,60 @@ pip install -r requirements.txt
 ```
 
 ## Overview
+"An important class of applications entails a robot monitoring, scrutinizing, or recording the evolution of an uncertain
+time-extended process. This sort of situation leads to an interesting family
+of planning problems in which the robot is limited in what it sees and must, thus, choose what to pay attention to. The distinguishing characteristic of this setting is that the robot has influence over what it  captures via its sensors, but exercises no causal authority over the evolving process. As such, the robot’s objective is to observe the underlying process and to produce a ‘chronicle’ of occurrent events, subject to a
+goal specification of the sorts of event sequences that may be of interest.
+This paper examines variants of such problems when the robot aims to
+collect sets of observations to meet a rich specification of their sequential structure. We study this class of problems by modeling a stochastic
+process via a variant of a hidden Markov model, and specify the event
+sequences of interest as a regular language, developing a vocabulary of
+‘mutators’ that enable sophisticated requirements to be expressed. Under different suppositions about the information gleaned about the event
+model, we formulate and solve different planning problems. The core underlying idea is the construction of a product between the event model
+and a specification automaton.
 
-The "Planning to Chronicle" paper proposed an approach to probabilistic planning that minimizes the expected number of
-steps required to reach a goal state (Rahmani et al.). However, in different scenarios, the criteria for optimality
-might differ from simply reducing the expected number of steps. This research aims to explore alternative cost
-mechanisms that could improve performance for certain problems.
+"A concrete motivation for this sort of setting, consider the
+proliferation of home videos. These videos are, with remarkably few exceptions,
+crummy specimens of the cinematic arts. They fail, generally, to establish and
+then bracket a scene; they often founder in emphasizing the importance of key
+subjects within the developing action, and are usually unsuccessful in attempts
+to trace an evolving narrative arc. And the current generation of autonomous
+personal robots and video drones, in their roles as costly and glorified ‘selfie
+sticks,’ are set to follow suit. The trouble is that capturing footage to tell a story
+is challenging. A camera can only record what you point it toward, so part of
+the difficulty stems from the fact that you can’t know exactly how the scene will
+unfold before it actually does. Moreover, what constitutes structure isn’t easily
+summed up with a few trite quantities. Another part of the challenge, of course,
+is that one has only limited time to capture video footage.
+Setting aside pure vanity as a motivator, many applications can be cast as
+the problem of producing a finite-length sensor-based recording of the evolution
+of some process. As the video example emphasizes, one might be interested
+in recordings that meet rich specifications of the event sequences that are of
+interest. When the evolution of the event-generating process is uncertain/nondeterministic and sensing is local (necessitating its active direction), then one
+encounters an instance from this class of problem. The broad class encompasses
+many monitoring and surveillance scenarios. An important characteristic of such
+settings is that the robot has influence over what it captures via its sensors, but
+cannot control the process of interest.
+Our incursion into this class of problem involves two lines of attack. The first
+is a wide-embracing formulation in which we pose a general stochastic model,
+including aspects of hidden/latent state, simultaneity of event occurrence, and
+various assumptions on the form of observability. Secondly, we specify the sequences of interest via a deterministic finite automaton (DFA), and we define
+several language mutators, which permit composition and refinement of specification DFAs, allowing for rich descriptions of desirable event sequences. The two
+parts are brought together via our approach to planning: we show how to compute an optimal policy (to satisfy the specifications as quickly as possible) via
+a form of product automaton. Empirical evidence from simulation experiments
+attests to the feasibility of this approach.
+Beyond the pragmatics of planning, a theoretical contribution of the paper
+is to prove a result on representation independence of the specifications. That
+is, though multiple distinct DFAs may express the same regular language and
+despite the DFA being involved directly in constructing the product automaton
+used to solve the planning problem, we show that it is merely the language expressed that affects the resulting optimal solution. Returning to mutators that
+transform DFAs, enabling easy expression of sophisticated requirements, we distinguish when mutators preserve representational independence too."
 
-Rather than counting steps, actions will be associated with cost values that capture domain-specific preferences. The
-planner will minimize cumulative cost to find lower-cost plans. Defining appropriate costs will allow encoding soft
-constraints and tradeoffs not representable by step counts alone.
+Additionally, a cost-based optimization approach has been implemented, such that the optimal policy becomes the one that
+reduces the most amount of cost, while still satisfying the constraints of the problem. This could mean minimizing the
+distance a robot travels, reducing its wear and improving its efficiency, minimizing the amount of time it takes to
+complete a certain task.
 
-To enable this research, the "Planning to Chronicle" codebase will be refactored with improved architecture and
-documentation. Cost mechanisms and related algorithms will then be implemented and evaluated on testing scenarios.
-Comparisons to the step-minimizing approach will determine when cost-based planning produces better solutions.
+## Running the code
 
-This research will provide new insights into designing cost functions that capture planning objectives beyond step
-minimization. More flexible cost definitions could expand the range of problems addressed by probabilistic planning
-techniques. The refactored code will also improve maintainability and extensibility for future work.
-
-## Smart Home Ideas
-
-- Event Model:
-    - Random events such as temperature changes, motion detection, or appliance malfunctions in the house.
-    - Examples: Sudden increase in temperature, a motion detected in a room, a door left open, or a malfunction in a
-      smart device. Markov Decision Process (MDP):
-- Markov Decision Process (MDP):
-    - The smart home system's decision-making process for managing devices and responding to events.
-    - Actions may include adjusting thermostat settings, turning on/off lights, locking doors, or notifying the
-      homeowner about an event.
-    - Probabilistic outcomes based on the current state and chosen actions (e.g., adjusting the thermostat may or may
-      not result in the desired temperature).
-- Deterministic Finite Automaton (DFA):
-    - A predefined sequence of tasks representing a daily routine or a specific scenario that the smart home should
-      handle.
-    - Examples: "Nighttime Security Check," "Guest Arrival," or "Morning Routine." The DFA ensures that certain tasks
-      are completed in a specific order for the smart home to function effectively.
-
-## Example
-Positional States:
-- S_0: Front Yard
-- S_1: Back Yard
-- S_2: Side of the house
-- S_4: Near the front door
-- S_5: In the living room
-- S_6: In the kitchen
-- S_7: In the bedroom
-- S_8: In the dining room
-- S_9: Near the back door
-
-Event States:
-- S_0: Front Door
-  - Events: Open, Close
-- S_1: Back Door
-  - Events: Open, Close
-- S_2: Side Door
-  - Events: Open, Close
-- S_3: Security System Console
-    - Events: Malfunction, Normal
-- S_4: Security Cameras
-    - Events: Activate, Deactivate
-- S_5: Temperature Console
-    - Events: High, Low
-- S_6: Nothing
-    - Events: None
-
-
-DFA States:
-- S_0: The smart home is in a normal state. All lights are off, doors and windows closed and locked, and security cameras are active
-- S_1: Motion detected in the backyard
-- S_2: Motion detected in the front yard
-- S_3: Motion detected in the side yard
-- S_4: The temperature is too high
-- S_5: The temperature is too low
-- S_6: The front door is open
-- S_7: The back door is open
-- S_8: The side door is open
-- S_9: The security system has malfunctioned
-- S_10: Security check completed
-
+The code has been containerized and MUST be run on Python 3.9. Libraries used are not compatible with other versions.

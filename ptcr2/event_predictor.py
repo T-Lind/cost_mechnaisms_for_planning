@@ -441,9 +441,9 @@ class EventPredictor:
 
                     for tran in state.actions_transitions[action]:
                         # Add the cost of the transition to the value
-                        print("Transition from", tran.src_state.index, "to", tran.dst_state.index, "with cost",
-                              self.cost_matrix[tran.src_state.index][tran.dst_state.index])
-                        transition_cost = self.cost_matrix[tran.src_state.index][tran.dst_state.index]
+                        from_index = self.state_lookup[tran.src_state.name.split('_')[2]]
+                        to_index = self.state_lookup[tran.dst_state.name.split('_')[2]]
+                        transition_cost = self.cost_matrix[from_index][to_index]
                         term = (G[tran.dst_state.index][1] + transition_cost) * tran.probability
                         val += term
                     if val < min_val:
