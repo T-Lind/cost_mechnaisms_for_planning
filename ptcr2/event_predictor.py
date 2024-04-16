@@ -384,7 +384,7 @@ class EventPredictor:
         }
 
     def optimal_policy_infinite_horizon_cost_based(self, epsilon_of_convergence=0.01, compute_avoidable_actions=False,
-                                                   verbose=False):
+                                                   verbose=True):
         n = len(self.mdp.states)
 
         if compute_avoidable_actions:
@@ -411,8 +411,11 @@ class EventPredictor:
             num_iterations += 1
             max_dif = 0
 
-            if verbose:
-                print(f"dif={difference:.4f}")
+            if verbose and num_iterations % 10 == 0:
+                print(f"Iteration {num_iterations}, dif={difference:.4f}")
+
+            # if verbose:
+            #     print(f"dif={difference:.4f}")
 
             if difference != float("inf"):
                 diff_tracker.append(difference)
@@ -436,16 +439,22 @@ class EventPredictor:
                         if action in state.avoid_actions:
                             continue
                     val = 0.0
+                    # if not state.is_goal:
+                    #     val += 1
                     if not state.is_goal:
-                        val += 1
+                        for tran in state.actions_transitions[action]:
+                            # print("Tran", tran)
+                            # Add the cost of the transition to the value
+                            from_index = self.state_lookup[tran.src_state.name.split('_')[2]]
+                            to_index = self.state_lookup[tran.dst_state.name.split('_')[2]]
+                            transition_cost = self.cost_matrix[from_index][to_index]
+                            # print("From", from_index, "To", to_index, "Cost", transition_cost)
+                            term = (G[tran.dst_state.index][1]) * tran.probability + transition_cost / 5
+                            val += term
+                            # print("Val is", val, "term", term, "for from", from_index, "to", to_index, "with cost", transition_cost)
+                    else:
+                        pass
 
-                    for tran in state.actions_transitions[action]:
-                        # Add the cost of the transition to the value
-                        from_index = self.state_lookup[tran.src_state.name.split('_')[2]]
-                        to_index = self.state_lookup[tran.dst_state.name.split('_')[2]]
-                        transition_cost = self.cost_matrix[from_index][to_index]
-                        term = (G[tran.dst_state.index][1] + transition_cost) * tran.probability
-                        val += term
                     if val < min_val:
                         min_val = val
                         opt_action = action

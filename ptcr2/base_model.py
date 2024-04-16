@@ -41,7 +41,7 @@ class BaseModel(ABC):
                 raise ValueError("Specification is required to compute optimal policy")
             self.compute_optimal_policy(spec, cost_based=cost_based)
 
-        result_dict = self.ep.simulate(self.computed_policy['optimal_policy'], cost_based=cost_based)
+        result_dict = self.ep.simulate(self.computed_policy['optimal_policy'])
 
         return {
             "expected": self.computed_policy['expected'],
