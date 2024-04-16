@@ -448,10 +448,9 @@ class EventPredictor:
                             from_index = self.state_lookup[tran.src_state.name.split('_')[2]]
                             to_index = self.state_lookup[tran.dst_state.name.split('_')[2]]
                             transition_cost = self.cost_matrix[from_index][to_index]
-                            # print("From", from_index, "To", to_index, "Cost", transition_cost)
-                            term = (G[tran.dst_state.index][1]) * tran.probability + transition_cost / 5
+                            term = (G[tran.dst_state.index][1]) * tran.probability + transition_cost / max(
+                                max(row) for row in self.cost_matrix)  # Last part brings into the range [0, 1]
                             val += term
-                            # print("Val is", val, "term", term, "for from", from_index, "to", to_index, "with cost", transition_cost)
                     else:
                         pass
 
