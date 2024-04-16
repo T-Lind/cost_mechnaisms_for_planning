@@ -2,7 +2,9 @@
 
 ### Author: T-Lind
 
-## Installation
+New to the project? Skip to the [Overview](#overview) section for a brief introduction.
+
+## Local Installation
 Prerequisites:
 - Python 3.9 (*later versions do not work*)
 - pip
@@ -15,6 +17,20 @@ python -m venv venv
 source venv/bin/activate
 # Install requirements
 pip install -r requirements.txt
+```
+
+## Docker Installation
+Prerequisites:
+- Docker
+
+To build the Docker image, run the following command:
+```bash
+docker build -t <image_name> .
+```
+
+To run the Docker container, run the following command:
+```bash
+docker run -it <image_name>
 ```
 
 ## Overview
@@ -75,3 +91,16 @@ complete a certain task.
 ## Running the code
 
 The code has been containerized and MUST be run on Python 3.9. Libraries used are not compatible with other versions.
+
+The current `Dockerfile` will run the code in the `main.py` file. It demonstrates all functionality of the codebase.
+
+When running locally, the `main.ipynb` file contains the code to run the experiments. The code is well-documented and should be easy to follow.
+
+## Questions?
+
+If you have any questions, feel free to reach out to me at [tiernanlind@tamu.edu](mailto:tiernanlind@tamu.edu).
+
+## Acknowledgements
+
+Dylan A. Shell
+Hazhar Rahmani
