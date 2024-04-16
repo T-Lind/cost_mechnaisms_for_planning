@@ -31,18 +31,17 @@ class BaseModel(ABC):
         if not cost_based and not spec.get('cost_based', False):
             self.computed_policy = self.ep.optimal_policy_infinite_horizon(epsilon_of_convergence=self.epsilon)
         else:
-            print("COMPUTING COST BASED POLICY!!!")
             self.computed_policy = self.ep.optimal_policy_infinite_horizon_cost_based(
                 epsilon_of_convergence=self.epsilon)
         return self.computed_policy
 
-    def simulate(self, spec: dict = None):
+    def simulate(self, spec: dict = None, cost_based=False):
         if not self.computed_policy or not self.ep:
             if not spec:
                 raise ValueError("Specification is required to compute optimal policy")
-            self.compute_optimal_policy(spec)
+            self.compute_optimal_policy(spec, cost_based=cost_based)
 
-        result_dict = self.ep.simulate(self.computed_policy['optimal_policy'])
+        result_dict = self.ep.simulate(self.computed_policy['optimal_policy'], cost_based=cost_based)
 
         return {
             "expected": self.computed_policy['expected'],
@@ -51,6 +50,11 @@ class BaseModel(ABC):
             "recorded_story": result_dict['story'],
             "diff_tracker": self.computed_policy['diff_tracker']
         }
+
+    def simulate_general_algos(self, general, cost_based):
+        if not self.ep:
+            raise ValueError("Event predictor is required to simulate general algorithms")
+        return self.ep.simulate_markov_state_visible_general_and_cost_based(general, cost_based)
 
     def simulate_greedy_algorithm(self, spec: dict):
         if not self.ep:
@@ -65,7 +69,6 @@ class BaseModel(ABC):
 
         policy = self.computed_policy['optimal_policy']
         return self.ep.simulate_general_and_greedy_algorithms(policy)
-
 
     def save(self, filename=None):
         """

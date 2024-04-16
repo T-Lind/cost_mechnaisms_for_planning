@@ -595,7 +595,7 @@ class EventPredictor:
             if i > MAX_UNSAFE_ITERS:
                 raise Exception(f'Max iterations reached in {__name__}')
 
-    def __simulate_markov_state_visible_general_and_cost_based(self, policy_general, policy_cost_based):
+    def simulate_markov_state_visible_general_and_cost_based(self, policy_general, policy_cost_based):
         story = ""
         story2 = ""
         s = self.markov_chain.initial_state
