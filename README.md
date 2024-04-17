@@ -23,7 +23,7 @@ pip install -r requirements.txt
 Prerequisites:
 - Docker
 
-To build the Docker image, run the following command:
+To build the Docker image using the source code, run the following command:
 ```bash
 docker build -t <image_name> .
 ```
@@ -95,6 +95,11 @@ The code has been containerized and MUST be run on Python 3.9. Libraries used ar
 The current `Dockerfile` will run the code in the `main.py` file. It demonstrates all functionality of the codebase.
 
 When running locally, the `main.ipynb` file contains the code to run the experiments. The code is well-documented and should be easy to follow.
+
+The package is also available on PyPi, and can be installed using the following command:
+```bash
+pip install ptcr
+```
 
 ## Questions?
 
